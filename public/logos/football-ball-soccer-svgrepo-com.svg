@@ -1,0 +1,19 @@
+<svg viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="fb-clip">
+      <circle cx="140" cy="140" r="134"/>
+    </clipPath>
+  </defs>
+  <circle cx="140" cy="140" r="136" fill="#f5f5f5"/>
+  <g clip-path="url(#fb-clip)" fill="#111111">
+    <polygon points="140,20 169,41 158,74 122,74 111,41"/>
+    <polygon points="73,62 100,81 90,113 57,113 46,81"/>
+    <polygon points="207,62 180,81 190,113 223,113 234,81"/>
+    <polygon points="15,135 40,112 63,130 61,162 36,175"/>
+    <polygon points="265,135 240,112 217,130 219,162 244,175"/>
+    <polygon points="73,218 100,199 90,167 57,167 46,199"/>
+    <polygon points="207,218 180,199 190,167 223,167 234,199"/>
+    <polygon points="140,260 169,239 158,206 122,206 111,239"/>
+  </g>
+  <circle cx="140" cy="140" r="136" fill="none" stroke="#111111" stroke-width="3"/>
+</svg>

@@ -1,0 +1,275 @@
+'use client'
+import { useState, useEffect, useRef, useCallback } from 'react'
+
+// PLACEHOLDER DATA: these are sample quotes, not real customer reviews.
+// Replace with real testimonials (and real star ratings) before launch.
+const TESTIMONIALS = [
+  {
+    quote: "My son joined at age 7 and now at 11 he's a completely different player. The coaches genuinely care about each child's development.",
+    name: 'Sara K.',
+    initials: 'SK',
+    role: 'Parent of U8 player',
+    color: 'var(--color-football)',
+    colorRgb: 'var(--color-football-rgb)',
+  },
+  {
+    quote: "The structured training transformed my daughter's passion into real skill. The discipline and professionalism here are unmatched.",
+    name: 'Michel R.',
+    initials: 'MR',
+    role: 'Parent of U12 player',
+    color: 'var(--color-football)',
+    colorRgb: 'var(--color-football-rgb)',
+  },
+  {
+    quote: "We switched from another academy and the difference was immediate. Mila Academy's coaching methodology is on another level.",
+    name: 'Lara H.',
+    initials: 'LH',
+    role: 'Parent of U16 player',
+    color: 'var(--color-football)',
+    colorRgb: 'var(--color-football-rgb)',
+  },
+  {
+    quote: "My son begged us to enroll in Basketball U14. Three months in and he's already competing in inter-school tournaments.",
+    name: 'Tony M.',
+    initials: 'TM',
+    role: 'Parent of U14 player',
+    color: 'var(--color-basketball)',
+    colorRgb: 'var(--color-basketball-rgb)',
+  },
+  {
+    quote: "The Adult Basketball program fits perfectly around my work schedule. The trainers push you hard but always know your limits.",
+    name: 'Dina A.',
+    initials: 'DA',
+    role: 'Adult Basketball member',
+    color: 'var(--color-basketball)',
+    colorRgb: 'var(--color-basketball-rgb)',
+  },
+  {
+    quote: "Both my kids train here — football and basketball. The facilities are exceptional and the community is like a second family.",
+    name: 'Joe S.',
+    initials: 'JS',
+    role: 'Parent of two players',
+    color: 'var(--color-gold)',
+    colorRgb: 'var(--color-gold-rgb)',
+  },
+]
+
+const CARD_W   = 340
+const CARD_GAP = 24
+const STRIDE   = CARD_W + CARD_GAP   // 364 px per slot
+const VISIBLE  = 3
+const MAX_IDX  = TESTIMONIALS.length - VISIBLE  // 3 — max trackOffset index
+
+export default function Testimonials() {
+  const [idx,     setIdx]     = useState(0)
+  const trackRef              = useRef<HTMLDivElement>(null)
+  const idxRef                = useRef(0)
+  const timerRef              = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Direct DOM control of the track transform — avoids React batching issues on wrap
+  const moveTo = useCallback((next: number) => {
+    const nextOffset = Math.min(next,          MAX_IDX) * STRIDE
+    const currOffset = Math.min(idxRef.current, MAX_IDX) * STRIDE
+
+    if (trackRef.current) {
+      if (nextOffset < currOffset) {
+        // Wrapping backward: instant jump, then re-enable transition
+        trackRef.current.style.transition = 'none'
+        trackRef.current.style.transform  = `translateX(-${nextOffset}px)`
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            if (trackRef.current)
+              trackRef.current.style.transition = 'transform 0.55s cubic-bezier(0.22,1,0.36,1)'
+          })
+        )
+      } else {
+        trackRef.current.style.transition = 'transform 0.55s cubic-bezier(0.22,1,0.36,1)'
+        trackRef.current.style.transform  = `translateX(-${nextOffset}px)`
+      }
+    }
+
+    idxRef.current = next
+    setIdx(next)  // triggers re-render for dots / card borders only
+  }, [])
+
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = setInterval(() => moveTo((idxRef.current + 1) % TESTIMONIALS.length), 4000)
+  }, [moveTo])
+
+  useEffect(() => {
+    resetTimer()
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [resetTimer])
+
+  const goPrev = () => { moveTo((idxRef.current - 1 + TESTIMONIALS.length) % TESTIMONIALS.length); resetTimer() }
+  const goNext = () => { moveTo((idxRef.current + 1)                        % TESTIMONIALS.length); resetTimer() }
+
+  return (
+    <section style={{ backgroundColor: 'var(--color-bg)', padding: '100px 20px' }}>
+      {/* Title */}
+      <h2 style={{
+        textAlign: 'center',
+        color: '#ffffff',
+        fontSize: 'clamp(32px, 5vw, 48px)',
+        fontWeight: 800,
+        margin: '0 0 60px',
+        lineHeight: 1.1,
+      }}>
+        What Families Say
+      </h2>
+
+      {/* Carousel wrapper */}
+      <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto' }}>
+
+        {/* Prev arrow */}
+        <button
+          onClick={goPrev}
+          aria-label="Previous"
+          style={{
+            position: 'absolute',
+            left: -20,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 10,
+            background: 'rgba(0,0,0,0.6)',
+            border: '1px solid rgba(var(--color-gold-rgb),0.35)',
+            color: 'var(--color-gold)',
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            fontSize: 22,
+            lineHeight: 1,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          ‹
+        </button>
+
+        {/* Clipping viewport */}
+        <div style={{ overflow: 'hidden', padding: '4px 0' }}>
+          {/* Track — transform is driven directly via ref, not state */}
+          <div
+            ref={trackRef}
+            style={{
+              display: 'flex',
+              gap: CARD_GAP,
+              willChange: 'transform',
+            }}
+          >
+            {TESTIMONIALS.map((t, i) => (
+              <div
+                key={i}
+                style={{
+                  width: CARD_W,
+                  flexShrink: 0,
+                  backgroundColor: 'var(--color-surface)',
+                  border: `0.5px solid ${i === idx ? 'var(--color-gold)' : 'var(--color-border)'}`,
+                  boxShadow: i === idx ? '0 0 28px rgba(var(--color-gold-rgb),0.14)' : 'none',
+                  borderRadius: 16,
+                  padding: 28,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0,
+                  transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
+                }}
+              >
+                {/* Stars */}
+                <p style={{ color: 'var(--color-gold)', fontSize: 17, letterSpacing: 3, margin: '0 0 18px' }}>
+                  ★★★★★
+                </p>
+
+                {/* Quote */}
+                <p style={{
+                  color: '#ffffff',
+                  fontSize: 15,
+                  fontStyle: 'italic',
+                  lineHeight: 1.7,
+                  margin: '0 0 24px',
+                  flex: 1,
+                }}>
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+
+                {/* Avatar row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: '50%',
+                    backgroundColor: `rgba(${t.colorRgb}, 0.125)`,
+                    border: `1.5px solid rgba(${t.colorRgb}, 0.33)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: t.color,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    flexShrink: 0,
+                  }}>
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p style={{ color: '#ffffff', fontWeight: 700, fontSize: 14, margin: 0 }}>{t.name}</p>
+                    <p style={{ color: 'var(--color-text-faint)', fontSize: 12, margin: '3px 0 0' }}>{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Next arrow */}
+        <button
+          onClick={goNext}
+          aria-label="Next"
+          style={{
+            position: 'absolute',
+            right: -20,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 10,
+            background: 'rgba(0,0,0,0.6)',
+            border: '1px solid rgba(var(--color-gold-rgb),0.35)',
+            color: 'var(--color-gold)',
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            fontSize: 22,
+            lineHeight: 1,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          ›
+        </button>
+      </div>
+
+      {/* Dot indicators */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 36 }}>
+        {TESTIMONIALS.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => { moveTo(i); resetTimer() }}
+            aria-label={`Go to testimonial ${i + 1}`}
+            style={{
+              width: idx === i ? 24 : 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: idx === i ? 'var(--color-gold)' : '#333',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              transition: 'width 0.3s ease, background-color 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}

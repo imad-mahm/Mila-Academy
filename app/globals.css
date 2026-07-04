@@ -1,26 +1,232 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ── Theme variables (data-theme attribute approach) ─────────────────────────── */
+:root,
+:root[data-theme="dark"] {
+  --bg:             #0f0f0f;
+  --bg-card:        #161616;
+  --bg-hover:       #1e1e1e;
+  --border:         #242424;
+  --text-primary:   #ffffff;
+  --text-secondary: #888888;
+  --text-muted:     #555555;
+  --accent-green:   #16a34a;
+  --accent-orange:  #f97316;
+  --accent-gold:    #f5c518;
+  --accent-red:     #dc2626;
+
+  /* Legacy variable aliases (used by public website) */
+  --color-bg:              #0a0a0a;
+  --color-surface:         #111111;
+  --color-border:          #1a1a1a;
+  --color-border-soft:     #242424;
+  --color-text:            #ffffff;
+  --color-text-dim:        #888888;
+  --color-text-faint:      #666666;
+  --color-text-faintest:   #444444;
+  --color-gold:            #f5c518;
+  --color-gold-rgb:        245, 197, 24;
+  --color-gold-hover:      #d4a715;
+  --color-football:        #16a34a;
+  --color-football-rgb:    22, 163, 74;
+  --color-football-hover:  #15803d;
+  --color-basketball:      #f97316;
+  --color-basketball-rgb:  249, 115, 22;
+  --color-basketball-hover:#ea6c10;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root[data-theme="light"] {
+  --bg:             #fafafa;
+  --bg-card:        #ffffff;
+  --bg-hover:       #f5f5f5;
+  --border:         #e5e5e5;
+  --text-primary:   #0a0a0a;
+  --text-secondary: #666666;
+  --text-muted:     #999999;
+  --accent-green:   #16a34a;
+  --accent-orange:  #f97316;
+  --accent-gold:    #ca9a00;
+  --accent-red:     #dc2626;
+
+  /* Legacy variable aliases */
+  --color-bg:              #ffffff;
+  --color-surface:         #f5f5f5;
+  --color-border:          #e5e5e5;
+  --color-border-soft:     #e0e0e0;
+  --color-text:            #0a0a0a;
+  --color-text-dim:        #444444;
+  --color-text-faint:      #666666;
+  --color-text-faintest:   #888888;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ── Global transition for smooth theme switching ───────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+/* Exclude elements where transitions would cause problems */
+input, textarea, select {
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.15s;
+}
+
+html,
+body {
+  min-height: 100%;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Custom cursor — hide native, show gold dot on pointer devices ───────────── */
+@media (pointer: fine) {
+  *, *::before, *::after {
+    cursor: none !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--color-surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── WhatsApp floating button ───────────────────────────────────────────────── */
+@keyframes wa-float-pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(37,211,102,0.4); }
+  50%       { box-shadow: 0 4px 36px rgba(37,211,102,0.7); }
+}
+
+/* ── Dashboard sidebar nav ───────────────────────────────────────────────────── */
+.nav-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+  color: var(--text-secondary); text-decoration: none; border: none;
+  background: none; cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  border-left: 3px solid transparent; box-sizing: border-box;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); }
+.nav-item.active { background: rgba(245,197,24,0.13); border-left-color: var(--accent-gold); color: var(--accent-gold); }
+
+.logout-btn {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  color: var(--text-muted); background: none; border: 1px solid transparent; cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease; margin-top: 6px;
+}
+.logout-btn:hover { background: rgba(220,38,38,0.1); color: var(--accent-red); border-color: rgba(220,38,38,0.2); }
+
+.back-site-link {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text-muted); font-size: 12px; text-decoration: none;
+  padding: 8px 16px; border-radius: 8px; margin-top: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.back-site-link:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
+
+/* ── Dashboard sidebar — mobile drawer ──────────────────────────────────────── */
+.dash-sidebar {
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
+  background-color: var(--bg);
+  border-right: 1px solid rgba(245,197,24,0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: transform 0.25s ease, background-color 0.2s;
+}
+
+.dash-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 290;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 768px) {
+  .dash-sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 300;
+    transform: translateX(-100%);
+    height: 100dvh;
+  }
+  .dash-sidebar.open {
+    transform: translateX(0);
+  }
+  .dash-sidebar-overlay.open {
+    display: block;
+  }
+  .dash-main-content {
+    padding-top: 60px !important;
+  }
+  .dash-header {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 200;
+  }
+  .dash-search {
+    display: none !important;
+  }
+  .dash-hamburger {
+    display: flex !important;
+  }
+  .dash-header-title {
+    display: block !important;
+  }
+  .dash-header-date {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .dash-hamburger { display: none !important; }
+  .dash-header-title { display: none !important; }
+}
+
+/* ── Dashboard: table scroll wrapper ────────────────────────────────────────── */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll table {
+  min-width: 600px;
+}
+
+/* ── Dashboard: stat cards — 2 cols on small screens ───────────────────────── */
+@media (max-width: 600px) {
+  .stat-grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ── Touch targets — minimum 44px ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  button, [role="button"], a, select {
+    min-height: 44px;
+  }
+  input, textarea, select {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+}
+
+/* ── Spinner animation ───────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes shimmer {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.4; }
+  100% { opacity: 1; }
 }
