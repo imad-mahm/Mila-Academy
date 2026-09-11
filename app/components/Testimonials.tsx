@@ -1,50 +1,10 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
-
-// PLACEHOLDER DATA: these are sample quotes, not real customer reviews.
-// Replace with real testimonials (and real star ratings) before launch.
-const TESTIMONIALS = [
-  {
-    quote: "My son joined at age 7 and now at 11 he's a completely different player. The coaches genuinely care about each child's development.",
-    name: 'Sara K.',
-    initials: 'SK',
-    role: 'Parent of U8 player',
-  },
-  {
-    quote: "The structured training transformed my daughter's passion into real skill. The discipline and professionalism here are unmatched.",
-    name: 'Michel R.',
-    initials: 'MR',
-    role: 'Parent of U12 player',
-  },
-  {
-    quote: "We switched from another academy and the difference was immediate. Mila Academy's coaching methodology is on another level.",
-    name: 'Lara H.',
-    initials: 'LH',
-    role: 'Parent of U16 player',
-  },
-  {
-    quote: "My son begged us to enroll in Basketball U14. Three months in and he's already competing in inter-school tournaments.",
-    name: 'Tony M.',
-    initials: 'TM',
-    role: 'Parent of U14 player',
-  },
-  {
-    quote: "The Adult Basketball program fits perfectly around my work schedule. The trainers push you hard but always know your limits.",
-    name: 'Dina A.',
-    initials: 'DA',
-    role: 'Adult Basketball member',
-  },
-  {
-    quote: "Both my kids train here — football and basketball. The facilities are exceptional and the community is like a second family.",
-    name: 'Joe S.',
-    initials: 'JS',
-    role: 'Parent of two players',
-  },
-]
+import type { Testimonial } from '@/lib/site-data'
 
 const CARD_GAP = 24
 
-export default function Testimonials() {
+export default function Testimonials({ testimonials }: { testimonials: Testimonial[] }) {
   const [idx,         setIdx]         = useState(0)
   const [windowWidth, setWindowWidth] = useState(0)
   const trackRef              = useRef<HTMLDivElement>(null)
@@ -62,7 +22,7 @@ export default function Testimonials() {
   const visible = windowWidth === 0 ? 3 : windowWidth < 700 ? 1 : windowWidth < 1000 ? 2 : 3
   const cardW   = windowWidth === 0 ? 340 : Math.min(340, windowWidth - 64)
   const stride  = cardW + CARD_GAP
-  const maxIdx  = Math.max(0, TESTIMONIALS.length - visible)
+  const maxIdx  = Math.max(0, testimonials.length - visible)
 
   // Direct DOM control of the track transform — avoids React batching issues on wrap
   const moveTo = useCallback((next: number) => {
@@ -92,16 +52,19 @@ export default function Testimonials() {
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current)
-    timerRef.current = setInterval(() => moveTo((idxRef.current + 1) % TESTIMONIALS.length), 4000)
-  }, [moveTo])
+    if (testimonials.length <= visible) return
+    timerRef.current = setInterval(() => moveTo((idxRef.current + 1) % testimonials.length), 4000)
+  }, [moveTo, testimonials.length, visible])
 
   useEffect(() => {
     resetTimer()
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [resetTimer])
 
-  const goPrev = () => { moveTo((idxRef.current - 1 + TESTIMONIALS.length) % TESTIMONIALS.length); resetTimer() }
-  const goNext = () => { moveTo((idxRef.current + 1)                        % TESTIMONIALS.length); resetTimer() }
+  if (testimonials.length === 0) return null
+
+  const goPrev = () => { moveTo((idxRef.current - 1 + testimonials.length) % testimonials.length); resetTimer() }
+  const goNext = () => { moveTo((idxRef.current + 1)                        % testimonials.length); resetTimer() }
 
   return (
     <section style={{ backgroundColor: 'var(--color-bg)', padding: '100px 20px' }}>
@@ -158,9 +121,9 @@ export default function Testimonials() {
               willChange: 'transform',
             }}
           >
-            {TESTIMONIALS.map((t, i) => (
+            {testimonials.map((t, i) => (
               <div
-                key={i}
+                key={t.id}
                 style={{
                   width: cardW,
                   flexShrink: 0,
@@ -177,7 +140,7 @@ export default function Testimonials() {
               >
                 {/* Stars */}
                 <p style={{ color: 'var(--color-gold)', fontSize: 17, letterSpacing: 3, margin: '0 0 18px' }}>
-                  ★★★★★
+                  {'★'.repeat(t.rating) + '☆'.repeat(Math.max(0, 5 - t.rating))}
                 </p>
 
                 {/* Quote */}
@@ -250,9 +213,9 @@ export default function Testimonials() {
 
       {/* Dot indicators */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 36 }}>
-        {TESTIMONIALS.map((_, i) => (
+        {testimonials.map((t, i) => (
           <button
-            key={i}
+            key={t.id}
             onClick={() => { moveTo(i); resetTimer() }}
             aria-label={`Go to testimonial ${i + 1}`}
             style={{

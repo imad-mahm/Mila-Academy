@@ -1,10 +1,9 @@
 'use client'
-import { SITE_CONFIG } from '@/lib/site-config'
 
-export default function WhatsAppButton() {
+export default function WhatsAppButton({ whatsappNumber }: { whatsappNumber: string }) {
   return (
     <a
-      href={`https://wa.me/${SITE_CONFIG.whatsappNumber}`}
+      href={`https://wa.me/${whatsappNumber}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"

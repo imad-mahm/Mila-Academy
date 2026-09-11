@@ -1,12 +1,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { SITE_CONFIG } from '@/lib/site-config'
+import type { SiteSettings } from '@/lib/site-data'
 import { ACADEMY_META, type Academy } from '@/lib/programs'
 import ProgramsExplorer from './ProgramsExplorer'
 
-export default function AcademyLanding({ academy }: { academy: Academy }) {
+export default function AcademyLanding({ academy, settings }: { academy: Academy; settings: SiteSettings }) {
   const meta = ACADEMY_META[academy]
-  const wa = `https://wa.me/${SITE_CONFIG.whatsappNumber}`
+  const wa = `https://wa.me/${settings.whatsapp_number}`
   const bannerSeed = academy === 'football' ? 700 : 701
 
   const heroBtn: React.CSSProperties = {

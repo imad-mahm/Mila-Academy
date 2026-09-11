@@ -1,6 +1,7 @@
 'use client'
 import Image from 'next/image'
-import { SITE_CONFIG } from '@/lib/site-config'
+import Link from 'next/link'
+import type { SiteSettings } from '@/lib/site-data'
 import { scrollToSection } from '@/lib/lenis-store'
 
 const NAV_LINKS = [
@@ -35,13 +36,13 @@ function YtSvg() {
   )
 }
 
-const SOCIALS = [
-  { href: SITE_CONFIG.social.instagram, icon: <IgSvg />, label: 'Instagram' },
-  { href: SITE_CONFIG.social.facebook,  icon: <FbSvg />, label: 'Facebook'  },
-  { href: SITE_CONFIG.social.youtube,   icon: <YtSvg />, label: 'YouTube'   },
-]
+export default function Footer({ settings }: { settings: SiteSettings }) {
+  const SOCIALS = [
+    { href: settings.instagram_url, icon: <IgSvg />, label: 'Instagram' },
+    { href: settings.facebook_url,  icon: <FbSvg />, label: 'Facebook'  },
+    { href: settings.youtube_url,   icon: <YtSvg />, label: 'YouTube'   },
+  ]
 
-export default function Footer() {
   return (
     <footer style={{ backgroundColor: 'var(--color-bg)', borderTop: '1px solid rgba(var(--color-gold-rgb),0.15)' }}>
       <style>{`
@@ -142,10 +143,10 @@ export default function Footer() {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
-              { label: SITE_CONFIG.location },
-              { label: SITE_CONFIG.phoneDisplay },
-              { label: SITE_CONFIG.email },
-              { label: SITE_CONFIG.hours },
+              { label: settings.location },
+              { label: settings.phone_display },
+              { label: settings.email },
+              { label: settings.hours },
             ].map(({ label }) => (
               <p key={label} style={{ color: 'var(--color-text-faint)', fontSize: 13, margin: 0 }}>{label}</p>
             ))}
@@ -168,9 +169,19 @@ export default function Footer() {
         <p style={{ color: 'var(--color-text-faintest)', fontSize: 12, margin: 0 }}>
           © 2024 Mila Football Academy. All rights reserved.
         </p>
-        <p style={{ color: 'var(--color-text-faintest)', fontSize: 12, margin: 0 }}>
-          Built with passion · Lebanon
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <p style={{ color: 'var(--color-text-faintest)', fontSize: 12, margin: 0 }}>
+            Built with passion · Lebanon
+          </p>
+          <Link
+            href="/dashboard"
+            style={{ color: 'var(--color-text-faintest)', fontSize: 12, textDecoration: 'none' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-text-dim)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-text-faintest)' }}
+          >
+            Staff Login
+          </Link>
+        </div>
       </div>
     </footer>
   )

@@ -1,20 +1,27 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import type { SiteSettings } from '@/lib/site-data'
 
 gsap.registerPlugin(ScrollTrigger)
 
-// PLACEHOLDER DATA: these figures are illustrative, not verified business
-// numbers. Replace with real counts before launch.
-const STATS = [
-  { value: 500, suffix: '+', label: 'Players Trained'    },
-  { value: 8,   suffix: '',  label: 'Years of Excellence' },
-  { value: 2,   suffix: '',  label: 'Academies'           },
-  { value: 98,  suffix: '%', label: 'Success Rate'        },
-]
+// Splits a stored value like "500+" or "98%" into a numeric part (for the
+// count-up animation) and whatever trailing suffix it had.
+function parseStat(raw: string): { value: number; suffix: string } {
+  const match = raw.match(/^(\d+)(.*)$/)
+  if (!match) return { value: 0, suffix: raw }
+  return { value: Number(match[1]), suffix: match[2] }
+}
 
-export default function Stats() {
+export default function Stats({ settings }: { settings: SiteSettings }) {
+  const STATS = useMemo(() => [
+    { ...parseStat(settings.players_trained),  label: 'Players Trained'     },
+    { ...parseStat(settings.years_excellence), label: 'Years of Excellence' },
+    { ...parseStat(settings.academies_count),  label: 'Academies'           },
+    { ...parseStat(settings.success_rate),     label: 'Success Rate'        },
+  ], [settings])
+
   const sectionRef  = useRef<HTMLElement>(null)
   const numRefs     = useRef<(HTMLSpanElement | null)[]>([])
 
@@ -42,7 +49,7 @@ export default function Stats() {
     }, sectionRef)
 
     return () => ctx.revert()
-  }, [])
+  }, [STATS])
 
   return (
     <section

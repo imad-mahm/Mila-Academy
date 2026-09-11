@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import type { GalleryPhoto } from '@/lib/site-data'
 
 type Category = 'all' | 'football' | 'basketball' | 'events'
 
@@ -10,29 +11,11 @@ const FILTERS: { key: Category; label: string }[] = [
   { key: 'events',     label: 'Events'     },
 ]
 
-// PLACEHOLDER DATA: images are random Picsum stock photos and captions are
-// generic category labels, not real academy photos or events. Replace ALL_IMAGES
-// with real photography + real captions before launch.
-const ALL_IMAGES = [
-  { id: 1,  seed: 1,  category: 'football'   as Category, caption: 'Football',   h: 280 },
-  { id: 2,  seed: 2,  category: 'basketball' as Category, caption: 'Basketball', h: 360 },
-  { id: 3,  seed: 3,  category: 'events'     as Category, caption: 'Academy',    h: 300 },
-  { id: 4,  seed: 4,  category: 'football'   as Category, caption: 'Football',   h: 240 },
-  { id: 5,  seed: 5,  category: 'basketball' as Category, caption: 'Basketball', h: 320 },
-  { id: 6,  seed: 6,  category: 'events'     as Category, caption: 'Academy',    h: 380 },
-  { id: 7,  seed: 7,  category: 'football'   as Category, caption: 'Football',   h: 310 },
-  { id: 8,  seed: 8,  category: 'basketball' as Category, caption: 'Basketball', h: 260 },
-  { id: 9,  seed: 9,  category: 'events'     as Category, caption: 'Academy',    h: 340 },
-  { id: 10, seed: 10, category: 'football'   as Category, caption: 'Football',   h: 290 },
-  { id: 11, seed: 11, category: 'basketball' as Category, caption: 'Basketball', h: 360 },
-  { id: 12, seed: 12, category: 'events'     as Category, caption: 'Academy',    h: 270 },
-]
-
-export default function Gallery() {
+export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
   const [activeTab,    setActiveTab]    = useState<Category>('all')
   const [visible,      setVisible]      = useState(true)
-  const [displayed,    setDisplayed]    = useState(ALL_IMAGES)
-  const [hoveredId,    setHoveredId]    = useState<number | null>(null)
+  const [displayed,    setDisplayed]    = useState(photos)
+  const [hoveredId,    setHoveredId]    = useState<string | null>(null)
   const [lightboxIdx,  setLightboxIdx]  = useState<number | null>(null)
 
   // Keyboard navigation for lightbox
@@ -59,17 +42,19 @@ export default function Gallery() {
     setVisible(false)
     setTimeout(() => {
       setActiveTab(tab)
-      setDisplayed(tab === 'all' ? ALL_IMAGES : ALL_IMAGES.filter(img => img.category === tab))
+      setDisplayed(tab === 'all' ? photos : photos.filter(img => img.category === tab))
       setVisible(true)
     }, 200)
-  }, [activeTab])
+  }, [activeTab, photos])
 
-  const openLightbox = (img: typeof ALL_IMAGES[number]) => {
+  const openLightbox = (img: GalleryPhoto) => {
     const idx = displayed.findIndex(d => d.id === img.id)
     setLightboxIdx(idx)
   }
 
   const activeLightbox = lightboxIdx !== null ? displayed[lightboxIdx] : null
+
+  if (photos.length === 0) return null
 
   return (
     <section id="gallery" style={{ backgroundColor: 'var(--color-bg)', padding: '100px 20px' }}>
@@ -131,17 +116,16 @@ export default function Gallery() {
                 overflow: 'hidden',
                 position: 'relative',
                 cursor: 'pointer',
-                height: img.h,
               }}
             >
               {/* Image */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- variable aspect ratios from admin uploads, native masonry sizing */}
               <img
-                src={`https://picsum.photos/seed/${img.seed}/600/400`}
+                src={img.image_url}
                 alt={img.caption}
                 style={{
                   width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
+                  height: 'auto',
                   display: 'block',
                   transform: hoveredId === img.id ? 'scale(1.05)' : 'scale(1)',
                   transition: 'transform 0.45s ease',
@@ -220,8 +204,9 @@ export default function Gallery() {
           </button>
 
           {/* Image */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- lightbox needs the original remote URL, not a build-time-optimized one */}
           <img
-            src={`https://picsum.photos/seed/${activeLightbox.seed}/1200/800`}
+            src={activeLightbox.image_url}
             alt={activeLightbox.caption}
             onClick={e => e.stopPropagation()}
             style={{

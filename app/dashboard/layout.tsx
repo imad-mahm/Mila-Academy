@@ -8,6 +8,7 @@ import {
   IconHome, IconUsers, IconCalendarCheck, IconTrophy, IconClipboardList,
   IconCash, IconStar, IconChartBar, IconSettings, IconLogout,
   IconSearch, IconX, IconBuildingArch, IconMenu2, IconSun, IconMoon,
+  IconListDetails, IconQuote, IconPhoto,
 } from '@tabler/icons-react'
 import { ToastContainer } from './components/ToastContainer'
 import { loadAllStudents } from './students/data'
@@ -34,20 +35,23 @@ const ROLE_COLORS: Record<SessionUser['role'], string> = {
 // ── Nav config ────────────────────────────────────────────────────────────────
 
 const ALL_NAV = [
-  { label: 'Dashboard', href: '/dashboard',            Icon: IconHome          },
-  { label: 'Students',  href: '/dashboard/students',   Icon: IconUsers         },
-  { label: 'Attendance',href: '/dashboard/attendance', Icon: IconCalendarCheck },
-  { label: 'Matches',   href: '/dashboard/matches',    Icon: IconTrophy        },
-  { label: 'Coaches',   href: '/dashboard/coaches',    Icon: IconClipboardList },
-  { label: 'Payments',  href: '/dashboard/payments',   Icon: IconCash          },
-  { label: 'Ratings',   href: '/dashboard/ratings',    Icon: IconStar          },
-  { label: 'Reports',   href: '/dashboard/reports',    Icon: IconChartBar      },
+  { label: 'Dashboard',    href: '/dashboard',                  Icon: IconHome          },
+  { label: 'Students',     href: '/dashboard/students',         Icon: IconUsers         },
+  { label: 'Attendance',   href: '/dashboard/attendance',       Icon: IconCalendarCheck },
+  { label: 'Matches',      href: '/dashboard/matches',          Icon: IconTrophy        },
+  { label: 'Coaches',      href: '/dashboard/coaches',          Icon: IconClipboardList },
+  { label: 'Payments',     href: '/dashboard/payments',         Icon: IconCash          },
+  { label: 'Ratings',      href: '/dashboard/ratings',          Icon: IconStar          },
+  { label: 'Reports',      href: '/dashboard/reports',          Icon: IconChartBar      },
+  { label: 'Programs',     href: '/dashboard/content/programs',     Icon: IconListDetails },
+  { label: 'Testimonials', href: '/dashboard/content/testimonials', Icon: IconQuote       },
+  { label: 'Gallery',      href: '/dashboard/content/gallery',      Icon: IconPhoto       },
   { label: 'Settings',  href: '/dashboard/settings',   Icon: IconSettings      },
 ]
 
 function navItemsFor(user: SessionUser) {
   if (user.role === 'admin') return ALL_NAV
-  if (user.role === 'coach') return ALL_NAV.filter(n => !['Payments', 'Settings'].includes(n.label))
+  if (user.role === 'coach') return ALL_NAV.filter(n => !['Payments', 'Settings', 'Programs', 'Testimonials', 'Gallery'].includes(n.label))
   return [
     { label: 'My Profile', href: `/dashboard/students/${user.studentId ?? ''}`, Icon: IconBuildingArch },
     { label: 'Matches',    href: '/dashboard/matches', Icon: IconTrophy },

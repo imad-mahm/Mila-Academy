@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { IconMapPin, IconPhone, IconMail, IconClock } from '@tabler/icons-react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import { SITE_CONFIG } from '@/lib/site-config'
+import type { SiteSettings } from '@/lib/site-data'
 
 // ── Inline SVGs ───────────────────────────────────────────────────────────────
 
@@ -104,18 +104,15 @@ function FloatingField({
   )
 }
 
-// ── Info items ────────────────────────────────────────────────────────────────
-
-const INFO = [
-  { Icon: IconMapPin, label: 'Location',       value: SITE_CONFIG.location     },
-  { Icon: IconPhone,  label: 'Phone',          value: SITE_CONFIG.phoneDisplay },
-  { Icon: IconMail,   label: 'Email',          value: SITE_CONFIG.email        },
-  { Icon: IconClock,  label: 'Training Hours', value: SITE_CONFIG.hours        },
-]
-
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function Contact() {
+export default function Contact({ settings }: { settings: SiteSettings }) {
+  const INFO = [
+    { Icon: IconMapPin, label: 'Location',       value: settings.location     },
+    { Icon: IconPhone,  label: 'Phone',          value: settings.phone_display },
+    { Icon: IconMail,   label: 'Email',          value: settings.email        },
+    { Icon: IconClock,  label: 'Training Hours', value: settings.hours        },
+  ]
   const [form, setForm] = useState({ name: '', email: '', phone: '', age: '', academy: '', message: '' })
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
 
@@ -272,7 +269,7 @@ export default function Contact() {
 
           {/* WhatsApp CTA */}
           <a
-            href={`https://wa.me/${SITE_CONFIG.whatsappNumber}`}
+            href={`https://wa.me/${settings.whatsapp_number}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -321,11 +318,11 @@ export default function Contact() {
               Follow Us
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
-              {([
-                { href: SITE_CONFIG.social.instagram, icon: <IgSvg />, label: 'Instagram' },
-                { href: SITE_CONFIG.social.facebook,  icon: <FbSvg />, label: 'Facebook'  },
-                { href: SITE_CONFIG.social.youtube,   icon: <YtSvg />, label: 'YouTube'   },
-              ] as const).map(({ href, icon, label }) => (
+              {[
+                { href: settings.instagram_url, icon: <IgSvg />, label: 'Instagram' },
+                { href: settings.facebook_url,  icon: <FbSvg />, label: 'Facebook'  },
+                { href: settings.youtube_url,   icon: <YtSvg />, label: 'YouTube'   },
+              ].map(({ href, icon, label }) => (
                 <a
                   key={label}
                   href={href}
