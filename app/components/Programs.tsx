@@ -87,7 +87,7 @@ export default function Programs() {
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 0 36px' }}>
         <h2
           style={{
-            color: '#ffffff',
+            color: 'var(--color-text)',
             fontSize: 'clamp(32px, 5vw, 48px)',
             fontWeight: 800,
             margin: '0 0 10px',
@@ -154,7 +154,7 @@ export default function Programs() {
             {/* Name */}
             <p
               style={{
-                color: '#ffffff',
+                color: 'var(--color-text)',
                 fontSize: 20,
                 fontWeight: 700,
                 margin: '0 0 5px',

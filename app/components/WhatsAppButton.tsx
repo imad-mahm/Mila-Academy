@@ -22,7 +22,7 @@ export default function WhatsAppButton() {
         justifyContent: 'center',
         color: '#fff',
         textDecoration: 'none',
-        animation: 'wa-float-pulse 2.5s ease-in-out infinite',
+        boxShadow: '0 4px 20px rgba(37,211,102,0.4)',
       }}
     >
       <svg viewBox="0 0 24 24" fill="currentColor" width={28} height={28}>

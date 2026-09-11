@@ -73,7 +73,7 @@ function RateBar({ rate }: { rate: number }) {
   const color = rate >= 80 ? '#16a34a' : rate >= 60 ? '#f5c518' : '#ef4444'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ flex: 1, height: 4, backgroundColor: '#2a2a2a', borderRadius: 2 }}>
+      <div style={{ flex: 1, height: 4, backgroundColor: 'var(--border)', borderRadius: 2 }}>
         <div style={{ width: `${rate}%`, height: '100%', backgroundColor: color, borderRadius: 2, transition: 'width 0.4s ease' }} />
       </div>
       <span style={{ fontSize: 12, color, fontWeight: 600, minWidth: 32 }}>{rate}%</span>
@@ -88,7 +88,7 @@ function Stars({ rating }: { rating: number }) {
     <span style={{ display: 'flex', alignItems: 'center', gap: 1 }}>
       {Array.from({ length: full  }).map((_, i) => <IconStarFilled key={`f${i}`} size={13} style={{ color: '#f5c518' }} />)}
       {rating % 1 > 0                            && <IconStarFilled key="h" size={13} style={{ color: '#f5c518', opacity: 0.4 }} />}
-      {Array.from({ length: empty }).map((_, i) => <IconStar       key={`e${i}`} size={13} style={{ color: '#444' }} />)}
+      {Array.from({ length: empty }).map((_, i) => <IconStar       key={`e${i}`} size={13} style={{ color: 'var(--text-muted)' }} />)}
     </span>
   )
 }
@@ -109,8 +109,8 @@ const ACADEMY_BADGE: Record<'MFA' | 'MBA', { bg: string; color: string }> = {
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={{
-      backgroundColor: '#1a1a1a',
-      border: '0.5px solid #2a2a2a',
+      backgroundColor: 'var(--bg-card)',
+      border: '0.5px solid var(--border)',
       borderRadius: 12,
       ...style,
     }}>
@@ -122,7 +122,7 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
 function SectionTitle({ title, linkLabel }: { title: string; linkLabel?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-      <h2 style={{ color: '#fff', fontSize: 15, fontWeight: 700, margin: 0 }}>{title}</h2>
+      <h2 style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, margin: 0 }}>{title}</h2>
       {linkLabel && (
         <a href="#" style={{ color: '#f5c518', fontSize: 13, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 2 }}>
           {linkLabel} <IconChevronRight size={14} />
@@ -194,9 +194,9 @@ export default function DashboardHome() {
         .dash-left   { display: flex; flex-direction: column; gap: 20px; }
         .dash-right  { display: flex; flex-direction: column; gap: 20px; }
         .att-table   { width: 100%; border-collapse: collapse; }
-        .att-table th{ color: #555; font-size: 11px; font-weight: 600; letter-spacing: 1px;
+        .att-table th{ color: var(--text-muted); font-size: 11px; font-weight: 600; letter-spacing: 1px;
                        text-transform: uppercase; padding: 0 0 10px; text-align: left; }
-        .att-table td{ padding: 10px 0; border-top: 1px solid #222; font-size: 13px; color: #ccc; vertical-align: middle; }
+        .att-table td{ padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-secondary); vertical-align: middle; }
         .att-table tr:first-child td { border-top: none; }
         @media (max-width: 900px) {
           .dash-stats { grid-template-columns: repeat(2, 1fr); }
@@ -210,13 +210,13 @@ export default function DashboardHome() {
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
-          <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: '0 0 4px', lineHeight: 1.2 }}>
+          <h1 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, margin: '0 0 4px', lineHeight: 1.2 }}>
             {greeting}, {name} 👋
           </h1>
           <p style={{ color: '#f5c518', fontSize: 13, margin: '0 0 2px', letterSpacing: '0.3px' }}>
             {dateStr}
           </p>
-          <p style={{ color: '#666', fontSize: 12, margin: 0 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>
             {ACADEMY_LABEL[selectedAcademy]}
           </p>
         </div>
@@ -224,15 +224,15 @@ export default function DashboardHome() {
           {/* Bell */}
           <button style={{
             width: 40, height: 40, borderRadius: '50%',
-            backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a',
+            backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#888', cursor: 'pointer', position: 'relative',
+            color: 'var(--text-secondary)', cursor: 'pointer', position: 'relative',
           }}>
             <IconBell size={18} stroke={1.8} />
             <span style={{
               position: 'absolute', top: 8, right: 8,
               width: 7, height: 7, borderRadius: '50%',
-              backgroundColor: '#ef4444', border: '1.5px solid #1a1a1a',
+              backgroundColor: '#ef4444', border: '1.5px solid var(--bg-card)',
             }} />
           </button>
           {/* Avatar */}
@@ -271,10 +271,10 @@ export default function DashboardHome() {
               <Icon size={20} stroke={1.8} />
             </div>
             {/* Value */}
-            <p style={{ color: '#fff', fontSize: 32, fontWeight: 700, margin: '0 0 4px', lineHeight: 1, position: 'relative' }}>
+            <p style={{ color: 'var(--text-primary)', fontSize: 32, fontWeight: 700, margin: '0 0 4px', lineHeight: 1, position: 'relative' }}>
               {value}
             </p>
-            <p style={{ color: '#666', fontSize: 13, margin: 0, position: 'relative' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0, position: 'relative' }}>
               {label}
             </p>
           </Card>
@@ -303,7 +303,7 @@ export default function DashboardHome() {
               <tbody>
                 {filteredAttendance.map((row) => (
                   <tr key={row.date + row.team}>
-                    <td style={{ color: '#777', fontSize: 12 }}>{row.date}</td>
+                    <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{row.date}</td>
                     <td>
                       <span style={{
                         display: 'inline-block',
@@ -335,7 +335,7 @@ export default function DashboardHome() {
                 return (
                   <div key={m.team + m.opponent} style={{
                     display: 'flex', alignItems: 'center', gap: 14,
-                    backgroundColor: '#111', border: '0.5px solid #222',
+                    backgroundColor: 'var(--bg-hover)', border: '0.5px solid var(--border)',
                     borderRadius: 10, padding: '12px 16px',
                   }}>
                     {/* Academy badge */}

@@ -1,6 +1,5 @@
 'use client'
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { scrollToSection } from '@/lib/lenis-store'
 
 const NAV_LINKS = [
@@ -72,6 +71,7 @@ export default function Navbar() {
     const html = document.documentElement
     html.classList.remove('dark', 'light')
     html.classList.add(next)
+    html.setAttribute('data-theme', next)
   }
 
   function handleNav(id: string) {
@@ -90,15 +90,7 @@ export default function Navbar() {
           white-space: nowrap;
           min-height: 44px; display: inline-flex; align-items: center;
         }
-        .nb-link:hover { color: #888; }
-        .nb-dash {
-          color: var(--color-text); font-size: 13px; font-weight: 500;
-          padding: 7px 16px; border-radius: 6px;
-          border: 1px solid #333; text-decoration: none;
-          white-space: nowrap; transition: border-color 0.15s ease;
-          min-height: 44px; display: inline-flex; align-items: center;
-        }
-        .nb-dash:hover { border-color: var(--color-text); }
+        .nb-link:hover { color: var(--color-text-dim); }
         .nb-join {
           background: none; border: none; padding: 0;
           color: var(--color-text-dim); font-size: 13px;
@@ -127,7 +119,7 @@ export default function Navbar() {
         }
         /* Mobile overlay links */
         .mob-link {
-          background: none; border: none; color: #fff;
+          background: none; border: none; color: var(--color-text);
           font-size: 20px; font-weight: 600; font-family: inherit;
           cursor: pointer; padding: 12px 32px; min-height: 44px;
           text-align: center;
@@ -138,10 +130,10 @@ export default function Navbar() {
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0,
         height: 60, zIndex: 1000,
-        backgroundColor: 'rgba(10,10,10,0.95)',
+        backgroundColor: 'var(--nav-bg)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #1a1a1a',
+        borderBottom: '1px solid var(--color-border)',
         display: 'flex', alignItems: 'center',
         padding: '0 24px', gap: 0,
       }}>
@@ -168,17 +160,14 @@ export default function Navbar() {
         {/* Spacer on desktop when center is hidden */}
         <div style={{ flex: 1 }} className="nb-center" aria-hidden />
 
-        {/* Right: join + theme + dashboard + hamburger */}
+        {/* Right: enroll + theme + hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 'auto' }}>
           <button className="nb-join" onClick={() => handleNav('contact')} style={{ marginRight: 8 }}>
-            Join Now
+            Enroll Now
           </button>
           <button className="nb-theme" onClick={toggleTheme} aria-label="Toggle theme">
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>
-          <Link href="/dashboard" className="nb-dash" style={{ marginLeft: 8 }}>
-            Dashboard
-          </Link>
           <button
             className="nb-hamburger"
             onClick={() => setMenuOpen(true)}
@@ -194,7 +183,7 @@ export default function Navbar() {
       {menuOpen && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 9999,
-          backgroundColor: '#0a0a0a',
+          backgroundColor: 'var(--color-bg)',
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
@@ -203,7 +192,7 @@ export default function Navbar() {
             aria-label="Close menu"
             style={{
               position: 'absolute', top: 16, right: 20,
-              background: 'none', border: 'none', color: '#fff',
+              background: 'none', border: 'none', color: 'var(--color-text)',
               cursor: 'pointer', padding: 8, minHeight: 44, minWidth: 44,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
@@ -215,8 +204,8 @@ export default function Navbar() {
               {l.label}
             </button>
           ))}
-          <button className="mob-link" onClick={() => handleNav('contact')} style={{ color: '#888', fontSize: 16, marginTop: 8 }}>
-            Join Now
+          <button className="mob-link" onClick={() => handleNav('contact')} style={{ color: 'var(--color-text-dim)', fontSize: 16, marginTop: 8 }}>
+            Enroll Now
           </button>
         </div>
       )}

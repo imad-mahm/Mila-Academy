@@ -9,67 +9,65 @@ const TESTIMONIALS = [
     name: 'Sara K.',
     initials: 'SK',
     role: 'Parent of U8 player',
-    color: 'var(--color-football)',
-    colorRgb: 'var(--color-football-rgb)',
   },
   {
     quote: "The structured training transformed my daughter's passion into real skill. The discipline and professionalism here are unmatched.",
     name: 'Michel R.',
     initials: 'MR',
     role: 'Parent of U12 player',
-    color: 'var(--color-football)',
-    colorRgb: 'var(--color-football-rgb)',
   },
   {
     quote: "We switched from another academy and the difference was immediate. Mila Academy's coaching methodology is on another level.",
     name: 'Lara H.',
     initials: 'LH',
     role: 'Parent of U16 player',
-    color: 'var(--color-football)',
-    colorRgb: 'var(--color-football-rgb)',
   },
   {
     quote: "My son begged us to enroll in Basketball U14. Three months in and he's already competing in inter-school tournaments.",
     name: 'Tony M.',
     initials: 'TM',
     role: 'Parent of U14 player',
-    color: 'var(--color-basketball)',
-    colorRgb: 'var(--color-basketball-rgb)',
   },
   {
     quote: "The Adult Basketball program fits perfectly around my work schedule. The trainers push you hard but always know your limits.",
     name: 'Dina A.',
     initials: 'DA',
     role: 'Adult Basketball member',
-    color: 'var(--color-basketball)',
-    colorRgb: 'var(--color-basketball-rgb)',
   },
   {
     quote: "Both my kids train here — football and basketball. The facilities are exceptional and the community is like a second family.",
     name: 'Joe S.',
     initials: 'JS',
     role: 'Parent of two players',
-    color: 'var(--color-gold)',
-    colorRgb: 'var(--color-gold-rgb)',
   },
 ]
 
-const CARD_W   = 340
 const CARD_GAP = 24
-const STRIDE   = CARD_W + CARD_GAP   // 364 px per slot
-const VISIBLE  = 3
-const MAX_IDX  = TESTIMONIALS.length - VISIBLE  // 3 — max trackOffset index
 
 export default function Testimonials() {
-  const [idx,     setIdx]     = useState(0)
+  const [idx,         setIdx]         = useState(0)
+  const [windowWidth, setWindowWidth] = useState(0)
   const trackRef              = useRef<HTMLDivElement>(null)
   const idxRef                = useRef(0)
   const timerRef              = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  useEffect(() => {
+    const update = () => setWindowWidth(window.innerWidth)
+    update()
+    window.addEventListener('resize', update, { passive: true })
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  // Fewer cards visible at once on narrower viewports (was fixed at 3, cramped on tablet)
+  const visible = windowWidth === 0 ? 3 : windowWidth < 700 ? 1 : windowWidth < 1000 ? 2 : 3
+  const cardW   = windowWidth === 0 ? 340 : Math.min(340, windowWidth - 64)
+  const stride  = cardW + CARD_GAP
+  const maxIdx  = Math.max(0, TESTIMONIALS.length - visible)
+
   // Direct DOM control of the track transform — avoids React batching issues on wrap
   const moveTo = useCallback((next: number) => {
-    const nextOffset = Math.min(next,          MAX_IDX) * STRIDE
-    const currOffset = Math.min(idxRef.current, MAX_IDX) * STRIDE
+    const nextOffset = Math.min(next,          maxIdx) * stride
+    const currOffset = Math.min(idxRef.current, maxIdx) * stride
 
     if (trackRef.current) {
       if (nextOffset < currOffset) {
@@ -90,7 +88,7 @@ export default function Testimonials() {
 
     idxRef.current = next
     setIdx(next)  // triggers re-render for dots / card borders only
-  }, [])
+  }, [maxIdx, stride])
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current)
@@ -110,7 +108,7 @@ export default function Testimonials() {
       {/* Title */}
       <h2 style={{
         textAlign: 'center',
-        color: '#ffffff',
+        color: 'var(--color-text)',
         fontSize: 'clamp(32px, 5vw, 48px)',
         fontWeight: 800,
         margin: '0 0 60px',
@@ -132,7 +130,7 @@ export default function Testimonials() {
             top: '50%',
             transform: 'translateY(-50%)',
             zIndex: 10,
-            background: 'rgba(0,0,0,0.6)',
+            background: 'var(--color-surface)',
             border: '1px solid rgba(var(--color-gold-rgb),0.35)',
             color: 'var(--color-gold)',
             width: 44,
@@ -164,7 +162,7 @@ export default function Testimonials() {
               <div
                 key={i}
                 style={{
-                  width: CARD_W,
+                  width: cardW,
                   flexShrink: 0,
                   backgroundColor: 'var(--color-surface)',
                   border: `0.5px solid ${i === idx ? 'var(--color-gold)' : 'var(--color-border)'}`,
@@ -184,7 +182,7 @@ export default function Testimonials() {
 
                 {/* Quote */}
                 <p style={{
-                  color: '#ffffff',
+                  color: 'var(--color-text)',
                   fontSize: 15,
                   fontStyle: 'italic',
                   lineHeight: 1.7,
@@ -200,12 +198,12 @@ export default function Testimonials() {
                     width: 44,
                     height: 44,
                     borderRadius: '50%',
-                    backgroundColor: `rgba(${t.colorRgb}, 0.125)`,
-                    border: `1.5px solid rgba(${t.colorRgb}, 0.33)`,
+                    backgroundColor: 'rgba(var(--color-gold-rgb), 0.125)',
+                    border: '1.5px solid rgba(var(--color-gold-rgb), 0.33)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: t.color,
+                    color: 'var(--color-gold)',
                     fontSize: 13,
                     fontWeight: 700,
                     flexShrink: 0,
@@ -213,7 +211,7 @@ export default function Testimonials() {
                     {t.initials}
                   </div>
                   <div>
-                    <p style={{ color: '#ffffff', fontWeight: 700, fontSize: 14, margin: 0 }}>{t.name}</p>
+                    <p style={{ color: 'var(--color-text)', fontWeight: 700, fontSize: 14, margin: 0 }}>{t.name}</p>
                     <p style={{ color: 'var(--color-text-faint)', fontSize: 12, margin: '3px 0 0' }}>{t.role}</p>
                   </div>
                 </div>
@@ -232,7 +230,7 @@ export default function Testimonials() {
             top: '50%',
             transform: 'translateY(-50%)',
             zIndex: 10,
-            background: 'rgba(0,0,0,0.6)',
+            background: 'var(--color-surface)',
             border: '1px solid rgba(var(--color-gold-rgb),0.35)',
             color: 'var(--color-gold)',
             width: 44,
@@ -261,7 +259,7 @@ export default function Testimonials() {
               width: idx === i ? 24 : 8,
               height: 8,
               borderRadius: 4,
-              backgroundColor: idx === i ? 'var(--color-gold)' : '#333',
+              backgroundColor: idx === i ? 'var(--color-gold)' : 'var(--color-border-soft)',
               border: 'none',
               cursor: 'pointer',
               padding: 0,

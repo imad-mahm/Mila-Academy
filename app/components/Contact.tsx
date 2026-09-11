@@ -90,7 +90,7 @@ function FloatingField({
           backgroundColor: 'var(--color-surface)',
           border: `1px solid ${focused ? 'var(--color-gold)' : 'var(--color-border-soft)'}`,
           borderRadius: 8,
-          color: '#fff',
+          color: 'var(--color-text)',
           fontSize: 14,
           outline: 'none',
           resize: multiline ? ('vertical' as const) : undefined,
@@ -164,7 +164,7 @@ export default function Contact() {
 
         {/* ── LEFT — Form ───────────────────────────────────────────────────── */}
         <div>
-          <h2 style={{ color: '#fff', fontSize: 36, fontWeight: 800, margin: '0 0 36px', lineHeight: 1.15 }}>
+          <h2 style={{ color: 'var(--color-text)', fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 800, margin: '0 0 36px', lineHeight: 1.15 }}>
             Join Mila Academy
           </h2>
 
@@ -201,7 +201,7 @@ export default function Contact() {
                   backgroundColor: 'var(--color-surface)',
                   border: '1px solid var(--color-border-soft)',
                   borderRadius: 8,
-                  color: form.academy ? '#fff' : 'transparent',
+                  color: form.academy ? 'var(--color-text)' : 'transparent',
                   fontSize: 14,
                   outline: 'none',
                   cursor: 'pointer',
@@ -254,7 +254,7 @@ export default function Contact() {
                   display: 'inline-block',
                 }} />
               )}
-              {(status === 'idle' || status === 'error') && 'Submit Enrollment'}
+              {(status === 'idle' || status === 'error') && 'Enroll Now'}
               {status === 'loading' && 'Sending…'}
               {status === 'done'    && '✓  Enrolled! We\'ll contact you soon'}
             </button>
@@ -302,14 +302,14 @@ export default function Contact() {
                 alignItems: 'flex-start',
                 gap: 14,
                 backgroundColor: 'var(--color-surface)',
-                border: '0.5px solid #222',
+                border: '0.5px solid var(--color-border)',
                 borderRadius: 10,
                 padding: '14px 18px',
               }}>
                 <Icon size={20} stroke={1.75} style={{ color: 'var(--color-gold)', flexShrink: 0, marginTop: 1 }} />
                 <div>
                   <p style={{ color: 'var(--color-text-faint)', fontSize: 11, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 3px' }}>{label}</p>
-                  <p style={{ color: '#ddd', fontSize: 14, margin: 0 }}>{value}</p>
+                  <p style={{ color: 'var(--color-text)', fontSize: 14, margin: 0 }}>{value}</p>
                 </div>
               </div>
             ))}

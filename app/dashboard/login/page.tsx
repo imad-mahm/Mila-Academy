@@ -21,8 +21,8 @@ function FloatingField({
         top: '50%',
         transform: lifted ? 'translateY(-160%)' : 'translateY(-50%)',
         fontSize: lifted ? 11 : 14,
-        color: lifted ? '#f5c518' : '#555',
-        backgroundColor: '#111', padding: lifted ? '0 4px' : '0',
+        color: lifted ? '#f5c518' : 'var(--text-muted)',
+        backgroundColor: 'var(--bg-card)', padding: lifted ? '0 4px' : '0',
         transition: 'all 0.18s ease', pointerEvents: 'none',
         zIndex: 1, lineHeight: 1, whiteSpace: 'nowrap',
       }}>
@@ -37,9 +37,9 @@ function FloatingField({
         autoComplete={type === 'password' ? 'current-password' : 'email'}
         style={{
           width: '100%', padding: '16px 14px',
-          backgroundColor: '#111',
-          border: `1px solid ${focused ? '#f5c518' : '#2a2a2a'}`,
-          borderRadius: 8, color: '#fff', fontSize: 14, outline: 'none',
+          backgroundColor: 'var(--bg-card)',
+          border: `1px solid ${focused ? '#f5c518' : 'var(--border)'}`,
+          borderRadius: 8, color: 'var(--text-primary)', fontSize: 14, outline: 'none',
           transition: 'border-color 0.18s ease', fontFamily: 'inherit',
           boxSizing: 'border-box',
         }}
@@ -112,7 +112,7 @@ export default function LoginPage() {
           <Image src="/logos/mba_navbar.png" alt="MBA" width={64} height={40} style={{ height: 40, width: 'auto' }} priority />
         </div>
 
-        <h1 style={{ color: '#fff', fontSize: 22, fontWeight: 700, textAlign: 'center', margin: '0 0 4px', lineHeight: 1.2 }}>
+        <h1 style={{ color: 'var(--text-primary)', fontSize: 22, fontWeight: 700, textAlign: 'center', margin: '0 0 4px', lineHeight: 1.2 }}>
           Mila Academy Dashboard
         </h1>
         <p style={{ color: '#f5c518', fontSize: 12, textAlign: 'center', margin: '0 0 28px', letterSpacing: '0.5px' }}>
@@ -179,9 +179,9 @@ export default function LoginPage() {
         </form>
 
         {/* Credential hint */}
-        <p style={{ color: '#333', fontSize: 11, textAlign: 'center', marginTop: 20, lineHeight: 1.6 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'center', marginTop: 20, lineHeight: 1.6 }}>
           Use the quick-fill buttons above to log in as different roles.<br />
-          Passwords: <span style={{ color: '#555' }}>admin123 · coach123 · parent123 · student123</span>
+          Passwords: <span style={{ color: 'var(--text-secondary)' }}>admin123 · coach123 · parent123 · student123</span>
         </p>
       </div>
     </div>

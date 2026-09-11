@@ -2,52 +2,8 @@
 import type { CSSProperties } from 'react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
-// ── Football SVG — classic black-pentagon soccer ball ─────────────────────────
-function FootballSVG({ style }: { style?: CSSProperties }) {
-  return (
-    <svg viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', ...style }}>
-      <defs>
-        <clipPath id="fb-clip">
-          <circle cx="140" cy="140" r="134" />
-        </clipPath>
-      </defs>
-      <circle cx="140" cy="140" r="136" fill="#f5f5f5" />
-      <g clipPath="url(#fb-clip)" fill="#111111">
-        <polygon points="140,20 169,41 158,74 122,74 111,41" />
-        <polygon points="73,62 100,81 90,113 57,113 46,81" />
-        <polygon points="207,62 180,81 190,113 223,113 234,81" />
-        <polygon points="15,135 40,112 63,130 61,162 36,175" />
-        <polygon points="265,135 240,112 217,130 219,162 244,175" />
-        <polygon points="73,218 100,199 90,167 57,167 46,199" />
-        <polygon points="207,218 180,199 190,167 223,167 234,199" />
-        <polygon points="140,260 169,239 158,206 122,206 111,239" />
-      </g>
-      <circle cx="140" cy="140" r="136" fill="none" stroke="#111111" strokeWidth="3" />
-    </svg>
-  )
-}
-
-// ── Basketball SVG — orange with curved seam lines ────────────────────────────
-function BasketballSVG({ style }: { style?: CSSProperties }) {
-  return (
-    <svg viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', ...style }}>
-      <defs>
-        <clipPath id="bb-clip">
-          <circle cx="140" cy="140" r="135" />
-        </clipPath>
-      </defs>
-      <circle cx="140" cy="140" r="136" fill="#e8621a" />
-      <g clipPath="url(#bb-clip)" fill="none" stroke="#3d1500" strokeWidth="4" strokeLinecap="round">
-        <path d="M 4,140 Q 140,65 276,140" />
-        <path d="M 4,140 Q 140,215 276,140" />
-        <path d="M 140,4 Q 65,140 140,276" />
-        <path d="M 140,4 Q 215,140 140,276" />
-      </g>
-      <circle cx="140" cy="140" r="136" fill="none" stroke="#3d1500" strokeWidth="3" />
-    </svg>
-  )
-}
 
 export default function Hero() {
   const [isMobile, setIsMobile] = useState(false)
@@ -68,21 +24,20 @@ export default function Hero() {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 20,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: 'var(--color-bg)',
     position: 'relative',
     overflow: 'hidden',
     ...(isMobile ? { width: '100%', height: '50vh', flex: 'none' } : {}),
   }
 
   const enterBtn: CSSProperties = {
-    backgroundColor: '#ffffff',
-    color: '#0a0a0a',
+    backgroundColor: 'var(--color-text)',
+    color: 'var(--color-bg)',
     border: 'none',
     padding: '10px 24px',
     borderRadius: 6,
     fontWeight: 600,
     fontSize: 14,
-    cursor: 'pointer',
     fontFamily: 'inherit',
     textDecoration: 'none',
     display: 'inline-block',
@@ -94,8 +49,8 @@ export default function Hero() {
     <>
       <style>{`
         @keyframes ballSpinY {
-          from { transform: rotateY(0deg); }
-          to   { transform: rotateY(360deg); }
+          from { transform: rotateZ(0deg); }
+          to   { transform: rotateZ(360deg); }
         }
         .enter-btn:hover { opacity: 0.85 !important; }
       `}</style>
@@ -115,24 +70,39 @@ export default function Hero() {
           onMouseLeave={() => setLeftHov(false)}
           style={halfBase}
         >
-          <div style={{ perspective: 700, width: 280, height: 280, flexShrink: 0 }}>
-            <FootballSVG style={{
-              width: '100%',
-              height: '100%',
-              filter: leftHov
-                ? 'drop-shadow(0 0 48px rgba(22,163,74,0.45))'
-                : 'drop-shadow(0 0 32px rgba(22,163,74,0.2))',
-              animation: 'ballSpinY linear infinite',
-              animationDuration: leftHov ? '2s' : '6s',
-              transition: 'filter 0.3s ease',
+          <div style={{
+            position: 'relative', width: 280, height: 280, flexShrink: 0,
+            perspective: 700,
+            filter: leftHov
+              ? 'drop-shadow(0 0 48px rgba(22,163,74,0.45))'
+              : 'drop-shadow(0 0 32px rgba(22,163,74,0.2))',
+            transition: 'filter 0.3s ease',
+          }}>
+            <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
+              <Image
+                src="/logos/football-ball-soccer-svgrepo-com.svg"
+                alt="Football"
+                width={280}
+                height={280}
+                draggable={false}
+                style={{
+                  display: 'block', width: '100%', height: '100%',
+                  animation: 'ballSpinY 6s linear infinite',
+                  userSelect: 'none',
+                }}
+              />
+            </div>
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: '50%', pointerEvents: 'none',
+              background: 'radial-gradient(circle at 36% 30%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.0) 50%, rgba(0,0,0,0.2) 100%)',
             }} />
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <p style={{ color: '#ffffff', fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>
+            <p style={{ color: 'var(--color-text)', fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>
               Mila Football Academy
             </p>
-            <p style={{ color: '#888888', fontSize: 13, margin: 0 }}>
+            <p style={{ color: 'var(--color-text-dim)', fontSize: 13, margin: 0 }}>
               Est. 2016 · Lebanon
             </p>
           </div>
@@ -144,7 +114,7 @@ export default function Hero() {
 
         {/* ── Divider ─────────────────────────────────────────────────────────── */}
         {isMobile ? null : (
-          <div style={{ width: 1, backgroundColor: '#242424', flexShrink: 0, alignSelf: 'stretch' }} />
+          <div style={{ width: 1, backgroundColor: 'var(--color-border-soft)', flexShrink: 0, alignSelf: 'stretch' }} />
         )}
 
         {/* ── Right: Basketball ───────────────────────────────────────────────── */}
@@ -153,23 +123,39 @@ export default function Hero() {
           onMouseLeave={() => setRightHov(false)}
           style={halfBase}
         >
-          <div style={{ perspective: 700, width: 280, height: 280, flexShrink: 0 }}>
-            <BasketballSVG style={{
-              width: '100%',
-              height: '100%',
-              filter: rightHov
-                ? 'drop-shadow(0 0 48px rgba(249,115,22,0.5))'
-                : 'drop-shadow(0 0 32px rgba(249,115,22,0.2))',
-              animation: 'ballSpinY 4s linear infinite',
-              transition: 'filter 0.3s ease',
+          <div style={{
+            position: 'relative', width: 280, height: 280, flexShrink: 0,
+            perspective: 700,
+            filter: rightHov
+              ? 'drop-shadow(0 0 48px rgba(249,115,22,0.5))'
+              : 'drop-shadow(0 0 32px rgba(249,115,22,0.2))',
+            transition: 'filter 0.3s ease',
+          }}>
+            <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
+              <Image
+                src="/logos/ball-of-basketball-svgrepo-com.svg"
+                alt="Basketball"
+                width={280}
+                height={280}
+                draggable={false}
+                style={{
+                  display: 'block', width: '100%', height: '100%',
+                  animation: 'ballSpinY 4s linear infinite',
+                  userSelect: 'none',
+                }}
+              />
+            </div>
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: '50%', pointerEvents: 'none',
+              background: 'radial-gradient(circle at 36% 30%, rgba(255,220,150,0.45) 0%, rgba(255,255,255,0.0) 50%, rgba(0,0,0,0.2) 100%)',
             }} />
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <p style={{ color: '#ffffff', fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>
+            <p style={{ color: 'var(--color-text)', fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>
               Mila Basket Academy
             </p>
-            <p style={{ color: '#888888', fontSize: 13, margin: 0 }}>
+            <p style={{ color: 'var(--color-text-dim)', fontSize: 13, margin: 0 }}>
               Est. 2024 · Baissour
             </p>
           </div>

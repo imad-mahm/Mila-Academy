@@ -16,29 +16,10 @@ const STATS = [
 
 export default function Stats() {
   const sectionRef  = useRef<HTMLElement>(null)
-  const headlineRef = useRef<HTMLHeadingElement>(null)
   const numRefs     = useRef<(HTMLSpanElement | null)[]>([])
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Headline clip-path wipe reveal
-      if (headlineRef.current) {
-        gsap.fromTo(
-          headlineRef.current,
-          { clipPath: 'inset(0 100% 0 0)' },
-          {
-            clipPath: 'inset(0 0% 0 0)',
-            duration: 1.1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: headlineRef.current,
-              start: 'top 85%',
-              toggleActions: 'play none none none',
-            },
-          }
-        )
-      }
-
       // Number count-up for each stat
       numRefs.current.forEach((el, i) => {
         if (!el) return
@@ -86,17 +67,15 @@ export default function Stats() {
         By The Numbers
       </p>
 
-      {/* Headline with clip-path reveal */}
+      {/* Headline */}
       <h2
-        ref={headlineRef}
         style={{
           textAlign: 'center',
-          color: '#ffffff',
+          color: 'var(--color-text)',
           fontSize: 'clamp(36px, 6vw, 56px)',
           fontWeight: 800,
           margin: '0 auto 60px',
           lineHeight: 1.1,
-          clipPath: 'inset(0 100% 0 0)',
         }}
       >
         Our Legacy Speaks
@@ -160,7 +139,7 @@ export default function Stats() {
       {/* Quote */}
       <p style={{
         textAlign: 'center',
-        color: '#ffffff',
+        color: 'var(--color-text)',
         fontSize: 18,
         fontStyle: 'italic',
         opacity: 0.7,

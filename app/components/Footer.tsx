@@ -57,7 +57,7 @@ export default function Footer() {
           .footer-grid { grid-template-columns: 1fr; gap: 40px; padding: 56px 24px 40px; }
         }
         .footer-link {
-          color: #888;
+          color: var(--color-text-dim);
           text-decoration: none;
           font-size: 14px;
           line-height: 1;
@@ -155,7 +155,7 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div style={{
-        borderTop: '1px solid rgba(255,255,255,0.06)',
+        borderTop: '1px solid var(--color-border)',
         maxWidth: 1100,
         margin: '0 auto',
         padding: '20px 24px',
@@ -165,10 +165,10 @@ export default function Footer() {
         flexWrap: 'wrap',
         gap: 12,
       }}>
-        <p style={{ color: '#444', fontSize: 12, margin: 0 }}>
+        <p style={{ color: 'var(--color-text-faintest)', fontSize: 12, margin: 0 }}>
           © 2024 Mila Football Academy. All rights reserved.
         </p>
-        <p style={{ color: '#333', fontSize: 12, margin: 0 }}>
+        <p style={{ color: 'var(--color-text-faintest)', fontSize: 12, margin: 0 }}>
           Built with passion · Lebanon
         </p>
       </div>

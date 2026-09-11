@@ -82,7 +82,7 @@ export default function Gallery() {
       {/* Title */}
       <h2 style={{
         textAlign: 'center',
-        color: '#ffffff',
+        color: 'var(--color-text)',
         fontSize: 'clamp(32px, 5vw, 48px)',
         fontWeight: 800,
         margin: '0 0 48px',
@@ -100,9 +100,9 @@ export default function Gallery() {
             style={{
               padding: '9px 22px',
               borderRadius: 50,
-              border: `1px solid ${activeTab === key ? 'var(--color-gold)' : '#333'}`,
+              border: `1px solid ${activeTab === key ? 'var(--color-gold)' : 'var(--color-border-soft)'}`,
               backgroundColor: activeTab === key ? 'var(--color-gold)' : 'transparent',
-              color: activeTab === key ? '#000' : '#aaa',
+              color: activeTab === key ? '#000' : 'var(--color-text-dim)',
               fontSize: 13,
               fontWeight: activeTab === key ? 700 : 500,
               cursor: 'pointer',
