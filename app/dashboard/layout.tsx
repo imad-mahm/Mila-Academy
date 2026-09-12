@@ -43,10 +43,11 @@ const ALL_NAV = [
   { label: 'Payments',     href: '/dashboard/payments',         Icon: IconCash          },
   { label: 'Ratings',      href: '/dashboard/ratings',          Icon: IconStar          },
   { label: 'Reports',      href: '/dashboard/reports',          Icon: IconChartBar      },
-  { label: 'Programs',     href: '/dashboard/content/programs',     Icon: IconListDetails },
-  { label: 'Testimonials', href: '/dashboard/content/testimonials', Icon: IconQuote       },
-  { label: 'Gallery',      href: '/dashboard/content/gallery',      Icon: IconPhoto       },
-  { label: 'Settings',  href: '/dashboard/settings',   Icon: IconSettings      },
+  // Routes not built yet — rendered disabled with a "Soon" badge, see Sidebar's nav loop.
+  { label: 'Programs',     href: '/dashboard/content/programs',     Icon: IconListDetails, comingSoon: true },
+  { label: 'Testimonials', href: '/dashboard/content/testimonials', Icon: IconQuote,       comingSoon: true },
+  { label: 'Gallery',      href: '/dashboard/content/gallery',      Icon: IconPhoto,       comingSoon: true },
+  { label: 'Settings',     href: '/dashboard/settings',             Icon: IconSettings,    comingSoon: true },
 ]
 
 function navItemsFor(user: SessionUser) {
@@ -254,11 +255,31 @@ function Sidebar({
         <AcademySwitcher user={user} />
 
         <nav style={{ flex: 1, padding: '4px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {navItems.map(({ label, href, Icon }) => (
-            <Link key={href} href={href} className={`nav-item${pathname === href ? ' active' : ''}`} onClick={onClose}>
-              <Icon size={20} stroke={1.8} />
-              {label}
-            </Link>
+          {navItems.map(({ label, href, Icon, comingSoon }) => (
+            comingSoon ? (
+              <div
+                key={href}
+                className="nav-item"
+                aria-disabled="true"
+                title={`${label} — coming soon`}
+                style={{ cursor: 'default', opacity: 0.45, pointerEvents: 'none' }}
+              >
+                <Icon size={20} stroke={1.8} />
+                {label}
+                <span style={{
+                  marginLeft: 'auto', fontSize: 9, fontWeight: 700, letterSpacing: '0.04em',
+                  textTransform: 'uppercase', padding: '2px 6px', borderRadius: 20,
+                  border: '1px solid var(--border)', color: 'var(--text-muted)',
+                }}>
+                  Soon
+                </span>
+              </div>
+            ) : (
+              <Link key={href} href={href} className={`nav-item${pathname === href ? ' active' : ''}`} onClick={onClose}>
+                <Icon size={20} stroke={1.8} />
+                {label}
+              </Link>
+            )
           ))}
         </nav>
 

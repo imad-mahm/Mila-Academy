@@ -254,8 +254,8 @@ export default function ReportsPage() {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Reports</h1>
-        <p style={{ color: '#555', fontSize: 14, margin: 0 }}>Generate and export academy reports in PDF and Excel formats.</p>
+        <h1 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Reports</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>Generate and export academy reports in PDF and Excel formats.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }} className="reports-grid">
@@ -268,7 +268,7 @@ export default function ReportsPage() {
           const isLoading = loading[idx]
           const isDone    = done[idx]
           return (
-            <div key={idx} style={{ backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 14, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div key={idx} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 14, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Icon + type badge */}
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: `${r.color}15`, border: `1px solid ${r.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
@@ -281,8 +281,8 @@ export default function ReportsPage() {
 
               {/* Content */}
               <div style={{ flex: 1 }}>
-                <h3 style={{ color: '#fff', fontSize: 15, fontWeight: 700, margin: '0 0 8px' }}>{r.title}</h3>
-                <p style={{ color: '#666', fontSize: 12, lineHeight: 1.6, margin: 0 }}>{r.description}</p>
+                <h3 style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, margin: '0 0 8px' }}>{r.title}</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.6, margin: 0 }}>{r.description}</p>
               </div>
 
               {/* Generate button */}
@@ -315,8 +315,8 @@ export default function ReportsPage() {
       </div>
 
       {/* Info box */}
-      <div style={{ marginTop: 28, padding: '16px 20px', backgroundColor: '#111', border: '0.5px solid #2a2a2a', borderRadius: 12 }}>
-        <p style={{ color: '#555', fontSize: 12, margin: 0, lineHeight: 1.7 }}>
+      <div style={{ marginTop: 28, padding: '16px 20px', backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 12 }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0, lineHeight: 1.7 }}>
           Reports use live data from all students, attendance sessions, payments, and ratings. PDF reports open in your browser&apos;s download manager. Excel files open directly in Microsoft Excel or Google Sheets.
         </p>
       </div>

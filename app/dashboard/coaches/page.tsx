@@ -85,10 +85,10 @@ function acColor(tid: string) { return TEAMS.find(t => t.id === tid)?.academy ==
 function expColor(y: number) { return y >= 7 ? '#f5c518' : y >= 4 ? '#16a34a' : '#3b82f6' }
 
 const FIELD: React.CSSProperties = {
-  width: '100%', backgroundColor: '#111', border: '0.5px solid #333', borderRadius: 8,
-  color: '#ccc', fontSize: 13, padding: '10px 12px', outline: 'none', boxSizing: 'border-box',
+  width: '100%', backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8,
+  color: 'var(--text-secondary)', fontSize: 13, padding: '10px 12px', outline: 'none', boxSizing: 'border-box',
 }
-const LBL: React.CSSProperties = { color: '#888', fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', display: 'block', marginBottom: 5 }
+const LBL: React.CSSProperties = { color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', display: 'block', marginBottom: 5 }
 
 // ── Add Coach Modal ───────────────────────────────────────────────────────────
 
@@ -123,10 +123,10 @@ function AddCoachModal({ userRole, onSave, onClose }: { userRole: string; onSave
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 28 }}>
+      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 28 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
-          <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: 0 }}>Add Coach</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer' }}><IconX size={20} /></button>
+          <h2 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700, margin: 0 }}>Add Coach</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><IconX size={20} /></button>
         </div>
 
         <div style={{ display: 'grid', gap: 14 }}>
@@ -145,9 +145,9 @@ function AddCoachModal({ userRole, onSave, onClose }: { userRole: string; onSave
               {TEAMS.map(t => (
                 <button key={t.id} onClick={() => toggleTeam(t.id)} style={{
                   padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                  border: `1.5px solid ${form.teams.includes(t.id) ? acColor(t.id) : '#2a2a2a'}`,
-                  backgroundColor: form.teams.includes(t.id) ? `${acColor(t.id)}22` : '#111',
-                  color: form.teams.includes(t.id) ? acColor(t.id) : '#555',
+                  border: `1.5px solid ${form.teams.includes(t.id) ? acColor(t.id) : 'var(--border)'}`,
+                  backgroundColor: form.teams.includes(t.id) ? `${acColor(t.id)}22` : 'var(--bg)',
+                  color: form.teams.includes(t.id) ? acColor(t.id) : 'var(--text-muted)',
                 }}>{t.name}</button>
               ))}
             </div>
@@ -190,9 +190,9 @@ type Tab = typeof TABS[number]
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: 'flex', gap: 16, padding: '10px 0', borderBottom: '1px solid #1e1e1e' }}>
-      <span style={{ color: '#555', fontSize: 12, fontWeight: 600, minWidth: 130 }}>{label}</span>
-      <span style={{ color: '#ccc', fontSize: 13 }}>{value || '—'}</span>
+    <div style={{ display: 'flex', gap: 16, padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+      <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 600, minWidth: 130 }}>{label}</span>
+      <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{value || '—'}</span>
     </div>
   )
 }
@@ -214,15 +214,15 @@ function CoachDetailModal({ coach, userRole, onClose }: { coach: CoachRow; userR
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 16, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto', padding: 28 }}>
+      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto', padding: 28 }}>
         {/* Header */}
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 24 }}>
           <div style={{ width: 64, height: 64, borderRadius: '50%', flexShrink: 0, backgroundColor: 'rgba(245,197,24,0.12)', border: '2px solid rgba(245,197,24,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, fontSize: 22, fontWeight: 800 }}>
             {initials(coach.name)}
           </div>
           <div style={{ flex: 1 }}>
-            <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 700, margin: '0 0 4px' }}>{coach.name}</h2>
-            <p style={{ color: '#888', fontSize: 13, margin: '0 0 8px' }}>{coach.specialty}</p>
+            <h2 style={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 700, margin: '0 0 4px' }}>{coach.name}</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '0 0 8px' }}>{coach.specialty}</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {coach.teams.map(tid => (
                 <span key={tid} style={{ backgroundColor: `${acColor(tid)}22`, color: acColor(tid), fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{teamName(tid)}</span>
@@ -230,16 +230,16 @@ function CoachDetailModal({ coach, userRole, onClose }: { coach: CoachRow; userR
               <span style={{ backgroundColor: 'rgba(245,197,24,0.1)', color: '#f5c518', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{coach.experience}y exp</span>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', flexShrink: 0 }}><IconX size={20} /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}><IconX size={20} /></button>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 2, backgroundColor: '#111', borderRadius: 10, padding: 4, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 2, backgroundColor: 'var(--bg)', borderRadius: 10, padding: 4, marginBottom: 20 }}>
           {TABS.filter(t => t !== 'Private Info' || userRole === 'admin').map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               flex: 1, padding: '7px 0', borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: 'none',
-              backgroundColor: tab === t ? '#1a1a1a' : 'transparent',
-              color: tab === t ? '#fff' : '#555',
+              backgroundColor: tab === t ? 'var(--bg-card)' : 'transparent',
+              color: tab === t ? 'var(--text-primary)' : 'var(--text-muted)',
             }}>{t}</button>
           ))}
         </div>
@@ -247,13 +247,13 @@ function CoachDetailModal({ coach, userRole, onClose }: { coach: CoachRow; userR
         {/* Profile */}
         {tab === 'Profile' && (
           <div>
-            {coach.bio && <p style={{ color: '#aaa', fontSize: 13, lineHeight: 1.7, marginBottom: 16, padding: '12px 14px', backgroundColor: '#111', borderRadius: 8 }}>{coach.bio}</p>}
+            {coach.bio && <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.7, marginBottom: 16, padding: '12px 14px', backgroundColor: 'var(--bg)', borderRadius: 8 }}>{coach.bio}</p>}
             <InfoRow label="Nationality" value={coach.nationality} />
             <InfoRow label="Email" value={coach.email} />
             <InfoRow label="Date Joined" value={coach.joined} />
             <InfoRow label="Languages" value={coach.languages.join(', ')} />
             <div style={{ padding: '10px 0' }}>
-              <span style={{ color: '#555', fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 8 }}>CERTIFICATIONS</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 8 }}>CERTIFICATIONS</span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {coach.certifications.map((c, i) => (
                   <span key={i} style={{ backgroundColor: 'rgba(59,130,246,0.1)', border: '0.5px solid rgba(59,130,246,0.25)', color: '#3b82f6', fontSize: 11, padding: '3px 10px', borderRadius: 20 }}>{c}</span>
@@ -267,16 +267,16 @@ function CoachDetailModal({ coach, userRole, onClose }: { coach: CoachRow; userR
         {tab === 'Teams' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {coach.teams.length === 0 ? (
-              <p style={{ color: '#555', fontSize: 13 }}>No teams assigned.</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No teams assigned.</p>
             ) : coach.teams.map(tid => (
-              <div key={tid} style={{ padding: '16px 18px', backgroundColor: '#111', borderRadius: 10, border: `0.5px solid ${acColor(tid)}33` }}>
+              <div key={tid} style={{ padding: '16px 18px', backgroundColor: 'var(--bg)', borderRadius: 10, border: `0.5px solid ${acColor(tid)}33` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: `${acColor(tid)}22`, border: `1.5px solid ${acColor(tid)}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: acColor(tid), fontSize: 9, fontWeight: 800, textAlign: 'center', lineHeight: 1.3 }}>
                     {teamName(tid).replace(' ', '\n')}
                   </div>
                   <div>
-                    <p style={{ color: '#fff', fontSize: 14, fontWeight: 700, margin: 0 }}>{teamName(tid)}</p>
-                    <p style={{ color: '#555', fontSize: 12, margin: 0 }}>{TEAMS.find(t => t.id === tid)?.academy} Academy</p>
+                    <p style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 700, margin: 0 }}>{teamName(tid)}</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>{TEAMS.find(t => t.id === tid)?.academy} Academy</p>
                   </div>
                 </div>
               </div>
@@ -288,7 +288,7 @@ function CoachDetailModal({ coach, userRole, onClose }: { coach: CoachRow; userR
         {tab === 'Session Log' && (
           <div>
             {sessions.length === 0 ? (
-              <p style={{ color: '#555', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>No sessions recorded for this coach yet.</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>No sessions recorded for this coach yet.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {sessions.map((s, i) => {
@@ -296,10 +296,10 @@ function CoachDetailModal({ coach, userRole, onClose }: { coach: CoachRow; userR
                   const present = vals.filter(v => v === 'present').length
                   const rate = vals.length > 0 ? Math.round((vals.filter(v => v !== 'absent').length / vals.length) * 100) : 0
                   return (
-                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0', borderTop: i > 0 ? '1px solid #1e1e1e' : 'none', flexWrap: 'wrap', gap: 8 }}>
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0', borderTop: i > 0 ? '1px solid var(--border)' : 'none', flexWrap: 'wrap', gap: 8 }}>
                       <div>
-                        <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: 0 }}>{s.date} · {s.team_name}</p>
-                        <p style={{ color: '#555', fontSize: 11, margin: 0 }}>{vals.length} students</p>
+                        <p style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, margin: 0 }}>{s.date} · {s.team_name}</p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: 11, margin: 0 }}>{vals.length} students</p>
                       </div>
                       <div style={{ display: 'flex', gap: 12 }}>
                         <span style={{ color: '#16a34a', fontSize: 12, fontWeight: 600 }}>{present} present</span>
@@ -339,8 +339,8 @@ function CoachCard({ coach, onClick }: { coach: CoachRow; onClick: () => void })
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        backgroundColor: '#1a1a1a',
-        border: `0.5px solid ${hov ? 'rgba(245,197,24,0.3)' : '#2a2a2a'}`,
+        backgroundColor: 'var(--bg-card)',
+        border: `0.5px solid ${hov ? 'rgba(245,197,24,0.3)' : 'var(--border)'}`,
         borderRadius: 14, padding: 22, cursor: 'pointer',
         transition: 'all 0.2s ease',
         transform: hov ? 'translateY(-2px)' : 'none',
@@ -353,8 +353,8 @@ function CoachCard({ coach, onClick }: { coach: CoachRow; onClick: () => void })
           {initials(coach.name)}
         </div>
         <div style={{ minWidth: 0 }}>
-          <p style={{ color: '#fff', fontSize: 15, fontWeight: 700, margin: '0 0 3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{coach.name}</p>
-          <p style={{ color: '#888', fontSize: 12, margin: 0 }}>{coach.specialty}</p>
+          <p style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, margin: '0 0 3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{coach.name}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: 0 }}>{coach.specialty}</p>
         </div>
       </div>
 
@@ -366,8 +366,8 @@ function CoachCard({ coach, onClick }: { coach: CoachRow; onClick: () => void })
       </div>
 
       {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid #222' }}>
-        <span style={{ color: '#555', fontSize: 12 }}>Since {new Date(coach.joined).getFullYear()}</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Since {new Date(coach.joined).getFullYear()}</span>
         <span style={{ backgroundColor: `${expColor(coach.experience)}1a`, color: expColor(coach.experience), fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20 }}>
           {coach.experience}y exp
         </span>
@@ -439,8 +439,8 @@ export default function CoachesPage() {
   }), [coaches, search, filterTeam, selectedAcademy])
 
   const SEL: React.CSSProperties = {
-    backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 8,
-    color: '#ccc', fontSize: 13, padding: '9px 32px 9px 12px', outline: 'none',
+    backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8,
+    color: 'var(--text-secondary)', fontSize: 13, padding: '9px 32px 9px 12px', outline: 'none',
     appearance: 'none', cursor: 'pointer',
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 010 1.659l-4.796 5.48a1 1 0 01-1.506 0z'/%3E%3C/svg%3E")`,
     backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', backgroundSize: '11px',
@@ -458,8 +458,8 @@ export default function CoachesPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Coaches</h1>
-          <p style={{ color: '#555', fontSize: 14, margin: 0 }}>{coaches.length} coaches across {TEAMS.length} teams</p>
+          <h1 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Coaches</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>{coaches.length} coaches across {TEAMS.length} teams</p>
         </div>
         <button onClick={() => setShowAdd(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
           <IconPlus size={16} stroke={2.5} /> Add Coach
@@ -471,7 +471,7 @@ export default function CoachesPage() {
         <input
           value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search coaches…"
-          style={{ ...FIELD, maxWidth: 220, padding: '9px 12px', backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 8, color: '#ccc', fontSize: 13, outline: 'none' }}
+          style={{ ...FIELD, maxWidth: 220, padding: '9px 12px', backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8, color: 'var(--text-secondary)', fontSize: 13, outline: 'none' }}
         />
         <select value={filterTeam} onChange={e => setFilterTeam(e.target.value)} style={SEL}>
           <option value="All">All Teams</option>
@@ -485,7 +485,7 @@ export default function CoachesPage() {
           <CoachCard key={c.id} coach={c} onClick={() => setSelected(c)} />
         ))}
         {filtered.length === 0 && (
-          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '48px 0', color: '#555', fontSize: 14 }}>
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)', fontSize: 14 }}>
             No coaches match your search.
           </div>
         )}

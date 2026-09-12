@@ -46,12 +46,14 @@ function FloatingField({
   value,
   onChange,
   multiline = false,
+  required = false,
 }: {
   label: string
   type?: string
   value: string
   onChange: (v: string) => void
   multiline?: boolean
+  required?: boolean
 }) {
   const [focused, setFocused] = useState(false)
   const up = focused || value.length > 0
@@ -80,6 +82,7 @@ function FloatingField({
       <Tag
         type={type}
         value={value}
+        required={required}
         onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
@@ -166,8 +169,8 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
           </h2>
 
           <form onSubmit={handleSubmit}>
-            <FloatingField label="Full Name"    value={form.name}    onChange={set('name')}  />
-            <FloatingField label="Email"        type="email" value={form.email}   onChange={set('email')} />
+            <FloatingField label="Full Name"    value={form.name}    onChange={set('name')}  required />
+            <FloatingField label="Email"        type="email" value={form.email}   onChange={set('email')} required />
             <FloatingField label="Phone"        type="tel"   value={form.phone}   onChange={set('phone')} />
             <FloatingField label="Child's Age"  type="number" value={form.age}   onChange={set('age')}   />
 

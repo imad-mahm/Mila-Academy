@@ -173,15 +173,15 @@ async function exportToExcel(rows: Array<{ student: StudentRow; payment: Payment
 
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 12, ...style }}>
+    <div style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 12, ...style }}>
       {children}
     </div>
   )
 }
 
 const FIELD: React.CSSProperties = {
-  width: '100%', backgroundColor: '#111', border: '0.5px solid #333', borderRadius: 8,
-  color: '#ccc', fontSize: 13, padding: '10px 12px', outline: 'none',
+  width: '100%', backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8,
+  color: 'var(--text-secondary)', fontSize: 13, padding: '10px 12px', outline: 'none',
   boxSizing: 'border-box', colorScheme: 'dark',
 }
 const SEL: React.CSSProperties = {
@@ -189,7 +189,7 @@ const SEL: React.CSSProperties = {
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 010 1.659l-4.796 5.48a1 1 0 01-1.506 0z'/%3E%3C/svg%3E")`,
   backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', backgroundSize: '11px',
 }
-const LBL: React.CSSProperties = { color: '#888', fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', display: 'block', marginBottom: 5 }
+const LBL: React.CSSProperties = { color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', display: 'block', marginBottom: 5 }
 
 // ── Mark Paid Modal ───────────────────────────────────────────────────────────
 
@@ -212,13 +212,13 @@ function MarkPaidModal({
       style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
       onClick={onClose}
     >
-      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 16, width: '100%', maxWidth: 460, padding: 28 }}>
+      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 460, padding: 28 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
           <div>
-            <h2 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 2px' }}>Mark as Paid</h2>
-            <p style={{ color: '#555', fontSize: 12, margin: 0 }}>{student.name} · {month}</p>
+            <h2 style={{ color: 'var(--text-primary)', fontSize: 17, fontWeight: 700, margin: '0 0 2px' }}>Mark as Paid</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>{student.name} · {month}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer' }}><IconX size={20} /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><IconX size={20} /></button>
         </div>
 
         <div style={{ display: 'grid', gap: 14 }}>
@@ -364,7 +364,7 @@ export default function PaymentsPage() {
   }
 
   function SortIndicator({ col }: { col: typeof sortCol }) {
-    return <span style={{ marginLeft: 3, fontSize: 9, color: sortCol === col ? '#f5c518' : '#333' }}>{sortCol === col ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}</span>
+    return <span style={{ marginLeft: 3, fontSize: 9, color: sortCol === col ? '#f5c518' : 'var(--text-muted)' }}>{sortCol === col ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}</span>
   }
 
   const filterSel: React.CSSProperties = { ...SEL, fontSize: 12 }
@@ -382,12 +382,12 @@ export default function PaymentsPage() {
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Payments</h1>
-          <p style={{ color: '#555', fontSize: 14, margin: 0 }}>Track and manage student fees across all teams.</p>
+          <h1 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Payments</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>Track and manage student fees across all teams.</p>
         </div>
         <button
           onClick={() => exportToExcel(filteredRows, selectedMonth)}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: '#1a1a1a', color: '#ccc', border: '0.5px solid #2a2a2a', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)', border: '0.5px solid var(--border)', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
         >
           ↓ Export Excel
         </button>
@@ -403,13 +403,13 @@ export default function PaymentsPage() {
         ].map(s => (
           <Card key={s.label} style={{ padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-              <span style={{ color: '#888', fontSize: 12, fontWeight: 600 }}>{s.label}</span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600 }}>{s.label}</span>
               <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
                 {s.icon}
               </div>
             </div>
-            <p style={{ color: '#fff', fontSize: 30, fontWeight: 800, margin: '0 0 2px', letterSpacing: '-0.5px' }}>{s.val}</p>
-            <p style={{ color: '#555', fontSize: 12, margin: 0 }}>{s.sub}</p>
+            <p style={{ color: 'var(--text-primary)', fontSize: 30, fontWeight: 800, margin: '0 0 2px', letterSpacing: '-0.5px' }}>{s.val}</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>{s.sub}</p>
           </Card>
         ))}
       </div>
@@ -417,7 +417,7 @@ export default function PaymentsPage() {
       {/* ── Filter bar ───────────────────────────────────────────────────── */}
       <Card style={{ padding: '13px 18px', marginBottom: 14 }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#555', fontSize: 12 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)', fontSize: 12 }}>
             <IconFilter size={13} /> Filter:
           </span>
 
@@ -449,13 +449,13 @@ export default function PaymentsPage() {
 
           {/* Sort buttons */}
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
-            <span style={{ color: '#555', fontSize: 11 }}>Sort:</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Sort:</span>
             {(['name', 'status', 'amount'] as const).map(col => (
               <button key={col} onClick={() => clickSort(col)} style={{
                 padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                border: `0.5px solid ${sortCol === col ? '#f5c518' : '#2a2a2a'}`,
-                backgroundColor: sortCol === col ? 'rgba(245,197,24,0.1)' : '#111',
-                color: sortCol === col ? '#f5c518' : '#555',
+                border: `0.5px solid ${sortCol === col ? '#f5c518' : 'var(--border)'}`,
+                backgroundColor: sortCol === col ? 'rgba(245,197,24,0.1)' : 'var(--bg-card)',
+                color: sortCol === col ? '#f5c518' : 'var(--text-muted)',
                 textTransform: 'capitalize',
               }}>
                 {col} <SortIndicator col={col} />
@@ -467,10 +467,10 @@ export default function PaymentsPage() {
 
       {/* ── Payments table ───────────────────────────────────────────────── */}
       <Card style={{ marginBottom: 24, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid #1e1e1e' }}>
-          <h2 style={{ color: '#fff', fontSize: 15, fontWeight: 700, margin: 0 }}>
+        <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--border)' }}>
+          <h2 style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, margin: 0 }}>
             {filteredRows.length} students
-            <span style={{ color: '#555', fontWeight: 400, fontSize: 13, marginLeft: 8 }}>— {selectedMonth}</span>
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: 13, marginLeft: 8 }}>— {selectedMonth}</span>
           </h2>
         </div>
 
@@ -479,7 +479,7 @@ export default function PaymentsPage() {
             <thead>
               <tr>
                 {['Student', 'Team', 'Academy', 'Status', 'Amount', 'Due Date', 'Actions'].map(h => (
-                  <th key={h} style={{ color: '#555', fontSize: 10, fontWeight: 700, letterSpacing: '0.8px', padding: '10px 16px', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                  <th key={h} style={{ color: 'var(--text-muted)', fontSize: 10, fontWeight: 700, letterSpacing: '0.8px', padding: '10px 16px', textAlign: 'left', whiteSpace: 'nowrap' }}>
                     {h.toUpperCase()}
                   </th>
                 ))}
@@ -492,51 +492,51 @@ export default function PaymentsPage() {
                 return (
                   <tr key={student.id} className="pay-tr">
                     {/* Student */}
-                    <td style={{ padding: '12px 16px', borderTop: '1px solid #1a1a1a' }}>
+                    <td style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{ width: 34, height: 34, borderRadius: '50%', flexShrink: 0, backgroundColor: `${col}1a`, border: `1.5px solid ${col}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: col, fontSize: 11, fontWeight: 700 }}>
                           {initials(student.name)}
                         </div>
                         <div>
-                          <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: 0 }}>{student.name}</p>
-                          <p style={{ color: '#555', fontSize: 11, margin: 0 }}>#{student.jersey_number}</p>
+                          <p style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, margin: 0 }}>{student.name}</p>
+                          <p style={{ color: 'var(--text-muted)', fontSize: 11, margin: 0 }}>#{student.jersey_number}</p>
                         </div>
                       </div>
                     </td>
 
                     {/* Team */}
-                    <td style={{ padding: '12px 16px', borderTop: '1px solid #1a1a1a' }}>
+                    <td style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
                       <span style={{ color: col, fontSize: 12, fontWeight: 600 }}>{teamName(student.team_id)}</span>
                     </td>
 
                     {/* Academy */}
-                    <td style={{ padding: '12px 16px', borderTop: '1px solid #1a1a1a' }}>
+                    <td style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
                       <span style={{ display: 'inline-block', padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: `${col}1a`, color: col }}>
                         {student.academy}
                       </span>
                     </td>
 
                     {/* Status */}
-                    <td style={{ padding: '12px 16px', borderTop: '1px solid #1a1a1a' }}>
+                    <td style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
                       <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, backgroundColor: cfg.bg, color: cfg.color }}>
                         {cfg.label}
                       </span>
                     </td>
 
                     {/* Amount */}
-                    <td style={{ padding: '12px 16px', borderTop: '1px solid #1a1a1a' }}>
-                      <span style={{ color: payment.status !== 'unpaid' ? '#fff' : '#444', fontSize: 13, fontWeight: 600 }}>
+                    <td style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
+                      <span style={{ color: payment.status !== 'unpaid' ? 'var(--text-primary)' : 'var(--text-muted)', fontSize: 13, fontWeight: 600 }}>
                         {payment.status === 'unpaid' ? '—' : `$${payment.amount}`}
                       </span>
                     </td>
 
                     {/* Due date */}
-                    <td style={{ padding: '12px 16px', borderTop: '1px solid #1a1a1a' }}>
-                      <span style={{ color: '#888', fontSize: 12 }}>{student.payment_due_date}</span>
+                    <td style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{student.payment_due_date}</span>
                     </td>
 
                     {/* Actions */}
-                    <td style={{ padding: '12px 16px', borderTop: '1px solid #1a1a1a' }}>
+                    <td style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'nowrap' }}>
                         {payment.status !== 'paid' && (
                           <button onClick={() => setMarkPaidTarget(student)} style={{ display: 'flex', alignItems: 'center', gap: 4, backgroundColor: 'rgba(22,163,74,0.12)', border: '0.5px solid rgba(22,163,74,0.3)', color: '#16a34a', fontSize: 11, fontWeight: 700, padding: '6px 10px', borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap' }}>
@@ -558,7 +558,7 @@ export default function PaymentsPage() {
               })}
               {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ padding: '40px 0', textAlign: 'center', color: '#555', fontSize: 14 }}>
+                  <td colSpan={7} style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
                     No students match your filters.
                   </td>
                 </tr>
@@ -576,27 +576,27 @@ export default function PaymentsPage() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <IconCalendar size={17} style={{ color: '#f5c518' }} />
-            <h2 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: 0 }}>
+            <h2 style={{ color: 'var(--text-primary)', fontSize: 16, fontWeight: 700, margin: 0 }}>
               Payment History
-              <span style={{ color: '#555', fontSize: 12, fontWeight: 400, marginLeft: 8 }}>({history.length} records)</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 400, marginLeft: 8 }}>({history.length} records)</span>
             </h2>
           </div>
-          <IconChevronDown size={18} style={{ color: '#555', transform: histOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+          <IconChevronDown size={18} style={{ color: 'var(--text-muted)', transform: histOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
         </div>
 
         {histOpen && (
           history.length === 0
-            ? <p style={{ color: '#555', fontSize: 14, textAlign: 'center', padding: '28px 0' }}>No payment records yet.</p>
+            ? <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', padding: '28px 0' }}>No payment records yet.</p>
             : <div>
                 {history.map((entry, i) => {
                   const col = entry.academy === 'MBA' ? '#f97316' : '#16a34a'
                   const cfg = STATUS_CFG[entry.status]
                   return (
-                    <div key={`${entry.student_id}-${entry.month}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0', borderTop: i > 0 ? '1px solid #1a1a1a' : 'none' }}>
+                    <div key={`${entry.student_id}-${entry.month}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0', borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
                       {/* Timeline dot + line */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 14, flexShrink: 0 }}>
                         <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: cfg.color, border: `2px solid ${cfg.bg}`, flexShrink: 0 }} />
-                        {i < history.length - 1 && <div style={{ width: 1, height: 22, backgroundColor: '#1e1e1e', marginTop: 3 }} />}
+                        {i < history.length - 1 && <div style={{ width: 1, height: 22, backgroundColor: 'var(--border)', marginTop: 3 }} />}
                       </div>
 
                       {/* Avatar */}
@@ -607,17 +607,17 @@ export default function PaymentsPage() {
                       {/* Info */}
                       <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                         <div>
-                          <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: '0 0 1px' }}>{entry.student_name}</p>
-                          <p style={{ color: '#555', fontSize: 11, margin: 0 }}>{entry.team_name} · {entry.month}</p>
+                          <p style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, margin: '0 0 1px' }}>{entry.student_name}</p>
+                          <p style={{ color: 'var(--text-muted)', fontSize: 11, margin: 0 }}>{entry.team_name} · {entry.month}</p>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                           <div style={{ textAlign: 'right' }}>
                             <p style={{ color: '#16a34a', fontSize: 14, fontWeight: 700, margin: '0 0 1px' }}>${entry.amount}</p>
-                            <p style={{ color: '#555', fontSize: 11, margin: 0, textTransform: 'capitalize' }}>{entry.method || '—'}</p>
+                            <p style={{ color: 'var(--text-muted)', fontSize: 11, margin: 0, textTransform: 'capitalize' }}>{entry.method || '—'}</p>
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <p style={{ color: '#888', fontSize: 12, margin: '0 0 1px' }}>{entry.paid_date}</p>
-                            <p style={{ color: '#444', fontSize: 11, margin: 0 }}>by {entry.recorded_by}</p>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: '0 0 1px' }}>{entry.paid_date}</p>
+                            <p style={{ color: 'var(--text-muted)', fontSize: 11, margin: 0 }}>by {entry.recorded_by}</p>
                           </div>
                           <span style={{ backgroundColor: cfg.bg, color: cfg.color, fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20 }}>
                             {cfg.label}

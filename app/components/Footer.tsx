@@ -36,7 +36,8 @@ function YtSvg() {
   )
 }
 
-export default function Footer({ settings }: { settings: SiteSettings }) {
+export default function Footer({ settings, hasGallery = true }: { settings: SiteSettings; hasGallery?: boolean }) {
+  const navLinks = hasGallery ? NAV_LINKS : NAV_LINKS.filter(l => l.id !== 'gallery')
   const SOCIALS = [
     { href: settings.instagram_url, icon: <IgSvg />, label: 'Instagram' },
     { href: settings.facebook_url,  icon: <FbSvg />, label: 'Facebook'  },
@@ -123,7 +124,7 @@ export default function Footer({ settings }: { settings: SiteSettings }) {
             Navigation
           </p>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <button
                 key={link.id}
                 onClick={() => scrollToSection(link.id)}

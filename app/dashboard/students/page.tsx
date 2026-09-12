@@ -35,7 +35,7 @@ function Stars({ rating }: { rating: number }) {
       )}
       {hasHalf && <IconStarFilled size={12} style={{ color: '#f5c518', opacity: 0.45 }} />}
       {Array.from({ length: empty }).map((_, i) =>
-        <IconStar key={`e${i}`} size={12} style={{ color: '#444' }} />
+        <IconStar key={`e${i}`} size={12} style={{ color: 'var(--text-muted)' }} />
       )}
     </span>
   )
@@ -77,8 +77,8 @@ function StudentCard({ student, onClick }: { student: StudentRow; onClick: () =>
       }}
     >
       <div style={{
-        backgroundColor: '#1a1a1a',
-        border: `0.5px solid ${hovered ? '#f5c518' : '#2a2a2a'}`,
+        backgroundColor: 'var(--bg-card)',
+        border: `0.5px solid ${hovered ? '#f5c518' : 'var(--border)'}`,
         borderRadius: 12,
         padding: '20px 20px 16px',
         transition: 'border-color 0.2s ease, transform 0.15s ease',
@@ -100,8 +100,8 @@ function StudentCard({ student, onClick }: { student: StudentRow; onClick: () =>
           {/* Jersey + academy */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
             <span style={{
-              backgroundColor: '#111', border: '0.5px solid #333',
-              color: '#888', fontSize: 12, fontWeight: 700,
+              backgroundColor: 'var(--bg)', border: '0.5px solid var(--border)',
+              color: 'var(--text-secondary)', fontSize: 12, fontWeight: 700,
               padding: '2px 8px', borderRadius: 6,
             }}>
               #{student.jersey_number}
@@ -111,10 +111,10 @@ function StudentCard({ student, onClick }: { student: StudentRow; onClick: () =>
         </div>
 
         {/* Name + position */}
-        <p style={{ color: '#fff', fontSize: 15, fontWeight: 700, margin: '0 0 3px' }}>
+        <p style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, margin: '0 0 3px' }}>
           {student.name}
         </p>
-        <p style={{ color: '#666', fontSize: 12, margin: '0 0 12px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 12, margin: '0 0 12px' }}>
           {student.position} · {team}
         </p>
 
@@ -123,7 +123,7 @@ function StudentCard({ student, onClick }: { student: StudentRow; onClick: () =>
           <Badge label={pmnt.label} bg={pmnt.bg} color={pmnt.color} />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
             <Stars rating={student.overall_rating} />
-            <span style={{ color: '#555', fontSize: 11 }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>
               {student.attendance_rate}% attendance
             </span>
           </div>
@@ -157,8 +157,8 @@ function Field({
       <label style={{
         position: 'absolute', left: 12, top: '50%',
         transform: lifted ? 'translateY(-165%)' : 'translateY(-50%)',
-        fontSize: lifted ? 10 : 13, color: lifted ? '#f5c518' : '#555',
-        backgroundColor: '#111', padding: lifted ? '0 4px' : '0',
+        fontSize: lifted ? 10 : 13, color: lifted ? '#f5c518' : 'var(--text-muted)',
+        backgroundColor: 'var(--bg-card)', padding: lifted ? '0 4px' : '0',
         transition: 'all 0.15s ease', pointerEvents: 'none', zIndex: 1, lineHeight: 1,
       }}>
         {label}
@@ -171,8 +171,8 @@ function Field({
         onBlur={() => setFocused(false)}
         style={{
           width: '100%', padding: '14px 12px', boxSizing: 'border-box',
-          backgroundColor: '#111', border: `1px solid ${focused ? '#f5c518' : '#2a2a2a'}`,
-          borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none',
+          backgroundColor: 'var(--bg-card)', border: `1px solid ${focused ? '#f5c518' : 'var(--border)'}`,
+          borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, outline: 'none',
           fontFamily: 'inherit', transition: 'border-color 0.15s ease',
         }}
       />
@@ -192,7 +192,7 @@ function SelectField({
       <label style={{
         position: 'absolute', left: 12, top: 0,
         transform: 'translateY(-50%)', fontSize: 10, color: '#f5c518',
-        backgroundColor: '#111', padding: '0 4px', zIndex: 1, lineHeight: 1,
+        backgroundColor: 'var(--bg-card)', padding: '0 4px', zIndex: 1, lineHeight: 1,
       }}>
         {label}
       </label>
@@ -203,8 +203,8 @@ function SelectField({
         onBlur={() => setFocused(false)}
         style={{
           width: '100%', padding: '14px 12px', boxSizing: 'border-box',
-          backgroundColor: '#111', border: `1px solid ${focused ? '#f5c518' : '#2a2a2a'}`,
-          borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none',
+          backgroundColor: 'var(--bg-card)', border: `1px solid ${focused ? '#f5c518' : 'var(--border)'}`,
+          borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, outline: 'none',
           appearance: 'none', cursor: 'pointer',
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 010 1.659l-4.796 5.48a1 1 0 01-1.506 0z'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '11px',
@@ -280,14 +280,14 @@ function AddStudentModal({
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div style={{
-        backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a',
+        backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)',
         borderRadius: 16, width: '100%', maxWidth: 520,
         maxHeight: '90vh', display: 'flex', flexDirection: 'column',
       }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 0' }}>
-          <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: 0 }}>Add New Student</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', padding: 4 }}>
+          <h2 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700, margin: 0 }}>Add New Student</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}>
             <IconX size={20} />
           </button>
         </div>
@@ -300,8 +300,8 @@ function AddStudentModal({
               onClick={() => setSection(s.key)}
               style={{
                 flex: 1, padding: '7px 4px', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                backgroundColor: section === s.key ? 'rgba(245,197,24,0.15)' : '#111',
-                color: section === s.key ? '#f5c518' : '#666',
+                backgroundColor: section === s.key ? 'rgba(245,197,24,0.15)' : 'var(--bg-card)',
+                color: section === s.key ? '#f5c518' : 'var(--text-muted)',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -363,15 +363,15 @@ function AddStudentModal({
               />
               <Field label="Amount Paid ($)" value={form.payment_amount} onChange={set('payment_amount')} type="number" />
               <div style={{ position: 'relative' }}>
-                <label style={{ display: 'block', color: '#555', fontSize: 11, marginBottom: 6 }}>Notes</label>
+                <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: 11, marginBottom: 6 }}>Notes</label>
                 <textarea
                   value={form.notes}
                   onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
                   rows={3}
                   style={{
                     width: '100%', padding: 12, boxSizing: 'border-box',
-                    backgroundColor: '#111', border: '1px solid #2a2a2a',
-                    borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none',
+                    backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)',
+                    borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, outline: 'none',
                     resize: 'vertical', fontFamily: 'inherit',
                   }}
                 />
@@ -382,8 +382,8 @@ function AddStudentModal({
           {/* Footer buttons */}
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
             <button type="button" onClick={onClose} style={{
-              flex: 1, height: 44, borderRadius: 8, border: '1px solid #2a2a2a',
-              backgroundColor: '#111', color: '#888', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              flex: 1, height: 44, borderRadius: 8, border: '1px solid var(--border)',
+              backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, cursor: 'pointer',
             }}>
               Cancel
             </button>
@@ -471,8 +471,8 @@ export default function StudentsPage() {
   }, [students, search, academy, team, payment])
 
   const filterSelect: React.CSSProperties = {
-    backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 8,
-    color: '#ccc', fontSize: 13, padding: '9px 32px 9px 12px', outline: 'none',
+    backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8,
+    color: 'var(--text-secondary)', fontSize: 13, padding: '9px 32px 9px 12px', outline: 'none',
     appearance: 'none', cursor: 'pointer',
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 010 1.659l-4.796 5.48a1 1 0 01-1.506 0z'/%3E%3C/svg%3E")`,
     backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', backgroundSize: '11px',
@@ -495,8 +495,8 @@ export default function StudentsPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <div>
-          <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Students</h1>
-          <p style={{ color: '#555', fontSize: 14, margin: 0 }}>
+          <h1 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Students</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
             {filtered.length} of {students.length} students
           </p>
         </div>
@@ -520,7 +520,7 @@ export default function StudentsPage() {
         {/* Search */}
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
           <IconSearch size={15} style={{
-            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#555',
+            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)',
           }} />
           <input
             type="text"
@@ -530,14 +530,14 @@ export default function StudentsPage() {
             style={{
               width: '100%', boxSizing: 'border-box',
               padding: '9px 12px 9px 36px',
-              backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a',
-              borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none',
+              backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)',
+              borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, outline: 'none',
             }}
           />
           {search && (
             <button onClick={() => setSearch('')} style={{
               position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-              background: 'none', border: 'none', color: '#666', cursor: 'pointer', padding: 2,
+              background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 2,
             }}>
               <IconX size={14} />
             </button>
@@ -579,8 +579,8 @@ export default function StudentsPage() {
           marginTop: 60, textAlign: 'center',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
         }}>
-          <IconUsers size={40} style={{ color: '#333' }} />
-          <p style={{ color: '#555', fontSize: 15, margin: 0 }}>No students match your filters.</p>
+          <IconUsers size={40} style={{ color: 'var(--border)' }} />
+          <p style={{ color: 'var(--text-muted)', fontSize: 15, margin: 0 }}>No students match your filters.</p>
           <button
             onClick={() => { setSearch(''); setAcademy('All'); setTeam('All'); setPayment('All') }}
             style={{ background: 'none', border: 'none', color: '#f5c518', fontSize: 13, cursor: 'pointer' }}

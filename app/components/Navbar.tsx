@@ -50,9 +50,10 @@ function CloseIcon() {
   )
 }
 
-export default function Navbar() {
+export default function Navbar({ hasGallery = true }: { hasGallery?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const navLinks = hasGallery ? NAV_LINKS : NAV_LINKS.filter(l => l.id !== 'gallery')
 
   useEffect(() => {
     const saved = localStorage.getItem('mila-theme') as 'dark' | 'light' | null
@@ -150,7 +151,7 @@ export default function Navbar() {
           flex: 1, display: 'flex', alignItems: 'center',
           justifyContent: 'center', gap: 32,
         }}>
-          {NAV_LINKS.map(l => (
+          {navLinks.map(l => (
             <button key={l.id} className="nb-link" onClick={() => handleNav(l.id)}>
               {l.label}
             </button>
@@ -199,7 +200,7 @@ export default function Navbar() {
           >
             <CloseIcon />
           </button>
-          {NAV_LINKS.map(l => (
+          {navLinks.map(l => (
             <button key={l.id} className="mob-link" onClick={() => handleNav(l.id)}>
               {l.label}
             </button>

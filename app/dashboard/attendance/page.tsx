@@ -125,22 +125,25 @@ function initials(name: string) {
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
 
-function Toast({ message, onDone }: { message: string; onDone: () => void }) {
+function Toast({ message, kind = 'success', onDone }: { message: string; kind?: 'success' | 'error' | 'info'; onDone: () => void }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 3000)
+    const t = setTimeout(onDone, kind === 'error' ? 5000 : 3500)
     return () => clearTimeout(t)
-  }, [onDone])
+  }, [onDone, kind])
+  const color = kind === 'error' ? '#ef4444' : kind === 'info' ? '#3b82f6' : '#16a34a'
+  const Icon  = kind === 'error' ? IconAlertCircle : IconCheck
   return (
     <div style={{
       position: 'fixed', bottom: 28, right: 90, zIndex: 1000,
-      backgroundColor: '#16a34a', color: '#fff',
+      backgroundColor: color, color: '#fff',
       padding: '13px 20px', borderRadius: 12,
       fontSize: 14, fontWeight: 600,
       display: 'flex', alignItems: 'center', gap: 10,
-      boxShadow: '0 8px 32px rgba(22,163,74,0.4)',
+      boxShadow: `0 8px 32px ${color}66`,
       animation: 'toastIn 0.3s ease',
+      maxWidth: 380,
     }}>
-      <IconCheck size={18} />
+      <Icon size={18} />
       {message}
     </div>
   )
@@ -150,7 +153,7 @@ function Toast({ message, onDone }: { message: string; onDone: () => void }) {
 
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 12, ...style }}>
+    <div style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 12, ...style }}>
       {children}
     </div>
   )
@@ -214,6 +217,7 @@ export default function AttendancePage() {
   const [date,        setDate]        = useState(isoToday)
   const [statusMap,   setStatusMap]   = useState<Record<string, Status>>({})
   const [toast,       setToast]       = useState('')
+  const [toastKind,   setToastKind]   = useState<'success' | 'error' | 'info'>('success')
   const authUser = getCurrentUser()
   const [coachName]   = useState(() => authUser?.name ?? 'Coach')
   const [allStudents] = useState<StudentRow[]>(() => {
@@ -239,14 +243,6 @@ export default function AttendancePage() {
   const [histFrom,      setHistFrom]      = useState('')
   const [histTo,        setHistTo]        = useState('')
 
-  function selectTeam(id: string) {
-    setTeamId(id)
-    if (!id) { setStatusMap({}); return }
-    const init: Record<string, Status> = {}
-    allStudents.filter(s => s.team_id === id).forEach(s => { init[s.id] = 'present' })
-    setStatusMap(init)
-  }
-
   // ── Derived data ─────────────────────────────────────────────────────────
   const visibleTeams = useMemo(
     () => selectedAcademy === 'Both' ? TEAMS : TEAMS.filter(t => t.academy === selectedAcademy),
@@ -263,6 +259,36 @@ export default function AttendancePage() {
     return [...savedSessions, ...DUMMY_SESSIONS.filter(d => !ids.has(d.id))]
       .sort((a, b) => b.date.localeCompare(a.date))
   }, [savedSessions])
+
+  function notify(message: string, kind: 'success' | 'error' | 'info' = 'success') {
+    setToastKind(kind)
+    setToast(message)
+  }
+
+  // Loads the already-recorded session for this team+date if one exists, instead
+  // of silently defaulting to all-present and discarding what a coach already entered.
+  function loadOrInitStatusMap(id: string, forDate: string) {
+    if (!id) { setStatusMap({}); return }
+    const existing = allSessions.find(s => s.team_id === id && s.date === forDate)
+    if (existing) {
+      setStatusMap({ ...existing.records })
+      notify(`Loaded existing session for ${teamName(id)} — ${forDate} (recorded by ${existing.coach})`, 'info')
+      return
+    }
+    const init: Record<string, Status> = {}
+    allStudents.filter(s => s.team_id === id).forEach(s => { init[s.id] = 'present' })
+    setStatusMap(init)
+  }
+
+  function selectTeam(id: string) {
+    setTeamId(id)
+    loadOrInitStatusMap(id, date)
+  }
+
+  function changeDate(newDate: string) {
+    setDate(newDate)
+    if (teamId) loadOrInitStatusMap(teamId, newDate)
+  }
 
   // ── Stats (last 30 days) ─────────────────────────────────────────────────
   const stats = useMemo(() => {
@@ -346,25 +372,29 @@ export default function AttendancePage() {
       saved_at:     new Date().toISOString(),
     }
     const next = [newSession, ...savedSessions.filter(s => !(s.date === date && s.team_id === teamId))]
-    setSavedSessions(next)
-    try { localStorage.setItem('mila_attendance_sessions', JSON.stringify(next)) } catch {}
-    setToast(`Attendance saved for ${teamName(teamId)} — ${date}`)
+    try {
+      localStorage.setItem('mila_attendance_sessions', JSON.stringify(next))
+      setSavedSessions(next)
+      notify(`Attendance saved for ${teamName(teamId)} — ${date}`, 'success')
+    } catch {
+      notify('Failed to save — your browser storage may be full or unavailable. Try again.', 'error')
+    }
   }
 
   const hideDismiss = useCallback(() => setToast(''), [])
 
   // ── Filter select style ───────────────────────────────────────────────────
   const sel: React.CSSProperties = {
-    backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 8,
-    color: '#ccc', fontSize: 13, padding: '9px 32px 9px 12px', outline: 'none',
+    backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8,
+    color: 'var(--text-secondary)', fontSize: 13, padding: '9px 32px 9px 12px', outline: 'none',
     appearance: 'none', cursor: 'pointer',
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 010 1.659l-4.796 5.48a1 1 0 01-1.506 0z'/%3E%3C/svg%3E")`,
     backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', backgroundSize: '11px',
   }
 
   const dateInput: React.CSSProperties = {
-    backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 8,
-    color: '#ccc', fontSize: 13, padding: '9px 12px', outline: 'none',
+    backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8,
+    color: 'var(--text-secondary)', fontSize: 13, padding: '9px 12px', outline: 'none',
     colorScheme: 'dark',
   }
 
@@ -381,13 +411,13 @@ export default function AttendancePage() {
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Attendance</h1>
-        <p style={{ color: '#555', fontSize: 14, margin: 0 }}>Track and review session attendance across all teams.</p>
+        <h1 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Attendance</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>Track and review session attendance across all teams.</p>
       </div>
 
       {/* ══ TAKE ATTENDANCE ════════════════════════════════════════════════ */}
       <Card style={{ padding: 24, marginBottom: 24 }}>
-        <h2 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: '0 0 20px' }}>
+        <h2 style={{ color: 'var(--text-primary)', fontSize: 17, fontWeight: 700, margin: '0 0 20px' }}>
           Take Attendance
         </h2>
 
@@ -400,7 +430,7 @@ export default function AttendancePage() {
           <input
             type="date"
             value={date}
-            onChange={e => setDate(e.target.value)}
+            onChange={e => changeDate(e.target.value)}
             style={dateInput}
           />
         </div>
@@ -410,9 +440,9 @@ export default function AttendancePage() {
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {/* Column labels */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', padding: '0 12px 8px', borderBottom: '1px solid #222', marginBottom: 4 }}>
-                <span style={{ color: '#555', fontSize: 11, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>Student</span>
-                <span style={{ color: '#555', fontSize: 11, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>Status</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', padding: '0 12px 8px', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>Student</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>Status</span>
               </div>
 
               {teamStudents.map((student, i) => {
@@ -440,8 +470,8 @@ export default function AttendancePage() {
                         {initials(student.name)}
                       </div>
                       <div style={{ minWidth: 0 }}>
-                        <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, margin: 0 }}>{student.name}</p>
-                        <p style={{ color: '#555', fontSize: 12, margin: 0 }}>#{student.jersey_number} · {student.position}</p>
+                        <p style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, margin: 0 }}>{student.name}</p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>#{student.jersey_number} · {student.position}</p>
                       </div>
                     </div>
 
@@ -464,7 +494,7 @@ export default function AttendancePage() {
             {/* Summary row + save */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              marginTop: 20, paddingTop: 16, borderTop: '1px solid #222', flexWrap: 'wrap', gap: 12,
+              marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: 12,
             }}>
               <div style={{ display: 'flex', gap: 20 }}>
                 {(['present', 'late', 'absent'] as Status[]).map(s => {
@@ -492,11 +522,11 @@ export default function AttendancePage() {
             </div>
           </>
         ) : teamId ? (
-          <p style={{ color: '#555', fontSize: 14, textAlign: 'center', padding: '24px 0' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', padding: '24px 0' }}>
             No students found in this team.
           </p>
         ) : (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: '#444' }}>
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)' }}>
             <IconUsers size={36} style={{ marginBottom: 12 }} />
             <p style={{ fontSize: 14, margin: 0 }}>Select a team to start taking attendance.</p>
           </div>
@@ -508,74 +538,74 @@ export default function AttendancePage() {
         {/* This week rate */}
         <Card style={{ padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-            <p style={{ color: '#888', fontSize: 12, fontWeight: 600, margin: 0, letterSpacing: '0.5px' }}>This Week</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, margin: 0, letterSpacing: '0.5px' }}>This Week</p>
             <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(22,163,74,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <IconActivity size={16} style={{ color: '#16a34a' }} />
             </div>
           </div>
-          <p style={{ color: '#fff', fontSize: 30, fontWeight: 800, margin: '0 0 2px' }}>{stats.weekRate}%</p>
-          <p style={{ color: '#555', fontSize: 12, margin: 0 }}>Attendance rate</p>
+          <p style={{ color: 'var(--text-primary)', fontSize: 30, fontWeight: 800, margin: '0 0 2px' }}>{stats.weekRate}%</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>Attendance rate</p>
         </Card>
 
         {/* Most absent */}
         <Card style={{ padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-            <p style={{ color: '#888', fontSize: 12, fontWeight: 600, margin: 0, letterSpacing: '0.5px' }}>Most Absent</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, margin: 0, letterSpacing: '0.5px' }}>Most Absent</p>
             <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <IconAlertCircle size={16} style={{ color: '#ef4444' }} />
             </div>
           </div>
           {stats.mostAbsent ? (
             <>
-              <p style={{ color: '#fff', fontSize: 15, fontWeight: 700, margin: '0 0 2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <p style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, margin: '0 0 2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {stats.mostAbsent.name}
               </p>
               <p style={{ color: '#ef4444', fontSize: 12, margin: 0 }}>{stats.mostAbsent.count} absences (30 days)</p>
             </>
           ) : (
-            <p style={{ color: '#555', fontSize: 13, margin: 0 }}>No data yet</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>No data yet</p>
           )}
         </Card>
 
         {/* Best team */}
         <Card style={{ padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-            <p style={{ color: '#888', fontSize: 12, fontWeight: 600, margin: 0, letterSpacing: '0.5px' }}>Best Team</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, margin: 0, letterSpacing: '0.5px' }}>Best Team</p>
             <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(245,197,24,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <IconTrophy size={16} style={{ color: '#f5c518' }} />
             </div>
           </div>
           {stats.bestTeam ? (
             <>
-              <p style={{ color: '#fff', fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>{stats.bestTeam.name}</p>
+              <p style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, margin: '0 0 2px' }}>{stats.bestTeam.name}</p>
               <p style={{ color: '#f5c518', fontSize: 12, margin: 0 }}>{stats.bestTeam.rate}% rate (30 days)</p>
             </>
           ) : (
-            <p style={{ color: '#555', fontSize: 13, margin: 0 }}>No data yet</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>No data yet</p>
           )}
         </Card>
 
         {/* Total sessions */}
         <Card style={{ padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-            <p style={{ color: '#888', fontSize: 12, fontWeight: 600, margin: 0, letterSpacing: '0.5px' }}>Sessions (30d)</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, margin: 0, letterSpacing: '0.5px' }}>Sessions (30d)</p>
             <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <IconCalendarStats size={16} style={{ color: '#3b82f6' }} />
             </div>
           </div>
-          <p style={{ color: '#fff', fontSize: 30, fontWeight: 800, margin: '0 0 2px' }}>{stats.totalSessions}</p>
-          <p style={{ color: '#555', fontSize: 12, margin: 0 }}>Across all teams</p>
+          <p style={{ color: 'var(--text-primary)', fontSize: 30, fontWeight: 800, margin: '0 0 2px' }}>{stats.totalSessions}</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>Across all teams</p>
         </Card>
       </div>
 
       {/* ══ ATTENDANCE HISTORY ═════════════════════════════════════════════ */}
       <Card style={{ padding: '20px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>
-          <h2 style={{ color: '#fff', fontSize: 17, fontWeight: 700, margin: 0 }}>Attendance History</h2>
+          <h2 style={{ color: 'var(--text-primary)', fontSize: 17, fontWeight: 700, margin: 0 }}>Attendance History</h2>
 
           {/* Filters */}
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#555' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)' }}>
               <IconFilter size={14} />
               <span style={{ fontSize: 12 }}>Filter:</span>
             </div>
@@ -588,7 +618,7 @@ export default function AttendancePage() {
               onChange={e => setHistFrom(e.target.value)}
               placeholder="From" style={{ ...dateInput, width: 140 }}
             />
-            <span style={{ color: '#444', fontSize: 12 }}>→</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>→</span>
             <input
               type="date" value={histTo}
               onChange={e => setHistTo(e.target.value)}
@@ -604,14 +634,14 @@ export default function AttendancePage() {
         </div>
 
         {filteredHistory.length === 0 ? (
-          <p style={{ color: '#555', fontSize: 14, textAlign: 'center', padding: '32px 0' }}>No sessions match your filters.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', padding: '32px 0' }}>No sessions match your filters.</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
               <thead>
                 <tr>
                   {['Date', 'Team', 'Coach', 'Present', 'Late', 'Absent', 'Rate', ''].map(h => (
-                    <th key={h} style={{ color: '#555', fontSize: 11, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', padding: '0 0 10px', textAlign: 'left' }}>
+                    <th key={h} style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', padding: '0 0 10px', textAlign: 'left' }}>
                       {h}
                     </th>
                   ))}
@@ -630,8 +660,8 @@ export default function AttendancePage() {
                         className="hist-row"
                         onClick={() => setExpandedId(isOpen ? null : session.id)}
                       >
-                        <td style={{ padding: '12px 0', borderTop: '1px solid #1e1e1e', color: '#ccc', fontSize: 13, whiteSpace: 'nowrap' }}>{session.date}</td>
-                        <td style={{ padding: '12px 0', borderTop: '1px solid #1e1e1e' }}>
+                        <td style={{ padding: '12px 0', borderTop: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13, whiteSpace: 'nowrap' }}>{session.date}</td>
+                        <td style={{ padding: '12px 0', borderTop: '1px solid var(--border)' }}>
                           <span style={{
                             display: 'inline-block', padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700,
                             backgroundColor: session.team_name.startsWith('MFA') ? 'rgba(22,163,74,0.15)' : 'rgba(249,115,22,0.15)',
@@ -640,17 +670,17 @@ export default function AttendancePage() {
                             {session.team_name}
                           </span>
                         </td>
-                        <td style={{ padding: '12px 0', borderTop: '1px solid #1e1e1e', color: '#888', fontSize: 13 }}>{session.coach}</td>
-                        <td style={{ padding: '12px 0', borderTop: '1px solid #1e1e1e', color: '#16a34a', fontSize: 13, fontWeight: 600 }}>{counts.present}</td>
-                        <td style={{ padding: '12px 0', borderTop: '1px solid #1e1e1e', color: '#f5c518', fontSize: 13, fontWeight: 600 }}>{counts.late}</td>
-                        <td style={{ padding: '12px 0', borderTop: '1px solid #1e1e1e', color: '#ef4444', fontSize: 13, fontWeight: 600 }}>{counts.absent}</td>
-                        <td style={{ padding: '12px 0', borderTop: '1px solid #1e1e1e' }}>
+                        <td style={{ padding: '12px 0', borderTop: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13 }}>{session.coach}</td>
+                        <td style={{ padding: '12px 0', borderTop: '1px solid var(--border)', color: '#16a34a', fontSize: 13, fontWeight: 600 }}>{counts.present}</td>
+                        <td style={{ padding: '12px 0', borderTop: '1px solid var(--border)', color: '#f5c518', fontSize: 13, fontWeight: 600 }}>{counts.late}</td>
+                        <td style={{ padding: '12px 0', borderTop: '1px solid var(--border)', color: '#ef4444', fontSize: 13, fontWeight: 600 }}>{counts.absent}</td>
+                        <td style={{ padding: '12px 0', borderTop: '1px solid var(--border)' }}>
                           <span style={{ color: rateCol, fontSize: 14, fontWeight: 700 }}>{rate}%</span>
                         </td>
-                        <td style={{ padding: '12px 0', borderTop: '1px solid #1e1e1e', textAlign: 'right' }}>
+                        <td style={{ padding: '12px 0', borderTop: '1px solid var(--border)', textAlign: 'right' }}>
                           {isOpen
-                            ? <IconChevronUp size={16} style={{ color: '#555' }} />
-                            : <IconChevronDown size={16} style={{ color: '#555' }} />}
+                            ? <IconChevronUp size={16} style={{ color: 'var(--text-muted)' }} />
+                            : <IconChevronDown size={16} style={{ color: 'var(--text-muted)' }} />}
                         </td>
                       </tr>
 
@@ -659,7 +689,7 @@ export default function AttendancePage() {
                         <tr key={`${session.id}-exp`}>
                           <td colSpan={8} style={{ padding: '0 0 12px', borderTop: 'none' }}>
                             <div style={{
-                              backgroundColor: '#111', border: '0.5px solid #222',
+                              backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)',
                               borderRadius: 10, padding: '16px 20px',
                               display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10,
                             }}>
@@ -680,7 +710,7 @@ export default function AttendancePage() {
                                       {initials(name)}
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                      <p style={{ color: '#ddd', fontSize: 12, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
+                                      <p style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
                                       <p style={{ color: cfg.color, fontSize: 11, margin: 0, fontWeight: 600 }}>{cfg.label}</p>
                                     </div>
                                   </div>
@@ -699,7 +729,7 @@ export default function AttendancePage() {
         )}
       </Card>
 
-      {toast && <Toast message={toast} onDone={hideDismiss} />}
+      {toast && <Toast message={toast} kind={toastKind} onDone={hideDismiss} />}
     </div>
   )
 }

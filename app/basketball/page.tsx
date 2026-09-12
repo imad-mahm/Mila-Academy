@@ -10,9 +10,9 @@ export default async function BasketballPage() {
   const settings = await getSiteSettings()
   return (
     <>
-      <Navbar />
+      <Navbar hasGallery={false} />
       <AcademyLanding academy="basketball" settings={settings} />
-      <Footer settings={settings} />
+      <Footer settings={settings} hasGallery={false} />
       <WhatsAppButton whatsappNumber={settings.whatsapp_number} />
     </>
   )

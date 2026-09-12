@@ -157,7 +157,7 @@ function academyColor(id: string) {
 // ── Card wrapper ───────────────────────────────────────────────────────────────
 
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return <div style={{ backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 12, ...style }}>{children}</div>
+  return <div style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 12, ...style }}>{children}</div>
 }
 
 // ── Modal overlay ──────────────────────────────────────────────────────────────
@@ -172,7 +172,7 @@ function Modal({ children, onClose, wide }: { children: React.ReactNode; onClose
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          backgroundColor: '#1a1a1a', border: '0.5px solid #2a2a2a', borderRadius: 16,
+          backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16,
           width: '100%', maxWidth: wide ? 900 : 520,
           maxHeight: '90vh', overflowY: 'auto',
           padding: 28,
@@ -187,8 +187,8 @@ function Modal({ children, onClose, wide }: { children: React.ReactNode; onClose
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-      <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: 0 }}>{title}</h2>
-      <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', lineHeight: 1 }}>
+      <h2 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700, margin: 0 }}>{title}</h2>
+      <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', lineHeight: 1 }}>
         <IconX size={20} />
       </button>
     </div>
@@ -198,11 +198,11 @@ function ModalHeader({ title, onClose }: { title: string; onClose: () => void })
 // ── Field styles ───────────────────────────────────────────────────────────────
 
 const fieldStyle: React.CSSProperties = {
-  width: '100%', backgroundColor: '#111', border: '0.5px solid #333', borderRadius: 8,
-  color: '#ccc', fontSize: 13, padding: '10px 12px', outline: 'none', boxSizing: 'border-box',
+  width: '100%', backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8,
+  color: 'var(--text-secondary)', fontSize: 13, padding: '10px 12px', outline: 'none', boxSizing: 'border-box',
   colorScheme: 'dark',
 }
-const labelStyle: React.CSSProperties = { color: '#888', fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', display: 'block', marginBottom: 5 }
+const labelStyle: React.CSSProperties = { color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, letterSpacing: '0.5px', display: 'block', marginBottom: 5 }
 const selStyle: React.CSSProperties = {
   ...fieldStyle, appearance: 'none', cursor: 'pointer',
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 010 1.659l-4.796 5.48a1 1 0 01-1.506 0z'/%3E%3C/svg%3E")`,
@@ -267,9 +267,9 @@ function ScheduleMatchModal({ onSave, onClose }: { onSave: (m: MatchRecord) => v
               {(['home', 'away'] as const).map(v => (
                 <button key={v} onClick={() => set('home_away', v)} style={{
                   flex: 1, padding: '10px 0', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                  border: `1.5px solid ${form.home_away === v ? '#f5c518' : '#2a2a2a'}`,
-                  backgroundColor: form.home_away === v ? 'rgba(245,197,24,0.12)' : '#111',
-                  color: form.home_away === v ? '#f5c518' : '#666',
+                  border: `1.5px solid ${form.home_away === v ? '#f5c518' : 'var(--border)'}`,
+                  backgroundColor: form.home_away === v ? 'rgba(245,197,24,0.12)' : 'var(--bg-card)',
+                  color: form.home_away === v ? '#f5c518' : 'var(--text-muted)',
                   textTransform: 'uppercase', letterSpacing: '0.5px',
                 }}>
                   {v}
@@ -407,12 +407,12 @@ function LineupModal({
         {(['4-3-3', '4-4-2'] as FormationKey[]).map(f => (
           <button key={f} onClick={() => setFormation(f)} style={{
             padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            border: `1.5px solid ${formation === f ? '#f5c518' : '#2a2a2a'}`,
-            backgroundColor: formation === f ? 'rgba(245,197,24,0.12)' : '#111',
-            color: formation === f ? '#f5c518' : '#555',
+            border: `1.5px solid ${formation === f ? '#f5c518' : 'var(--border)'}`,
+            backgroundColor: formation === f ? 'rgba(245,197,24,0.12)' : 'var(--bg-card)',
+            color: formation === f ? '#f5c518' : 'var(--text-muted)',
           }}>{f}</button>
         ))}
-        <span style={{ marginLeft: 'auto', color: '#555', fontSize: 12, alignSelf: 'center' }}>
+        <span style={{ marginLeft: 'auto', color: 'var(--text-muted)', fontSize: 12, alignSelf: 'center' }}>
           {lineup.filter(Boolean).length}/11 selected
         </span>
       </div>
@@ -428,12 +428,12 @@ function LineupModal({
             {bench.map(s => (
               <button key={s.id} onClick={() => addPlayer(s.id)} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
-                backgroundColor: '#111', border: '0.5px solid #2a2a2a', borderRadius: 8,
+                backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8,
                 padding: '8px 10px', cursor: 'pointer', textAlign: 'left',
                 transition: 'border-color 0.15s ease',
               }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = '#f5c518')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a2a')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
               >
                 <div style={{
                   width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
@@ -445,16 +445,16 @@ function LineupModal({
                   {initials(s.name)}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <p style={{ color: '#ddd', fontSize: 12, fontWeight: 600, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</p>
-                  <p style={{ color: '#555', fontSize: 10, margin: 0 }}>#{s.jersey_number} {s.position}</p>
+                  <p style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 600, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 10, margin: 0 }}>#{s.jersey_number} {s.position}</p>
                 </div>
               </button>
             ))}
             {bench.length === 0 && (
-              <p style={{ color: '#555', fontSize: 12, textAlign: 'center', padding: '12px 0' }}>All players placed</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 12, textAlign: 'center', padding: '12px 0' }}>All players placed</p>
             )}
           </div>
-          <p style={{ color: '#444', fontSize: 11, margin: '4px 0 0' }}>Click a player on the pitch to remove them</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 11, margin: '4px 0 0' }}>Click a player on the pitch to remove them</p>
         </div>
       </div>
 
@@ -485,16 +485,16 @@ function GoalScorerModal({
   return (
     <Modal onClose={onClose}>
       <ModalHeader title="⚽ Who Scored?" onClose={onClose} />
-      <p style={{ color: '#888', fontSize: 13, margin: '0 0 16px' }}>Minute {minute}&apos;</p>
+      <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: '0 0 16px' }}>Minute {minute}&apos;</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {lineupStudents.map(s => (
           <button key={s.id} onClick={() => onSelect({ id: s.id, name: s.name, minute })} style={{
             display: 'flex', alignItems: 'center', gap: 12,
-            backgroundColor: '#111', border: '0.5px solid #2a2a2a', borderRadius: 10,
+            backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 10,
             padding: '12px 14px', cursor: 'pointer', textAlign: 'left',
           }}
             onMouseEnter={e => (e.currentTarget.style.borderColor = '#16a34a')}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a2a')}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
           >
             <div style={{
               width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
@@ -505,14 +505,14 @@ function GoalScorerModal({
               {initials(s.name)}
             </div>
             <div>
-              <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, margin: 0 }}>{s.name}</p>
-              <p style={{ color: '#555', fontSize: 12, margin: 0 }}>#{s.jersey_number} · {s.position}</p>
+              <p style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, margin: 0 }}>{s.name}</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>#{s.jersey_number} · {s.position}</p>
             </div>
           </button>
         ))}
         <button onClick={() => onSelect(null)} style={{
           padding: '12px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-          border: '0.5px solid #2a2a2a', backgroundColor: '#111', color: '#666',
+          border: '0.5px solid var(--border)', backgroundColor: 'var(--bg-card)', color: 'var(--text-muted)',
         }}>
           Own Goal / Unknown
         </button>
@@ -534,8 +534,8 @@ function EndMatchModal({
     <Modal onClose={onClose}>
       <ModalHeader title="End Match" onClose={onClose} />
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <p style={{ color: '#888', fontSize: 14, margin: '0 0 8px' }}>Final Score</p>
-        <p style={{ color: '#fff', fontSize: 36, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-1px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 14, margin: '0 0 8px' }}>Final Score</p>
+        <p style={{ color: 'var(--text-primary)', fontSize: 36, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-1px' }}>
           {match.score_us} – {match.score_them}
         </p>
         <span style={{
@@ -707,23 +707,23 @@ function UpcomingCard({
             {match.team_name.replace(' ', '\n')}
           </div>
           <div>
-            <p style={{ color: '#888', fontSize: 11, fontWeight: 600, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               {match.home_away === 'home' ? 'Home' : 'Away'} Match
             </p>
-            <p style={{ color: '#fff', fontSize: 20, fontWeight: 800, margin: '0 0 8px' }}>
+            <p style={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 800, margin: '0 0 8px' }}>
               vs {match.opponent}
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#888', fontSize: 12 }}>
-                <IconCalendar size={13} style={{ color: '#555' }} />
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', fontSize: 12 }}>
+                <IconCalendar size={13} style={{ color: 'var(--text-muted)' }} />
                 {fmtDate(match.date)}
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#888', fontSize: 12 }}>
-                <IconClock size={13} style={{ color: '#555' }} />
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', fontSize: 12 }}>
+                <IconClock size={13} style={{ color: 'var(--text-muted)' }} />
                 {match.time}
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#888', fontSize: 12 }}>
-                <IconMapPin size={13} style={{ color: '#555' }} />
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)', fontSize: 12 }}>
+                <IconMapPin size={13} style={{ color: 'var(--text-muted)' }} />
                 {match.location}
               </span>
             </div>
@@ -734,9 +734,9 @@ function UpcomingCard({
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
           {/* Countdown badge */}
           <span style={{
-            backgroundColor: days <= 3 ? 'rgba(239,68,68,0.12)' : days <= 7 ? 'rgba(245,197,24,0.12)' : 'rgba(255,255,255,0.05)',
-            border: `0.5px solid ${days <= 3 ? 'rgba(239,68,68,0.3)' : days <= 7 ? 'rgba(245,197,24,0.3)' : '#2a2a2a'}`,
-            color: days <= 3 ? '#ef4444' : days <= 7 ? '#f5c518' : '#888',
+            backgroundColor: days <= 3 ? 'rgba(239,68,68,0.12)' : days <= 7 ? 'rgba(245,197,24,0.12)' : 'var(--bg)',
+            border: `0.5px solid ${days <= 3 ? 'rgba(239,68,68,0.3)' : days <= 7 ? 'rgba(245,197,24,0.3)' : 'var(--border)'}`,
+            color: days <= 3 ? '#ef4444' : days <= 7 ? '#f5c518' : 'var(--text-secondary)',
             fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20,
           }}>
             {days === 0 ? 'TODAY' : days === 1 ? 'TOMORROW' : `${days} days`}
@@ -746,8 +746,8 @@ function UpcomingCard({
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={onViewLineup} style={{
               display: 'flex', alignItems: 'center', gap: 6,
-              backgroundColor: '#111', border: '0.5px solid #2a2a2a', borderRadius: 8,
-              color: '#ccc', fontSize: 12, fontWeight: 600, padding: '8px 14px', cursor: 'pointer',
+              backgroundColor: 'var(--bg)', border: '0.5px solid var(--border)', borderRadius: 8,
+              color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, padding: '8px 14px', cursor: 'pointer',
             }}>
               <IconUsers size={13} /> Lineup {match.lineup.length > 0 ? `(${match.lineup.length})` : ''}
             </button>
@@ -790,12 +790,12 @@ function ResultCard({ match, students }: { match: MatchRecord; students: Student
         {/* Match info */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ color: '#fff', fontSize: 15, fontWeight: 700 }}>vs {match.opponent}</span>
+            <span style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 700 }}>vs {match.opponent}</span>
             <span style={{ color: acColor, fontSize: 11, fontWeight: 700 }}>{match.team_name}</span>
           </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 3 }}>
-            <span style={{ color: '#555', fontSize: 12 }}>{fmtDate(match.date)}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#555', fontSize: 12 }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtDate(match.date)}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)', fontSize: 12 }}>
               <IconMapPin size={12} />{match.location}
             </span>
             <span style={{
@@ -806,20 +806,20 @@ function ResultCard({ match, students }: { match: MatchRecord; students: Student
         </div>
 
         {/* Score */}
-        <span style={{ color: '#fff', fontSize: 22, fontWeight: 900, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ color: 'var(--text-primary)', fontSize: 22, fontWeight: 900, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>
           {match.score_us}–{match.score_them}
         </span>
-        {open ? <IconChevronUp size={16} style={{ color: '#555', flexShrink: 0 }} /> : <IconChevronDown size={16} style={{ color: '#555', flexShrink: 0 }} />}
+        {open ? <IconChevronUp size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} /> : <IconChevronDown size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />}
       </div>
 
       {open && (
-        <div style={{ padding: '0 20px 20px', borderTop: '1px solid #1e1e1e' }}>
+        <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--border)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 16 }}>
             {/* Scorers */}
             <div>
               <p style={{ ...labelStyle, marginBottom: 8 }}>SCORERS</p>
               {match.scorers.length === 0 ? (
-                <p style={{ color: '#555', fontSize: 12 }}>No goals scored</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>No goals scored</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   {match.scorers.map((sc, i) => (
@@ -836,15 +836,15 @@ function ResultCard({ match, students }: { match: MatchRecord; students: Student
             <div>
               <p style={{ ...labelStyle, marginBottom: 8 }}>LINEUP ({match.lineup.length})</p>
               {match.lineup.length === 0 ? (
-                <p style={{ color: '#555', fontSize: 12 }}>No lineup recorded</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>No lineup recorded</p>
               ) : (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                   {match.lineup.map(sid => {
                     const s = students.find(st => st.id === sid)
                     return s ? (
                       <span key={sid} style={{
-                        backgroundColor: '#111', border: '0.5px solid #2a2a2a', borderRadius: 6,
-                        color: '#ccc', fontSize: 11, padding: '3px 8px',
+                        backgroundColor: 'var(--bg)', border: '0.5px solid var(--border)', borderRadius: 6,
+                        color: 'var(--text-secondary)', fontSize: 11, padding: '3px 8px',
                       }}>
                         #{s.jersey_number} {s.name}
                       </span>
@@ -857,9 +857,9 @@ function ResultCard({ match, students }: { match: MatchRecord; students: Student
 
           {/* Coach notes */}
           {match.coach_notes && (
-            <div style={{ marginTop: 16, padding: '12px 14px', backgroundColor: '#111', borderRadius: 8, border: '0.5px solid #222' }}>
+            <div style={{ marginTop: 16, padding: '12px 14px', backgroundColor: 'var(--bg)', borderRadius: 8, border: '0.5px solid var(--border)' }}>
               <p style={{ ...labelStyle, marginBottom: 4 }}>COACH NOTES</p>
-              <p style={{ color: '#aaa', fontSize: 13, margin: 0, lineHeight: 1.6 }}>{match.coach_notes}</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: 0, lineHeight: 1.6 }}>{match.coach_notes}</p>
             </div>
           )}
         </div>
@@ -895,22 +895,22 @@ function LeagueTable({ results }: { results: MatchRecord[] }) {
     <Card style={{ padding: '20px 24px', marginTop: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
         <IconTrophy size={18} style={{ color: '#f5c518' }} />
-        <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 700, margin: 0 }}>League Standings</h3>
+        <h3 style={{ color: 'var(--text-primary)', fontSize: 16, fontWeight: 700, margin: 0 }}>League Standings</h3>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 500 }}>
           <thead>
             <tr>
               {['#', 'Team', 'P', 'W', 'D', 'L', 'GD', 'Pts'].map(h => (
-                <th key={h} style={{ color: '#555', fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', padding: '0 8px 10px', textAlign: h === 'Team' ? 'left' : 'center' }}>{h}</th>
+                <th key={h} style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', padding: '0 8px 10px', textAlign: h === 'Team' ? 'left' : 'center' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {standings.map((row, i) => (
               <tr key={row.team}>
-                <td style={{ padding: '10px 8px', borderTop: '1px solid #1e1e1e', color: '#555', fontSize: 13, textAlign: 'center' }}>{i + 1}</td>
-                <td style={{ padding: '10px 8px', borderTop: '1px solid #1e1e1e', color: '#fff', fontSize: 13, fontWeight: 600 }}>
+                <td style={{ padding: '10px 8px', borderTop: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: 13, textAlign: 'center' }}>{i + 1}</td>
+                <td style={{ padding: '10px 8px', borderTop: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{
                       width: 22, height: 22, borderRadius: 6, flexShrink: 0,
@@ -925,14 +925,14 @@ function LeagueTable({ results }: { results: MatchRecord[] }) {
                   </div>
                 </td>
                 {[row.played, row.won, row.drawn, row.lost].map((v, j) => (
-                  <td key={j} style={{ padding: '10px 8px', borderTop: '1px solid #1e1e1e', color: '#aaa', fontSize: 13, textAlign: 'center' }}>{v}</td>
+                  <td key={j} style={{ padding: '10px 8px', borderTop: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center' }}>{v}</td>
                 ))}
-                <td style={{ padding: '10px 8px', borderTop: '1px solid #1e1e1e', textAlign: 'center' }}>
-                  <span style={{ color: row.gd > 0 ? '#16a34a' : row.gd < 0 ? '#ef4444' : '#888', fontSize: 13, fontWeight: 600 }}>
+                <td style={{ padding: '10px 8px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
+                  <span style={{ color: row.gd > 0 ? '#16a34a' : row.gd < 0 ? '#ef4444' : 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>
                     {row.gd > 0 ? '+' : ''}{row.gd}
                   </span>
                 </td>
-                <td style={{ padding: '10px 8px', borderTop: '1px solid #1e1e1e', textAlign: 'center' }}>
+                <td style={{ padding: '10px 8px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
                   <span style={{ color: '#f5c518', fontSize: 14, fontWeight: 800 }}>{row.points}</span>
                 </td>
               </tr>
@@ -977,7 +977,6 @@ export default function MatchesPage() {
   const [showSchedule,    setShowSchedule]    = useState(false)
   const [lineupMatch,     setLineupMatch]     = useState<MatchRecord | null>(null)
   const [goalMatch,       setGoalMatch]       = useState<MatchRecord | null>(null)
-  const [goalForUs,       setGoalForUs]       = useState(true)
   const [goalElapsed,     setGoalElapsed]     = useState(0)
   const [endMatch,        setEndMatch]        = useState<MatchRecord | null>(null)
 
@@ -1017,23 +1016,24 @@ export default function MatchesPage() {
   }
 
   function handleGoal(forUs: boolean) {
-    setGoalForUs(forUs)
-    setGoalMatch(liveMatch)
-    if (liveMatch) {
-      setGoalElapsed(Math.floor((Date.now() - new Date(liveMatch.live_started_at).getTime()) / 1000))
+    if (!liveMatch) return
+    if (!forUs) {
+      // Opponent goals have no scorer to pick — register immediately, no modal.
+      const elapsed = Math.floor((Date.now() - new Date(liveMatch.live_started_at).getTime()) / 1000)
+      const minute = Math.floor(elapsed / 60) + 1
+      updateMatch({ ...liveMatch, score_them: liveMatch.score_them + 1, opp_goal_minutes: [...liveMatch.opp_goal_minutes, minute] })
+      return
     }
+    setGoalMatch(liveMatch)
+    setGoalElapsed(Math.floor((Date.now() - new Date(liveMatch.live_started_at).getTime()) / 1000))
   }
 
   function registerGoal(scorer: Scorer | null) {
     if (!liveMatch) return
     const elapsed = Math.floor((Date.now() - new Date(liveMatch.live_started_at).getTime()) / 1000)
     const minute = Math.floor(elapsed / 60) + 1
-    if (goalForUs) {
-      const s = scorer ?? { id: 'og', name: 'Unknown', minute }
-      updateMatch({ ...liveMatch, score_us: liveMatch.score_us + 1, scorers: [...liveMatch.scorers, s] })
-    } else {
-      updateMatch({ ...liveMatch, score_them: liveMatch.score_them + 1, opp_goal_minutes: [...liveMatch.opp_goal_minutes, minute] })
-    }
+    const s = scorer ?? { id: 'og', name: 'Unknown', minute }
+    updateMatch({ ...liveMatch, score_us: liveMatch.score_us + 1, scorers: [...liveMatch.scorers, s] })
     setGoalMatch(null)
   }
 
@@ -1061,8 +1061,8 @@ export default function MatchesPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Matches</h1>
-          <p style={{ color: '#555', fontSize: 14, margin: 0 }}>Schedule, track, and review match performances.</p>
+          <h1 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Matches</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>Schedule, track, and review match performances.</p>
         </div>
         <button onClick={() => setShowSchedule(true)} style={{
           display: 'flex', alignItems: 'center', gap: 8,
@@ -1075,12 +1075,12 @@ export default function MatchesPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, backgroundColor: '#111', borderRadius: 10, padding: 4, width: 'fit-content', marginBottom: 24 }}>
+      <div style={{ display: 'flex', gap: 4, backgroundColor: 'var(--bg-card)', borderRadius: 10, padding: 4, width: 'fit-content', marginBottom: 24 }}>
         {(['upcoming', 'results'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
             padding: '8px 22px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', border: 'none',
-            backgroundColor: tab === t ? '#1a1a1a' : 'transparent',
-            color: tab === t ? '#fff' : '#555',
+            backgroundColor: tab === t ? 'var(--bg-hover)' : 'transparent',
+            color: tab === t ? 'var(--text-primary)' : 'var(--text-muted)',
             boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.3)' : 'none',
             transition: 'all 0.15s ease', textTransform: 'capitalize',
           }}>
@@ -1104,8 +1104,8 @@ export default function MatchesPage() {
 
           {upcoming.length === 0 && !liveMatch && (
             <Card style={{ padding: 48, textAlign: 'center' }}>
-              <IconCalendar size={40} style={{ color: '#2a2a2a', marginBottom: 12 }} />
-              <p style={{ color: '#555', fontSize: 14, margin: 0 }}>No upcoming matches scheduled.</p>
+              <IconCalendar size={40} style={{ color: 'var(--border)', marginBottom: 12 }} />
+              <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>No upcoming matches scheduled.</p>
               <button onClick={() => setShowSchedule(true)} style={{
                 marginTop: 16, backgroundColor: '#16a34a', color: '#fff', border: 'none',
                 borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
@@ -1133,8 +1133,8 @@ export default function MatchesPage() {
         <div>
           {results.length === 0 ? (
             <Card style={{ padding: 48, textAlign: 'center' }}>
-              <IconTrophy size={40} style={{ color: '#2a2a2a', marginBottom: 12 }} />
-              <p style={{ color: '#555', fontSize: 14, margin: 0 }}>No completed matches yet.</p>
+              <IconTrophy size={40} style={{ color: 'var(--border)', marginBottom: 12 }} />
+              <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>No completed matches yet.</p>
             </Card>
           ) : (
             <>
@@ -1147,7 +1147,7 @@ export default function MatchesPage() {
                 ].map(s => (
                   <Card key={s.label} style={{ padding: 16, textAlign: 'center' }}>
                     <p style={{ color: s.color, fontSize: 28, fontWeight: 900, margin: '0 0 4px' }}>{s.val}</p>
-                    <p style={{ color: '#555', fontSize: 12, fontWeight: 600, margin: 0 }}>{s.label}</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 600, margin: 0 }}>{s.label}</p>
                   </Card>
                 ))}
               </div>
@@ -1174,7 +1174,7 @@ export default function MatchesPage() {
         />
       )}
 
-      {goalMatch && goalForUs && (
+      {goalMatch && (
         <GoalScorerModal
           match={goalMatch}
           students={students}
