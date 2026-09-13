@@ -436,7 +436,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: 'var(--bg)' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
         <Sidebar
           user={user}
           pathname={pathname}
@@ -445,7 +445,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           onClose={() => setSidebarOpen(false)}
         />
 
-        <div id="dash-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+        <div id="dash-main" className="dash-main-content-wrapper" style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {/* ── Header ── */}
           <header
             className="dash-header"
@@ -514,7 +514,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <main
             className="dash-main-content"
-            style={{ flex: 1, overflowY: 'auto', padding: 32 }}
+            style={{ padding: '92px 32px 32px' }}
           >
             {children}
           </main>

@@ -7,7 +7,8 @@ import {
   IconUsers,
 } from '@tabler/icons-react'
 import { TEAMS, loadAllStudents, teamName, type StudentRow } from '../students/data'
-import { getCurrentUser, type AcademyFilter } from '@/lib/auth'
+import { getCurrentUser, hasAccess, type AcademyFilter } from '@/lib/auth'
+import { useRequireAccess } from '../hooks/useRequireAccess'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -193,6 +194,9 @@ function StatusPill({
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function AttendancePage() {
+  const { user: guardedUser, loading: guardLoading } = useRequireAccess('attendance')
+  const canTakeAttendance = !!guardedUser && hasAccess('attendance', 'edit', guardedUser)
+
   // ── Take attendance state ────────────────────────────────────────────────
   const [selectedAcademy, setSelectedAcademy] = useState<AcademyFilter>(
     () => getCurrentUser()?.selectedAcademy ?? 'Both'
@@ -399,6 +403,8 @@ export default function AttendancePage() {
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
+  if (guardLoading) return null
+
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto' }}>
       <style>{`
@@ -415,7 +421,10 @@ export default function AttendancePage() {
         <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>Track and review session attendance across all teams.</p>
       </div>
 
-      {/* ══ TAKE ATTENDANCE ════════════════════════════════════════════════ */}
+      {/* ══ TAKE ATTENDANCE ════════════════════════════════════════════════
+          Only admin/coach can record attendance — parents/students get
+          view-only access to the history below (matches hasAccess()). */}
+      {canTakeAttendance && (
       <Card style={{ padding: 24, marginBottom: 24 }}>
         <h2 style={{ color: 'var(--text-primary)', fontSize: 17, fontWeight: 700, margin: '0 0 20px' }}>
           Take Attendance
@@ -532,6 +541,7 @@ export default function AttendancePage() {
           </div>
         )}
       </Card>
+      )}
 
       {/* ══ STATS CARDS ════════════════════════════════════════════════════ */}
       <div className="stat-card-grid" style={{ marginBottom: 24 }}>

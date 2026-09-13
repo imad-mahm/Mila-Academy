@@ -10,13 +10,26 @@ const COOKIE_NAME = 'mila_session'
  * server-verified session. Treat replacing it with real auth as a priority.
  */
 export async function isAdminRequest(): Promise<boolean> {
+  return requireRole('admin')
+}
+
+type Role = 'admin' | 'coach' | 'parent' | 'student'
+
+/** Reads just the role out of the session cookie, or null if not logged in / unparseable. */
+export async function getSessionRole(): Promise<Role | null> {
   const store = await cookies()
   const raw = store.get(COOKIE_NAME)?.value
-  if (!raw) return false
+  if (!raw) return null
   try {
     const parsed = JSON.parse(decodeURIComponent(raw))
-    return parsed?.role === 'admin'
+    return parsed?.role ?? null
   } catch {
-    return false
+    return null
   }
+}
+
+/** True if the session's role is one of `allowed`. */
+export async function requireRole(...allowed: Role[]): Promise<boolean> {
+  const role = await getSessionRole()
+  return role !== null && allowed.includes(role)
 }

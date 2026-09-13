@@ -128,17 +128,22 @@ body {
 }
 .back-site-link:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
 
-/* ── Dashboard sidebar — mobile drawer ──────────────────────────────────────── */
+/* ── Dashboard shell ───────────────────────────────────────────────────────────
+   Sidebar + header are fixed in place; the page itself scrolls normally
+   (mouse wheel moves the whole page), instead of a separate inner scroll pane. */
 .dash-sidebar {
   width: 260px;
   min-width: 260px;
   height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 250;
   background-color: var(--bg);
   border-right: 1px solid rgba(245,197,24,0.12);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  flex-shrink: 0;
   transition: transform 0.25s ease, background-color 0.2s;
 }
 
@@ -151,9 +156,24 @@ body {
   backdrop-filter: blur(2px);
 }
 
+.dash-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 260px;
+  z-index: 200;
+}
+
+.dash-main-content-wrapper {
+  margin-left: 260px;
+}
+
+/* NOTE: dash-main-content's top offset for the fixed header is set inline
+   (in layout.tsx) instead of here — a CSS class's padding-top would be
+   silently overridden by any inline `padding` shorthand a page sets. */
+
 @media (max-width: 768px) {
   .dash-sidebar {
-    position: fixed;
     top: 0; left: 0; bottom: 0;
     z-index: 300;
     transform: translateX(-100%);
@@ -165,13 +185,11 @@ body {
   .dash-sidebar-overlay.open {
     display: block;
   }
-  .dash-main-content {
-    padding-top: 60px !important;
-  }
   .dash-header {
-    position: fixed !important;
-    top: 0; left: 0; right: 0;
-    z-index: 200;
+    left: 0;
+  }
+  .dash-main-content-wrapper {
+    margin-left: 0;
   }
   .dash-search {
     display: none !important;
