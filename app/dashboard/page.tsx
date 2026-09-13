@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link'
 import { getCurrentUser, type AcademyFilter } from '@/lib/auth'
-import { loadAllStudents } from './students/data'
+import { fetchStudents, fetchTeams, type TeamRow } from './students/api'
+import type { StudentRow } from './students/data'
+import { loadAllSessions } from './attendance/data'
+import { loadAllMatches } from './matches/data'
 import {
-  IconBell,
   IconUsers,
   IconClipboardList,
   IconCash,
@@ -16,7 +19,7 @@ import {
   IconChevronRight,
 } from '@tabler/icons-react'
 
-// ── Hardcoded data ─────────────────────────────────────────────────────────────
+// ── Static meta (icons/colors for stat cards) ───────────────────────────────────
 
 const STAT_CARD_META = [
   { label: 'Total Students',     Icon: IconUsers,         tint: 'rgba(22,163,74,0.12)',  iconColor: '#16a34a', border: 'rgba(22,163,74,0.2)'  },
@@ -25,41 +28,11 @@ const STAT_CARD_META = [
   { label: 'Unpaid Students',    Icon: IconAlertCircle,   tint: 'rgba(239,68,68,0.1)',   iconColor: '#ef4444', border: 'rgba(239,68,68,0.2)' },
 ]
 
-const COACH_COUNTS: Record<AcademyFilter, number> = { MFA: 3, MBA: 1, Both: 4 }
-
 const ACADEMY_LABEL: Record<AcademyFilter, string> = {
   MFA: 'Mila Football Academy',
   MBA: 'Mila Basket Academy',
   Both: 'Mila Academy',
 }
-
-const ATTENDANCE = [
-  { date: 'Jun 30',  team: 'MFA U-17', present: 13, absent: 2, rate: 87 },
-  { date: 'Jun 29',  team: 'MBA U-16', present: 9,  absent: 4, rate: 69 },
-  { date: 'Jun 28',  team: 'MFA U-14', present: 11, absent: 1, rate: 92 },
-  { date: 'Jun 27',  team: 'MFA U-17', present: 10, absent: 3, rate: 77 },
-  { date: 'Jun 26',  team: 'MBA U-16', present: 8,  absent: 5, rate: 62 },
-]
-
-const MATCHES = [
-  { team: 'MFA U-17', opponent: 'Al-Nejmeh',   date: 'Jul 5',  location: 'Beirut Sports City', academy: 'MFA' as const },
-  { team: 'MBA U-16', opponent: 'Safa BC',      date: 'Jul 8',  location: 'Brissour Sports Hall', academy: 'MBA' as const },
-  { team: 'MFA U-14', opponent: 'Ansar FC',     date: 'Jul 12', location: 'Sidon Municipal Stadium', academy: 'MFA' as const },
-]
-
-const PAYMENTS = [
-  { name: 'Ali Hassan',    amount: 150, date: 'Jun 30', status: 'paid'    as const },
-  { name: 'Omar Khalil',   amount: 150, date: 'Jun 29', status: 'paid'    as const },
-  { name: 'Sarah Mansour', amount: 150, date: 'Jun 28', status: 'unpaid'  as const },
-  { name: 'Rami Fares',    amount: 150, date: 'Jun 28', status: 'paid'    as const },
-  { name: 'Lara Haddad',   amount: 75,  date: 'Jun 27', status: 'partial' as const },
-]
-
-const TOP_PLAYERS = [
-  { name: 'Karim Nassar',   team: 'MFA U-17', rating: 4.9 },
-  { name: 'Youssef Aoun',   team: 'MFA U-14', rating: 4.7 },
-  { name: 'Nour Saleh',     team: 'MBA U-16', rating: 4.6 },
-]
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -119,17 +92,21 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
   )
 }
 
-function SectionTitle({ title, linkLabel }: { title: string; linkLabel?: string }) {
+function SectionTitle({ title, linkLabel, linkHref }: { title: string; linkLabel?: string; linkHref?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
       <h2 style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, margin: 0 }}>{title}</h2>
-      {linkLabel && (
-        <a href="#" style={{ color: '#f5c518', fontSize: 13, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 2 }}>
+      {linkLabel && linkHref && (
+        <Link href={linkHref} style={{ color: '#f5c518', fontSize: 13, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 2 }}>
           {linkLabel} <IconChevronRight size={14} />
-        </a>
+        </Link>
       )}
     </div>
   )
+}
+
+function EmptyNote({ text }: { text: string }) {
+  return <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: '24px 0', margin: 0 }}>{text}</p>
 }
 
 // ── Main page ──────────────────────────────────────────────────────────────────
@@ -161,30 +138,116 @@ export default function DashboardHome() {
     return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
   }, [])
 
-  const allStudents = useMemo(() => loadAllStudents(), [])
+  // Real data: students + teams (Supabase), coach count (Supabase),
+  // attendance/matches (still the shared localStorage system — see
+  // app/dashboard/attendance/data.ts and matches/data.ts).
+  const [students,   setStudents]   = useState<StudentRow[]>([])
+  const [teams,       setTeams]      = useState<TeamRow[]>([])
+  const [coachCount, setCoachCount] = useState<number | null>(null)
+  const [loading,     setLoading]    = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([
+      fetchStudents(),
+      fetchTeams(),
+      fetch('/api/admin/coaches').then(r => r.ok ? r.json() : { data: [] }).catch(() => ({ data: [] })),
+    ]).then(([s, t, coachesRes]) => {
+      if (cancelled) return
+      setStudents(s)
+      setTeams(t)
+      setCoachCount(Array.isArray(coachesRes.data) ? coachesRes.data.length : null)
+    }).finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  const sessions = useMemo(() => loadAllSessions(), [])
+  const matches  = useMemo(() => loadAllMatches(), [])
+
   const academyStudents = useMemo(
-    () => selectedAcademy === 'Both' ? allStudents : allStudents.filter(s => s.academy === selectedAcademy),
-    [allStudents, selectedAcademy]
+    () => selectedAcademy === 'Both' ? students : students.filter(s => s.academy === selectedAcademy),
+    [students, selectedAcademy]
   )
+
   const statValues = useMemo(() => {
     const revenue = academyStudents.filter(s => s.payment_status !== 'unpaid').reduce((sum, s) => sum + s.payment_amount, 0)
     const unpaid  = academyStudents.filter(s => s.payment_status === 'unpaid').length
-    return [String(academyStudents.length), String(COACH_COUNTS[selectedAcademy]), `$${revenue.toLocaleString()}`, String(unpaid)]
-  }, [academyStudents, selectedAcademy])
+    return [
+      String(academyStudents.length),
+      coachCount === null ? '—' : String(coachCount),
+      `$${revenue.toLocaleString()}`,
+      String(unpaid),
+    ]
+  }, [academyStudents, coachCount])
 
   const statCards = useMemo(() =>
     STAT_CARD_META.map((m, i) => ({ ...m, value: statValues[i] })),
     [statValues]
   )
 
-  const filteredAttendance = useMemo(
-    () => selectedAcademy === 'Both' ? ATTENDANCE : ATTENDANCE.filter(a => a.team.startsWith(selectedAcademy)),
-    [selectedAcademy]
+  // Team academy lookup for the old localStorage-based team ids ('mfa-u17' etc.)
+  // used by Attendance/Matches, distinct from the new Supabase team UUIDs.
+  const legacyTeamAcademy = (teamId: string): 'MFA' | 'MBA' | null => {
+    if (teamId.startsWith('mfa')) return 'MFA'
+    if (teamId.startsWith('mba')) return 'MBA'
+    return null
+  }
+
+  const recentAttendance = useMemo(() => {
+    const filtered = selectedAcademy === 'Both'
+      ? sessions
+      : sessions.filter(s => legacyTeamAcademy(s.team_id) === selectedAcademy)
+    return filtered.slice(0, 5).map(s => {
+      const vals = Object.values(s.records)
+      const present = vals.filter(v => v === 'present').length
+      const absent  = vals.filter(v => v === 'absent').length
+      const rate    = vals.length > 0 ? Math.round((vals.filter(v => v !== 'absent').length / vals.length) * 100) : 0
+      return { date: s.date, team: s.team_name, present, absent, rate }
+    })
+  }, [sessions, selectedAcademy])
+
+  const upcomingMatches = useMemo(() => {
+    const filtered = matches.filter(m => m.status === 'upcoming' && (
+      selectedAcademy === 'Both' || legacyTeamAcademy(m.team_id) === selectedAcademy
+    ))
+    return filtered
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 3)
+      .map(m => ({
+        team: m.team_name, opponent: m.opponent, date: m.date, location: m.location,
+        academy: legacyTeamAcademy(m.team_id) ?? 'MFA' as const,
+      }))
+  }, [matches, selectedAcademy])
+
+  const paymentBreakdown = useMemo(() => {
+    const total = academyStudents.length || 1
+    const paid    = academyStudents.filter(s => s.payment_status === 'paid').length
+    const unpaid  = academyStudents.filter(s => s.payment_status === 'unpaid').length
+    const partial = academyStudents.filter(s => s.payment_status === 'partial').length
+    return {
+      paidPct:    Math.round((paid    / total) * 100),
+      unpaidPct:  Math.round((unpaid  / total) * 100),
+      partialPct: Math.round((partial / total) * 100),
+    }
+  }, [academyStudents])
+
+  const recentPayments = useMemo(() =>
+    [...academyStudents]
+      .filter(s => s.payment_due_date)
+      .sort((a, b) => (b.payment_due_date ?? '').localeCompare(a.payment_due_date ?? ''))
+      .slice(0, 5),
+    [academyStudents]
   )
-  const filteredMatches = useMemo(
-    () => selectedAcademy === 'Both' ? MATCHES : MATCHES.filter(m => m.academy === selectedAcademy),
-    [selectedAcademy]
+
+  const topRatedPlayers = useMemo(() =>
+    [...academyStudents]
+      .filter(s => s.overall_rating > 0)
+      .sort((a, b) => b.overall_rating - a.overall_rating)
+      .slice(0, 3),
+    [academyStudents]
   )
+
+  const teamNameFor = (teamId: string) => teams.find(t => t.id === teamId)?.name ?? '—'
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -221,20 +284,6 @@ export default function DashboardHome() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          {/* Bell */}
-          <button style={{
-            width: 40, height: 40, borderRadius: '50%',
-            backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--text-secondary)', cursor: 'pointer', position: 'relative',
-          }}>
-            <IconBell size={18} stroke={1.8} />
-            <span style={{
-              position: 'absolute', top: 8, right: 8,
-              width: 7, height: 7, borderRadius: '50%',
-              backgroundColor: '#ef4444', border: '1.5px solid var(--bg-card)',
-            }} />
-          </button>
           {/* Avatar */}
           <div style={{
             width: 40, height: 40, borderRadius: '50%',
@@ -272,7 +321,7 @@ export default function DashboardHome() {
             </div>
             {/* Value */}
             <p style={{ color: 'var(--text-primary)', fontSize: 32, fontWeight: 700, margin: '0 0 4px', lineHeight: 1, position: 'relative' }}>
-              {value}
+              {loading ? '—' : value}
             </p>
             <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0, position: 'relative' }}>
               {label}
@@ -289,83 +338,91 @@ export default function DashboardHome() {
 
           {/* Recent Attendance */}
           <Card style={{ padding: '20px 24px' }}>
-            <SectionTitle title="Recent Attendance" linkLabel="View all" />
-            <table className="att-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 72 }}>Date</th>
-                  <th>Team</th>
-                  <th style={{ textAlign: 'center' }}>Present</th>
-                  <th style={{ textAlign: 'center' }}>Absent</th>
-                  <th style={{ width: 120 }}>Rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAttendance.map((row) => (
-                  <tr key={row.date + row.team}>
-                    <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{row.date}</td>
-                    <td>
-                      <span style={{
-                        display: 'inline-block',
-                        padding: '2px 8px',
-                        borderRadius: 20,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        backgroundColor: row.team.startsWith('MFA') ? 'rgba(22,163,74,0.13)' : 'rgba(249,115,22,0.13)',
-                        color:           row.team.startsWith('MFA') ? '#16a34a'               : '#f97316',
-                      }}>
-                        {row.team}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>{row.present}</td>
-                    <td style={{ textAlign: 'center', color: '#ef4444', fontWeight: 600 }}>{row.absent}</td>
-                    <td><RateBar rate={row.rate} /></td>
+            <SectionTitle title="Recent Attendance" linkLabel="View all" linkHref="/dashboard/attendance" />
+            {recentAttendance.length === 0 ? (
+              <EmptyNote text="No attendance sessions recorded yet." />
+            ) : (
+              <table className="att-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 72 }}>Date</th>
+                    <th>Team</th>
+                    <th style={{ textAlign: 'center' }}>Present</th>
+                    <th style={{ textAlign: 'center' }}>Absent</th>
+                    <th style={{ width: 120 }}>Rate</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentAttendance.map((row) => (
+                    <tr key={row.date + row.team}>
+                      <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{row.date}</td>
+                      <td>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '2px 8px',
+                          borderRadius: 20,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          backgroundColor: row.team.startsWith('MFA') ? 'rgba(22,163,74,0.13)' : 'rgba(249,115,22,0.13)',
+                          color:           row.team.startsWith('MFA') ? '#16a34a'               : '#f97316',
+                        }}>
+                          {row.team}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>{row.present}</td>
+                      <td style={{ textAlign: 'center', color: '#ef4444', fontWeight: 600 }}>{row.absent}</td>
+                      <td><RateBar rate={row.rate} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </Card>
 
           {/* Upcoming Matches */}
           <Card style={{ padding: '20px 24px' }}>
-            <SectionTitle title="Upcoming Matches" linkLabel="View all" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {filteredMatches.map((m) => {
-                const badge = ACADEMY_BADGE[m.academy]
-                return (
-                  <div key={m.team + m.opponent} style={{
-                    display: 'flex', alignItems: 'center', gap: 14,
-                    backgroundColor: 'var(--bg-hover)', border: '0.5px solid var(--border)',
-                    borderRadius: 10, padding: '12px 16px',
-                  }}>
-                    {/* Academy badge */}
-                    <span style={{
-                      flexShrink: 0,
-                      padding: '4px 10px',
-                      borderRadius: 6,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      backgroundColor: badge.bg,
-                      color: badge.color,
-                      letterSpacing: '0.5px',
+            <SectionTitle title="Upcoming Matches" linkLabel="View all" linkHref="/dashboard/matches" />
+            {upcomingMatches.length === 0 ? (
+              <EmptyNote text="No upcoming matches scheduled." />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {upcomingMatches.map((m) => {
+                  const badge = ACADEMY_BADGE[m.academy]
+                  return (
+                    <div key={m.team + m.opponent + m.date} style={{
+                      display: 'flex', alignItems: 'center', gap: 14,
+                      backgroundColor: 'var(--bg-hover)', border: '0.5px solid var(--border)',
+                      borderRadius: 10, padding: '12px 16px',
                     }}>
-                      {m.academy}
-                    </span>
-                    {/* Teams */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: '0 0 3px' }}>
-                        {m.team} <span style={{ color: '#555' }}>vs</span> {m.opponent}
-                      </p>
-                      <p style={{ color: '#555', fontSize: 12, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <IconCalendar size={12} stroke={1.8} style={{ flexShrink: 0 }} /> {m.date}
-                        <span style={{ color: '#333' }}>·</span>
-                        <IconMapPin size={12} stroke={1.8} style={{ flexShrink: 0 }} /> {m.location}
-                      </p>
+                      {/* Academy badge */}
+                      <span style={{
+                        flexShrink: 0,
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        backgroundColor: badge.bg,
+                        color: badge.color,
+                        letterSpacing: '0.5px',
+                      }}>
+                        {m.academy}
+                      </span>
+                      {/* Teams */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, margin: '0 0 3px' }}>
+                          {m.team} <span style={{ color: 'var(--text-muted)' }}>vs</span> {m.opponent}
+                        </p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <IconCalendar size={12} stroke={1.8} style={{ flexShrink: 0 }} /> {m.date}
+                          <span>·</span>
+                          <IconMapPin size={12} stroke={1.8} style={{ flexShrink: 0 }} /> {m.location}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </Card>
         </div>
 
@@ -376,115 +433,127 @@ export default function DashboardHome() {
           <Card style={{ padding: '20px 24px' }}>
             <SectionTitle title="Payment Overview" />
 
-            {/* Donut */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 28, marginBottom: 20 }}>
-              {/* CSS conic-gradient donut */}
-              <div style={{ position: 'relative', width: 110, height: 110, flexShrink: 0 }}>
-                <div style={{
-                  width: 110, height: 110, borderRadius: '50%',
-                  background: 'conic-gradient(#16a34a 0% 73%, #ef4444 73% 85%, #f5c518 85% 100%)',
-                }} />
-                {/* Inner cutout */}
-                <div style={{
-                  position: 'absolute', inset: '18px',
-                  borderRadius: '50%',
-                  backgroundColor: '#1a1a1a',
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <span style={{ color: '#fff', fontSize: 18, fontWeight: 700, lineHeight: 1 }}>73%</span>
-                  <span style={{ color: '#666', fontSize: 10, marginTop: 2 }}>paid</span>
-                </div>
-              </div>
-              {/* Legend */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {[
-                  { label: 'Paid',    pct: '73%', color: '#16a34a' },
-                  { label: 'Unpaid',  pct: '12%', color: '#ef4444' },
-                  { label: 'Partial', pct: '15%', color: '#f5c518' },
-                ].map(({ label, pct, color }) => (
-                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color, flexShrink: 0 }} />
-                    <span style={{ color: '#888', fontSize: 12 }}>{label}</span>
-                    <span style={{ color: '#fff', fontSize: 12, fontWeight: 600, marginLeft: 'auto', paddingLeft: 12 }}>{pct}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent payments list */}
-            <div style={{ borderTop: '1px solid #222', paddingTop: 16 }}>
-              <p style={{ color: '#555', fontSize: 11, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', margin: '0 0 12px' }}>
-                Recent Payments
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {PAYMENTS.map((p) => {
-                  const s = STATUS_STYLE[p.status]
-                  return (
-                    <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      {/* Initials dot */}
-                      <div style={{
-                        width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-                        backgroundColor: '#222', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', color: '#777', fontSize: 11, fontWeight: 700,
-                      }}>
-                        {p.name.split(' ').map(w => w[0]).join('')}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ color: '#ddd', fontSize: 13, fontWeight: 500, margin: '0 0 1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {p.name}
-                        </p>
-                        <p style={{ color: '#555', fontSize: 11, margin: 0 }}>{p.date}</p>
-                      </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: '0 0 2px' }}>${p.amount}</p>
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '1px 7px', borderRadius: 20,
-                          fontSize: 10, fontWeight: 700,
-                          backgroundColor: s.bg, color: s.color,
-                        }}>
-                          {s.label}
-                        </span>
-                      </div>
+            {academyStudents.length === 0 ? (
+              <EmptyNote text="No students yet." />
+            ) : (
+              <>
+                {/* Donut */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 28, marginBottom: 20 }}>
+                  {/* CSS conic-gradient donut */}
+                  <div style={{ position: 'relative', width: 110, height: 110, flexShrink: 0 }}>
+                    <div style={{
+                      width: 110, height: 110, borderRadius: '50%',
+                      background: `conic-gradient(#16a34a 0% ${paymentBreakdown.paidPct}%, #ef4444 ${paymentBreakdown.paidPct}% ${paymentBreakdown.paidPct + paymentBreakdown.unpaidPct}%, #f5c518 ${paymentBreakdown.paidPct + paymentBreakdown.unpaidPct}% 100%)`,
+                    }} />
+                    {/* Inner cutout */}
+                    <div style={{
+                      position: 'absolute', inset: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--bg-card)',
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <span style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700, lineHeight: 1 }}>{paymentBreakdown.paidPct}%</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 10, marginTop: 2 }}>paid</span>
                     </div>
-                  )
-                })}
-              </div>
-            </div>
+                  </div>
+                  {/* Legend */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {[
+                      { label: 'Paid',    pct: `${paymentBreakdown.paidPct}%`,    color: '#16a34a' },
+                      { label: 'Unpaid',  pct: `${paymentBreakdown.unpaidPct}%`,  color: '#ef4444' },
+                      { label: 'Partial', pct: `${paymentBreakdown.partialPct}%`, color: '#f5c518' },
+                    ].map(({ label, pct, color }) => (
+                      <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color, flexShrink: 0 }} />
+                        <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{label}</span>
+                        <span style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 600, marginLeft: 'auto', paddingLeft: 12 }}>{pct}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recent payments list */}
+                {recentPayments.length > 0 && (
+                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, letterSpacing: '1.5px', textTransform: 'uppercase', margin: '0 0 12px' }}>
+                      Recent Payments
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {recentPayments.map((p) => {
+                        const s = STATUS_STYLE[p.payment_status]
+                        return (
+                          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            {/* Initials dot */}
+                            <div style={{
+                              width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
+                              backgroundColor: 'var(--bg-hover)', display: 'flex', alignItems: 'center',
+                              justifyContent: 'center', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 700,
+                            }}>
+                              {p.name.split(' ').map(w => w[0]).join('')}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 500, margin: '0 0 1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {p.name}
+                              </p>
+                              <p style={{ color: 'var(--text-muted)', fontSize: 11, margin: 0 }}>{teamNameFor(p.team_id)}</p>
+                            </div>
+                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                              <p style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, margin: '0 0 2px' }}>${p.payment_amount}</p>
+                              <span style={{
+                                display: 'inline-block',
+                                padding: '1px 7px', borderRadius: 20,
+                                fontSize: 10, fontWeight: 700,
+                                backgroundColor: s.bg, color: s.color,
+                              }}>
+                                {s.label}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </Card>
 
           {/* Top Rated Players */}
           <Card style={{ padding: '20px 24px' }}>
             <SectionTitle title="Top Rated Players" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {TOP_PLAYERS.map((p, i) => (
-                <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {/* Rank */}
-                  <span style={{
-                    width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-                    backgroundColor: i === 0 ? 'rgba(245,197,24,0.2)' : i === 1 ? 'rgba(180,180,180,0.1)' : 'rgba(180,100,40,0.1)',
-                    color:           i === 0 ? '#f5c518'               : i === 1 ? '#aaa'                   : '#cd7f32',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 800,
-                  }}>
-                    {i + 1}
-                  </span>
-                  {/* Name + team */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ color: '#fff', fontSize: 13, fontWeight: 600, margin: '0 0 2px' }}>{p.name}</p>
-                    <p style={{ color: '#555', fontSize: 11, margin: 0 }}>{p.team}</p>
+            {topRatedPlayers.length === 0 ? (
+              <EmptyNote text="No ratings recorded yet." />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {topRatedPlayers.map((p, i) => (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {/* Rank */}
+                    <span style={{
+                      width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                      backgroundColor: i === 0 ? 'rgba(245,197,24,0.2)' : i === 1 ? 'rgba(180,180,180,0.1)' : 'rgba(180,100,40,0.1)',
+                      color:           i === 0 ? '#f5c518'               : i === 1 ? 'var(--text-secondary)'  : '#cd7f32',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, fontWeight: 800,
+                    }}>
+                      {i + 1}
+                    </span>
+                    {/* Name + team */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, margin: '0 0 2px' }}>{p.name}</p>
+                      <p style={{ color: 'var(--text-muted)', fontSize: 11, margin: 0 }}>{teamNameFor(p.team_id)}</p>
+                    </div>
+                    {/* Rating */}
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <Stars rating={p.overall_rating} />
+                      <p style={{ color: '#f5c518', fontSize: 12, fontWeight: 700, margin: '2px 0 0', textAlign: 'center' }}>
+                        {p.overall_rating.toFixed(1)}
+                      </p>
+                    </div>
                   </div>
-                  {/* Rating */}
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <Stars rating={p.rating} />
-                    <p style={{ color: '#f5c518', fontSize: 12, fontWeight: 700, margin: '2px 0 0', textAlign: 'center' }}>
-                      {p.rating.toFixed(1)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </Card>
 
         </div>
