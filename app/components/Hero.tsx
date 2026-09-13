@@ -85,6 +85,7 @@ export default function Hero() {
                 width={280}
                 height={280}
                 draggable={false}
+                loading="eager"
                 style={{
                   display: 'block', width: '100%', height: '100%',
                   animation: 'ballSpinY 6s linear infinite',
@@ -138,6 +139,7 @@ export default function Hero() {
                 width={280}
                 height={280}
                 draggable={false}
+                loading="eager"
                 style={{
                   display: 'block', width: '100%', height: '100%',
                   animation: 'ballSpinY 4s linear infinite',

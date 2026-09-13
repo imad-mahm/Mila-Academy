@@ -428,17 +428,6 @@ export default function StudentsPage() {
     }
   }, [router])
 
-  // Sync academy filter with the sidebar academy switcher
-  useEffect(() => {
-    function onAcademyChange() {
-      const u = getCurrentUser()
-      if (!u) return
-      setAcademy(u.selectedAcademy === 'Both' ? 'All' : u.selectedAcademy as 'MFA' | 'MBA')
-    }
-    window.addEventListener('mila_academy_changed', onAcademyChange)
-    return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
-  }, [])
-
   const [students, setStudents]         = useState<StudentRow[]>(() => {
     const all = loadAllStudents()
     const u   = getCurrentUser()
@@ -458,6 +447,17 @@ export default function StudentsPage() {
   const [team,     setTeam]             = useState('All')
   const [payment,  setPayment]          = useState<'All' | 'paid' | 'unpaid' | 'partial'>('All')
   const [showModal, setShowModal]       = useState(false)
+
+  // Sync academy filter with the sidebar academy switcher
+  useEffect(() => {
+    function onAcademyChange() {
+      const u = getCurrentUser()
+      if (!u) return
+      setAcademy(u.selectedAcademy === 'Both' ? 'All' : u.selectedAcademy as 'MFA' | 'MBA')
+    }
+    window.addEventListener('mila_academy_changed', onAcademyChange)
+    return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
+  }, [])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()

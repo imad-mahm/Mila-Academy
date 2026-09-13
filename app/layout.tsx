@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: "Mila Academy",
   description: "Mila Football Academy & Mila Basket Academy — Train with the best in Lebanon.",
   icons: { icon: "/logos/mfa_favicon.png" },

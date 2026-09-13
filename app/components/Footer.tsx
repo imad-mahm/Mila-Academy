@@ -144,12 +144,12 @@ export default function Footer({ settings, hasGallery = true }: { settings: Site
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
-              { label: settings.location },
-              { label: settings.phone_display },
-              { label: settings.email },
-              { label: settings.hours },
-            ].map(({ label }) => (
-              <p key={label} style={{ color: 'var(--color-text-faint)', fontSize: 13, margin: 0 }}>{label}</p>
+              { id: 'location', value: settings.location },
+              { id: 'phone',    value: settings.phone_display },
+              { id: 'email',    value: settings.email },
+              { id: 'hours',    value: settings.hours },
+            ].filter(({ value }) => value).map(({ id, value }) => (
+              <p key={id} style={{ color: 'var(--color-text-faint)', fontSize: 13, margin: 0 }}>{value}</p>
             ))}
           </div>
         </div>

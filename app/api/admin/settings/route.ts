@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET() {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const { data, error } = await supabaseAdmin.from('site_settings').select('*')
+  const { data, error } = await getSupabaseAdmin().from('site_settings').select('*')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const asObject = Object.fromEntries((data ?? []).map(row => [row.key, row.value]))
@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'No settings provided' }, { status: 400 })
   }
 
-  const { error } = await supabaseAdmin.from('site_settings').upsert(rows, { onConflict: 'key' })
+  const { error } = await getSupabaseAdmin().from('site_settings').upsert(rows, { onConflict: 'key' })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ ok: true })

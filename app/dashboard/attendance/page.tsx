@@ -198,18 +198,6 @@ export default function AttendancePage() {
     () => getCurrentUser()?.selectedAcademy ?? 'Both'
   )
 
-  useEffect(() => {
-    function onAcademyChange() {
-      const u = getCurrentUser()
-      if (!u) return
-      setSelectedAcademy(u.selectedAcademy)
-      setTeamId('')
-      setStatusMap({})
-    }
-    window.addEventListener('mila_academy_changed', onAcademyChange)
-    return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
-  }, [])
-
   const [teamId,      setTeamId]      = useState(() => {
     const u = getCurrentUser()
     return (u?.role === 'coach' && u.teamId) ? u.teamId : ''
@@ -229,6 +217,18 @@ export default function AttendancePage() {
     }
     return all
   })
+
+  useEffect(() => {
+    function onAcademyChange() {
+      const u = getCurrentUser()
+      if (!u) return
+      setSelectedAcademy(u.selectedAcademy)
+      setTeamId('')
+      setStatusMap({})
+    }
+    window.addEventListener('mila_academy_changed', onAcademyChange)
+    return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
+  }, [])
 
   // ── History state ────────────────────────────────────────────────────────
   const [savedSessions, setSavedSessions] = useState<SessionRecord[]>(() => {

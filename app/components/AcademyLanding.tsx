@@ -39,7 +39,7 @@ export default function AcademyLanding({ academy, settings }: { academy: Academy
           position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column',
           alignItems: 'center', gap: 14, padding: '48px 0',
         }}>
-          <Image src={meta.logo} alt={meta.name} width={96} height={64} style={{ height: 64, width: 'auto' }} priority />
+          <Image src={meta.logo} alt={meta.name} width={96} height={64} style={{ height: 64, width: 'auto' }} preload />
           <h1 style={{ color: '#fff', fontSize: 'clamp(32px, 6vw, 52px)', fontWeight: 800, margin: 0, lineHeight: 1.1 }}>
             {meta.name}
           </h1>

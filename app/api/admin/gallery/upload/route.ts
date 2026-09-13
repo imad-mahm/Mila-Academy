@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
   const ext = file.name.split('.').pop() || 'jpg'
   const path = `${category}/${crypto.randomUUID()}.${ext}`
 
-  const { error: uploadError } = await supabaseAdmin.storage
+  const admin = getSupabaseAdmin()
+  const { error: uploadError } = await admin.storage
     .from('gallery')
     .upload(path, file, { contentType: file.type })
 
@@ -37,9 +38,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: uploadError.message }, { status: 500 })
   }
 
-  const { data: urlData } = supabaseAdmin.storage.from('gallery').getPublicUrl(path)
+  const { data: urlData } = admin.storage.from('gallery').getPublicUrl(path)
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await admin
     .from('gallery_photos')
     .insert({
       image_url: urlData.publicUrl,
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     // Roll back the uploaded file if the DB insert failed
-    await supabaseAdmin.storage.from('gallery').remove([path])
+    await admin.storage.from('gallery').remove([path])
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 

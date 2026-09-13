@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET() {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from('gallery_photos')
     .select('*')
     .order('sort_order', { ascending: true })

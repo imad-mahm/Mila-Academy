@@ -107,9 +107,9 @@ export default function LoginPage() {
 
         {/* Logos */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 28 }}>
-          <Image src="/logos/mfa_navbar.png" alt="MFA" width={64} height={40} style={{ height: 40, width: 'auto' }} priority />
+          <Image src="/logos/mfa_navbar.png" alt="MFA" width={64} height={40} style={{ height: 40, width: 'auto' }} loading="eager" />
           <div style={{ width: 1, height: 32, backgroundColor: '#f5c518', opacity: 0.35 }} />
-          <Image src="/logos/mba_navbar.png" alt="MBA" width={64} height={40} style={{ height: 40, width: 'auto' }} priority />
+          <Image src="/logos/mba_navbar.png" alt="MBA" width={64} height={40} style={{ height: 40, width: 'auto' }} loading="eager" />
         </div>
 
         <h1 style={{ color: 'var(--text-primary)', fontSize: 22, fontWeight: 700, textAlign: 'center', margin: '0 0 4px', lineHeight: 1.2 }}>
