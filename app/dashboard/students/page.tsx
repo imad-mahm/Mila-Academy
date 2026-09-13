@@ -6,8 +6,9 @@ import {
   IconSearch, IconPlus, IconX, IconUsers,
   IconStarFilled, IconStar,
 } from '@tabler/icons-react'
-import { TEAMS, loadAllStudents, type StudentRow } from './data'
+import type { StudentRow } from './data'
 import { getCurrentUser } from '@/lib/auth'
+import { fetchStudents, fetchTeams, createStudent, type TeamRow } from './api'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -60,11 +61,11 @@ function initials(name: string) {
 
 // ── Student card ───────────────────────────────────────────────────────────────
 
-function StudentCard({ student, onClick }: { student: StudentRow; onClick: () => void }) {
+function StudentCard({ student, teams, onClick }: { student: StudentRow; teams: TeamRow[]; onClick: () => void }) {
   const [hovered, setHovered] = useState(false)
   const acad  = ACADEMY_STYLE[student.academy]
   const pmnt  = PAYMENT_STYLE[student.payment_status]
-  const team  = TEAMS.find(t => t.id === student.team_id)?.name ?? student.team_id
+  const team  = teams.find(t => t.id === student.team_id)?.name ?? '—'
 
   return (
     <button
@@ -137,7 +138,7 @@ function StudentCard({ student, onClick }: { student: StudentRow; onClick: () =>
 
 const EMPTY_FORM = {
   name: '', dob: '', nationality: 'Lebanese', position: '', jersey_number: '',
-  team_id: 'mfa-u17', academy: 'MFA' as 'MFA' | 'MBA',
+  team_id: '', academy: 'MFA' as 'MFA' | 'MBA',
   parent_name: '', parent_phone: '', parent_whatsapp: '', emergency_contact: '',
   blood_type: '', allergies: '', injuries: '', doctor_contact: '',
   payment_status: 'paid' as 'paid' | 'unpaid' | 'partial', payment_amount: '150',
@@ -217,50 +218,53 @@ function SelectField({
 }
 
 function AddStudentModal({
+  teams,
   onClose,
   onAdd,
 }: {
+  teams: TeamRow[]
   onClose: () => void
   onAdd: (s: StudentRow) => void
 }) {
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [form, setForm]     = useState(() => ({ ...EMPTY_FORM, team_id: teams[0]?.id ?? '' }))
   const [section, setSection] = useState<'basic' | 'parent' | 'medical' | 'payment'>('basic')
+  const [saving, setSaving] = useState(false)
+  const [error,  setError]  = useState('')
   const set = (k: keyof typeof EMPTY_FORM) => (v: string) => setForm(p => ({ ...p, [k]: v }))
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const newStudent: StudentRow = {
-      id: `custom-${Date.now()}`,
-      name: form.name,
-      dob: form.dob,
-      nationality: form.nationality,
-      position: form.position,
-      jersey_number: parseInt(form.jersey_number) || 99,
-      team_id: form.team_id,
-      academy: TEAMS.find(t => t.id === form.team_id)?.academy ?? 'MFA',
-      blood_type: form.blood_type || 'Unknown',
-      allergies: form.allergies || 'None',
-      injuries: form.injuries || 'None',
-      doctor_contact: form.doctor_contact,
-      parent_name: form.parent_name,
-      parent_phone: form.parent_phone,
-      parent_whatsapp: form.parent_whatsapp,
-      emergency_contact: form.emergency_contact,
-      payment_status: form.payment_status,
-      payment_amount: parseFloat(form.payment_amount) || 0,
-      payment_due_date: new Date().toISOString().split('T')[0],
-      notes: form.notes,
-      created_at: new Date().toISOString().split('T')[0],
-      attendance_rate: 0,
-      overall_rating: 0,
-      awards: [],
-    }
+    setSaving(true)
+    setError('')
     try {
-      const existing = JSON.parse(localStorage.getItem('mila_students_added') ?? '[]') as StudentRow[]
-      localStorage.setItem('mila_students_added', JSON.stringify([...existing, newStudent]))
-    } catch {}
-    onAdd(newStudent)
-    onClose()
+      const created = await createStudent({
+        name: form.name,
+        dob: form.dob || null,
+        nationality: form.nationality,
+        position: form.position,
+        jersey_number: parseInt(form.jersey_number) || null,
+        team_id: form.team_id || null,
+        academy: teams.find(t => t.id === form.team_id)?.academy ?? form.academy,
+        blood_type: form.blood_type || '',
+        allergies: form.allergies || 'None',
+        injuries: form.injuries || 'None',
+        doctor_contact: form.doctor_contact,
+        parent_name: form.parent_name,
+        parent_phone: form.parent_phone,
+        parent_whatsapp: form.parent_whatsapp,
+        emergency_contact: form.emergency_contact,
+        payment_status: form.payment_status,
+        payment_amount: parseFloat(form.payment_amount) || 0,
+        payment_due_date: new Date().toISOString().split('T')[0],
+        notes: form.notes,
+      })
+      onAdd(created)
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add student.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const SECTIONS = [
@@ -324,10 +328,10 @@ function AddStudentModal({
                 label="Team *"
                 value={form.team_id}
                 onChange={v => {
-                  const acad = TEAMS.find(t => t.id === v)?.academy ?? 'MFA'
+                  const acad = teams.find(t => t.id === v)?.academy ?? 'MFA'
                   setForm(p => ({ ...p, team_id: v, academy: acad }))
                 }}
-                options={TEAMS.map(t => ({ value: t.id, label: t.name }))}
+                options={teams.map(t => ({ value: t.id, label: t.name }))}
               />
             </>}
 
@@ -379,6 +383,10 @@ function AddStudentModal({
             </>}
           </div>
 
+          {error && (
+            <p style={{ color: '#ef4444', fontSize: 13, marginTop: 14, textAlign: 'center' }}>{error}</p>
+          )}
+
           {/* Footer buttons */}
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
             <button type="button" onClick={onClose} style={{
@@ -399,12 +407,12 @@ function AddStudentModal({
                 Next →
               </button>
             ) : (
-              <button type="submit" disabled={!form.name || !form.dob || !form.position} style={{
+              <button type="submit" disabled={saving || !form.name || !form.dob || !form.position} style={{
                 flex: 1, height: 44, borderRadius: 8, border: 'none',
                 backgroundColor: '#16a34a', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                opacity: !form.name || !form.dob || !form.position ? 0.5 : 1,
+                opacity: saving || !form.name || !form.dob || !form.position ? 0.5 : 1,
               }}>
-                Add Student
+                {saving ? 'Adding…' : 'Add Student'}
               </button>
             )}
           </div>
@@ -428,16 +436,10 @@ export default function StudentsPage() {
     }
   }, [router])
 
-  const [students, setStudents]         = useState<StudentRow[]>(() => {
-    const all = loadAllStudents()
-    const u   = getCurrentUser()
-    if (!u || u.role === 'admin') return all
-    if (u.role === 'coach') {
-      if (u.teamId) return all.filter(s => s.team_id === u.teamId)
-      return all.filter(s => u.academies.includes(s.academy))
-    }
-    return all // parent / student are redirected in useEffect below
-  })
+  const [allStudents, setAllStudents]   = useState<StudentRow[]>([])
+  const [teams,        setTeams]        = useState<TeamRow[]>([])
+  const [loading,       setLoading]     = useState(true)
+  const [loadError,     setLoadError]   = useState('')
   const [search,   setSearch]           = useState('')
   const [academy,  setAcademy]          = useState<'All' | 'MFA' | 'MBA'>(() => {
     const u = getCurrentUser()
@@ -447,6 +449,24 @@ export default function StudentsPage() {
   const [team,     setTeam]             = useState('All')
   const [payment,  setPayment]          = useState<'All' | 'paid' | 'unpaid' | 'partial'>('All')
   const [showModal, setShowModal]       = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([fetchStudents(), fetchTeams()])
+      .then(([s, t]) => {
+        if (cancelled) return
+        const u = getCurrentUser()
+        let visible = s
+        if (u?.role === 'coach') {
+          visible = u.teamId ? s.filter(x => x.team_id === u.teamId) : s.filter(x => u.academies.includes(x.academy))
+        }
+        setAllStudents(visible)
+        setTeams(t)
+      })
+      .catch(err => { if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Failed to load students.') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
 
   // Sync academy filter with the sidebar academy switcher
   useEffect(() => {
@@ -461,14 +481,14 @@ export default function StudentsPage() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    return students.filter(s => {
+    return allStudents.filter(s => {
       if (q && !s.name.toLowerCase().includes(q) && !s.position.toLowerCase().includes(q)) return false
       if (academy !== 'All' && s.academy !== academy) return false
       if (team !== 'All' && s.team_id !== team) return false
       if (payment !== 'All' && s.payment_status !== payment) return false
       return true
     })
-  }, [students, search, academy, team, payment])
+  }, [allStudents, search, academy, team, payment])
 
   const filterSelect: React.CSSProperties = {
     backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8,
@@ -497,16 +517,18 @@ export default function StudentsPage() {
         <div>
           <h1 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Students</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
-            {filtered.length} of {students.length} students
+            {loading ? 'Loading…' : `${filtered.length} of ${allStudents.length} students`}
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
+          disabled={teams.length === 0}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             backgroundColor: '#16a34a', color: '#fff',
             border: 'none', borderRadius: 10, padding: '10px 18px',
-            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            fontSize: 14, fontWeight: 600, cursor: teams.length === 0 ? 'default' : 'pointer',
+            opacity: teams.length === 0 ? 0.5 : 1,
             transition: 'background-color 0.2s ease',
           }}
         >
@@ -514,6 +536,10 @@ export default function StudentsPage() {
           Add Student
         </button>
       </div>
+
+      {loadError && (
+        <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12 }}>{loadError}</p>
+      )}
 
       {/* Filter bar */}
       <div className="filter-bar">
@@ -552,7 +578,7 @@ export default function StudentsPage() {
 
         <select value={team} onChange={e => setTeam(e.target.value)} style={filterSelect}>
           <option value="All">All Teams</option>
-          {TEAMS.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
 
         <select value={payment} onChange={e => setPayment(e.target.value as typeof payment)} style={filterSelect}>
@@ -570,11 +596,12 @@ export default function StudentsPage() {
             <StudentCard
               key={s.id}
               student={s}
+              teams={teams}
               onClick={() => router.push(`/dashboard/students/${s.id}`)}
             />
           ))}
         </div>
-      ) : (
+      ) : !loading && (
         <div style={{
           marginTop: 60, textAlign: 'center',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
@@ -592,8 +619,9 @@ export default function StudentsPage() {
 
       {showModal && (
         <AddStudentModal
+          teams={teams}
           onClose={() => setShowModal(false)}
-          onAdd={s => setStudents(p => [...p, s])}
+          onAdd={s => setAllStudents(p => [...p, s])}
         />
       )}
     </div>

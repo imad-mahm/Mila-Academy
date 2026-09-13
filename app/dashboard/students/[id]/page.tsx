@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import {
   IconArrowLeft, IconPhone, IconBrandWhatsapp, IconX, IconPlus,
@@ -8,10 +8,11 @@ import {
   IconCheck, IconActivity, IconCreditCard, IconNotes, IconMedicalCross,
 } from '@tabler/icons-react'
 import {
-  findStudent, generateAttendance, generateRatings, generatePayments, teamName,
+  generateAttendance, generateRatings, generatePayments,
   type StudentRow, type RatingEntry, type PaymentEntry,
 } from '../data'
 import { getCurrentUser } from '@/lib/auth'
+import { fetchStudent, fetchTeams, type TeamRow } from '../api'
 
 // ── Shared mini-components ─────────────────────────────────────────────────────
 
@@ -221,7 +222,7 @@ function AddRatingModal({
 
 // ── Tab bodies ─────────────────────────────────────────────────────────────────
 
-function OverviewTab({ student }: { student: StudentRow }) {
+function OverviewTab({ student, teamDisplayName }: { student: StudentRow; teamDisplayName: string }) {
   const key = `mila_notes_${student.id}`
   const [notes, setNotes] = useState(() => student.notes || localStorage.getItem(key) || '')
   const [saved, setSaved]  = useState(false)
@@ -245,7 +246,7 @@ function OverviewTab({ student }: { student: StudentRow }) {
         </p>
         <InfoRow label="Date of Birth" value={`${dobStr} (Age ${age})`} />
         <InfoRow label="Nationality"   value={student.nationality}        />
-        <InfoRow label="Team"          value={teamName(student.team_id)}  />
+        <InfoRow label="Team"          value={teamDisplayName}            />
         <InfoRow label="Academy"       value={student.academy}            />
         <InfoRow label="Position"      value={student.position}           />
         <InfoRow label="Enrolled"      value={new Date(student.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} />
@@ -629,7 +630,9 @@ type Tab = typeof ALL_TABS[number]['key']
 export default function StudentDetailPage() {
   const router  = useRouter()
   const params  = useParams<{ id: string }>()
-  const student = useMemo(() => findStudent(params.id) ?? null, [params.id])
+  const [student, setStudent] = useState<StudentRow | null>(null)
+  const [teams,   setTeams]   = useState<TeamRow[]>([])
+  const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('overview')
 
   const authUser = getCurrentUser()
@@ -646,6 +649,18 @@ export default function StudentDetailPage() {
     }
   }, [params.id, router])
 
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    Promise.all([fetchStudent(params.id), fetchTeams()])
+      .then(([s, t]) => { if (!cancelled) { setStudent(s); setTeams(t) } })
+      .catch(() => { if (!cancelled) setStudent(null) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [params.id])
+
+  if (loading) return null
+
   if (!student) {
     return (
       <div style={{ color: 'var(--text-primary)', textAlign: 'center', paddingTop: 60 }}>
@@ -656,6 +671,8 @@ export default function StudentDetailPage() {
       </div>
     )
   }
+
+  const teamDisplayName = teams.find(t => t.id === student.team_id)?.name ?? '—'
 
   const acad  = ACAD_STYLE[student.academy]
   const inits = student.name.split(' ').map(w => w[0] ?? '').join('').toUpperCase().slice(0, 2)
@@ -709,7 +726,7 @@ export default function StudentDetailPage() {
               </span>
               <Badge label={student.position}   bg="var(--bg-hover)" color="var(--text-secondary)" size={12} />
               <Badge label={student.academy}    bg={acad.bg}         color={acad.color} size={12} />
-              <Badge label={teamName(student.team_id)} bg="rgba(255,255,255,0.06)" color="var(--text-secondary)" size={12} />
+              <Badge label={teamDisplayName} bg="rgba(255,255,255,0.06)" color="var(--text-secondary)" size={12} />
               <Stars rating={student.overall_rating} />
             </div>
           </div>
@@ -737,7 +754,7 @@ export default function StudentDetailPage() {
       </div>
 
       {/* Tab body */}
-      {tab === 'overview'   && <OverviewTab   key={student.id} student={student} />}
+      {tab === 'overview'   && <OverviewTab   key={student.id} student={student} teamDisplayName={teamDisplayName} />}
       {tab === 'medical'    && <MedicalTab    key={student.id} student={student} role={role} />}
       {tab === 'ratings'    && <RatingsTab    key={student.id} student={student} />}
       {tab === 'attendance' && <AttendanceTab key={student.id} student={student} />}
