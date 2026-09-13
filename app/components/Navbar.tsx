@@ -84,14 +84,15 @@ export default function Navbar({ hasGallery = true }: { hasGallery?: boolean }) 
     <>
       <style>{`
         .nb-link {
-          background: none; border: none; padding: 0;
+          background: none; border: none;
           color: var(--color-text); font-size: 13px;
           font-family: inherit; cursor: pointer;
-          transition: color 0.15s ease;
+          transition: color 0.15s ease, background-color 0.15s ease;
           white-space: nowrap;
-          min-height: 44px; display: inline-flex; align-items: center;
+          min-height: 44px; padding: 0 12px; border-radius: 8px;
+          display: inline-flex; align-items: center;
         }
-        .nb-link:hover { color: var(--color-text-dim); }
+        .nb-link:hover { color: var(--color-gold); background-color: rgba(var(--color-gold-rgb), 0.1); }
         .nb-join {
           background: none; border: none; padding: 0;
           color: var(--color-text-dim); font-size: 13px;
