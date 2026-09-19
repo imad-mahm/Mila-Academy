@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 export type Program = {
   id: string
@@ -47,7 +47,28 @@ const FALLBACK_SETTINGS: SiteSettings = {
   instagram_url: '#', facebook_url: '#', youtube_url: '#',
 }
 
+// Without credentials every call below would fire a request at the placeholder
+// URL in lib/supabase.ts and fail with a bare "TypeError: fetch failed" — four
+// of them per page load, which is what fills the dev overlay's issue counter.
+// Warn once, clearly, and skip the doomed round-trips.
+let warnedUnconfigured = false
+
+function unconfigured(): boolean {
+  if (isSupabaseConfigured) return false
+  if (!warnedUnconfigured) {
+    warnedUnconfigured = true
+    console.warn(
+      '[site-data] Supabase is not configured — the public site will render ' +
+      'with empty programmes/testimonials/gallery and no stats or contact ' +
+      'details. Copy .env.example to .env.local and fill in ' +
+      'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+    )
+  }
+  return true
+}
+
 export async function getPrograms(): Promise<Program[]> {
+  if (unconfigured()) return []
   const { data, error } = await supabase
     .from('programs')
     .select('id, sport, name, subtitle, age_range, frequency, price_month')
@@ -57,6 +78,7 @@ export async function getPrograms(): Promise<Program[]> {
 }
 
 export async function getTestimonials(): Promise<Testimonial[]> {
+  if (unconfigured()) return []
   const { data, error } = await supabase
     .from('testimonials')
     .select('id, quote, name, initials, role, rating')
@@ -66,6 +88,7 @@ export async function getTestimonials(): Promise<Testimonial[]> {
 }
 
 export async function getGalleryPhotos(): Promise<GalleryPhoto[]> {
+  if (unconfigured()) return []
   const { data, error } = await supabase
     .from('gallery_photos')
     .select('id, image_url, category, caption')
@@ -75,6 +98,7 @@ export async function getGalleryPhotos(): Promise<GalleryPhoto[]> {
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
+  if (unconfigured()) return FALLBACK_SETTINGS
   const { data, error } = await supabase.from('site_settings').select('key, value')
   if (error) { console.error('getSiteSettings:', error.message); return FALLBACK_SETTINGS }
   const map = Object.fromEntries((data ?? []).map(r => [r.key, r.value]))

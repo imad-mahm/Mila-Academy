@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { getCurrentUser, type AcademyFilter } from '@/lib/auth'
+import { type AcademyFilter } from '@/lib/auth'
+import { useSession, useSelectedAcademy } from '@/lib/use-session'
 import { fetchStudents, fetchTeams, type TeamRow } from './students/api'
 import type { StudentRow } from './students/data'
 import { loadAllSessions } from './attendance/data'
@@ -112,7 +113,8 @@ function EmptyNote({ text }: { text: string }) {
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function DashboardHome() {
-  const [name]     = useState(() => getCurrentUser()?.name ?? 'Coach')
+  const { user: session } = useSession()
+  const name = session?.name ?? 'Coach'
   const [initials] = useState(() =>
     (name ?? 'C')
       .split(' ')
@@ -126,17 +128,7 @@ export default function DashboardHome() {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   }))
 
-  const [selectedAcademy, setSelectedAcademy] = useState<AcademyFilter>(
-    () => getCurrentUser()?.selectedAcademy ?? 'Both'
-  )
-  useEffect(() => {
-    function onAcademyChange() {
-      const u = getCurrentUser()
-      if (u) setSelectedAcademy(u.selectedAcademy)
-    }
-    window.addEventListener('mila_academy_changed', onAcademyChange)
-    return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
-  }, [])
+  const selectedAcademy = useSelectedAcademy()
 
   // Real data: students + teams (Supabase), coach count (Supabase),
   // attendance/matches (still the shared localStorage system — see

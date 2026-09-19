@@ -15,17 +15,33 @@ function parseStat(raw: string): { value: number; suffix: string } {
 }
 
 export default function Stats({ settings }: { settings: SiteSettings }) {
+  // Drop any figure that is missing or zero rather than advertising
+  // "0 Players Trained". site_settings falling back (unset env, unreachable DB,
+  // a cleared field) used to render the whole row as zeros on the live site.
   const STATS = useMemo(() => [
     { ...parseStat(settings.players_trained),  label: 'Players Trained'     },
     { ...parseStat(settings.years_excellence), label: 'Years of Excellence' },
     { ...parseStat(settings.academies_count),  label: 'Academies'           },
     { ...parseStat(settings.success_rate),     label: 'Success Rate'        },
-  ], [settings])
+  ].filter(s => s.value > 0), [settings])
 
   const sectionRef  = useRef<HTMLElement>(null)
   const numRefs     = useRef<(HTMLSpanElement | null)[]>([])
 
   useEffect(() => {
+    // With reduced motion the count-up is skipped — but the markup renders "0"
+    // as its starting value, so without this the section would permanently read
+    // "0 Players Trained". Write the real figures straight in instead.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      numRefs.current.forEach((el, i) => {
+        if (el && STATS[i]) el.textContent = STATS[i].value + STATS[i].suffix
+      })
+      return
+    }
+
+    // Drop refs left behind by a longer previous list.
+    numRefs.current.length = STATS.length
+
     const ctx = gsap.context(() => {
       // Number count-up for each stat
       numRefs.current.forEach((el, i) => {
@@ -88,13 +104,16 @@ export default function Stats({ settings }: { settings: SiteSettings }) {
         Our Legacy Speaks
       </h2>
 
-      {/* Stats grid */}
+      {/* Stats grid — omitted entirely when no figures are available */}
+      {STATS.length > 0 && (
       <div style={{
         maxWidth: 1000,
         margin: '0 auto',
         padding: '0 24px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        // Tracks the number of figures actually shown — a fixed repeat(4)
+        // squeezed two surviving stats into half the row.
+        gridTemplateColumns: `repeat(${STATS.length}, 1fr)`,
         gap: 0,
       }}
         className="stats-grid"
@@ -134,6 +153,7 @@ export default function Stats({ settings }: { settings: SiteSettings }) {
           </div>
         ))}
       </div>
+      )}
 
       {/* Divider */}
       <div style={{

@@ -8,7 +8,9 @@ import {
 } from '@tabler/icons-react'
 import type { StudentRow } from './data'
 import { getCurrentUser } from '@/lib/auth'
+import { useSelectedAcademy } from '@/lib/use-session'
 import { fetchStudents, fetchTeams, createStudent, type TeamRow } from './api'
+import { useModal, modalOverlayProps } from '../hooks/useModal'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -274,8 +276,10 @@ function AddStudentModal({
     { key: 'payment' as const, label: 'Payment'      },
   ]
 
+  useModal(onClose)
+
   return (
-    <div style={{
+    <div {...modalOverlayProps} aria-label="Add student" style={{
       position: 'fixed', inset: 0, zIndex: 1000,
       backgroundColor: 'rgba(0,0,0,0.75)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -440,12 +444,14 @@ export default function StudentsPage() {
   const [teams,        setTeams]        = useState<TeamRow[]>([])
   const [loading,       setLoading]     = useState(true)
   const [loadError,     setLoadError]   = useState('')
+  const selectedAcademy = useSelectedAcademy()
   const [search,   setSearch]           = useState('')
-  const [academy,  setAcademy]          = useState<'All' | 'MFA' | 'MBA'>(() => {
-    const u = getCurrentUser()
-    if (!u || u.selectedAcademy === 'Both') return 'All'
-    return u.selectedAcademy as 'MFA' | 'MBA'
-  })
+  // Follows the sidebar switcher unless overridden by the filter below. Seeding
+  // this from localStorage in the initialiser ran on the server too, so the
+  // prerendered markup always showed 'All'.
+  const [academyOverride, setAcademy] = useState<'All' | 'MFA' | 'MBA' | null>(null)
+  const academy: 'All' | 'MFA' | 'MBA' =
+    academyOverride ?? (selectedAcademy === 'Both' ? 'All' : selectedAcademy)
   const [team,     setTeam]             = useState('All')
   const [payment,  setPayment]          = useState<'All' | 'paid' | 'unpaid' | 'partial'>('All')
   const [showModal, setShowModal]       = useState(false)
@@ -468,13 +474,9 @@ export default function StudentsPage() {
     return () => { cancelled = true }
   }, [])
 
-  // Sync academy filter with the sidebar academy switcher
+  // Switching academy in the sidebar clears any local override.
   useEffect(() => {
-    function onAcademyChange() {
-      const u = getCurrentUser()
-      if (!u) return
-      setAcademy(u.selectedAcademy === 'Both' ? 'All' : u.selectedAcademy as 'MFA' | 'MBA')
-    }
+    function onAcademyChange() { setAcademy(null) }
     window.addEventListener('mila_academy_changed', onAcademyChange)
     return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
   }, [])

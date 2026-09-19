@@ -2,6 +2,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { SiteSettings } from '@/lib/site-data'
+import { useRouter } from 'next/navigation'
 import { scrollToSection } from '@/lib/lenis-store'
 
 const NAV_LINKS = [
@@ -36,13 +37,24 @@ function YtSvg() {
   )
 }
 
-export default function Footer({ settings, hasGallery = true }: { settings: SiteSettings; hasGallery?: boolean }) {
-  const navLinks = hasGallery ? NAV_LINKS : NAV_LINKS.filter(l => l.id !== 'gallery')
+export default function Footer({
+  settings,
+  hasGallery = true,
+  hasPrograms = true,
+}: { settings: SiteSettings; hasGallery?: boolean; hasPrograms?: boolean }) {
+  const router = useRouter()
+  // Same guard as the navbar: drop links whose section isn't rendered.
+  const navLinks = NAV_LINKS.filter(l =>
+    (l.id !== 'gallery'  || hasGallery) &&
+    (l.id !== 'programs' || hasPrograms)
+  )
+  // Drop socials the site settings haven't been filled in for — the fallback
+  // value is '#', which would render a visible icon that goes nowhere.
   const SOCIALS = [
     { href: settings.instagram_url, icon: <IgSvg />, label: 'Instagram' },
     { href: settings.facebook_url,  icon: <FbSvg />, label: 'Facebook'  },
     { href: settings.youtube_url,   icon: <YtSvg />, label: 'YouTube'   },
-  ]
+  ].filter(s => s.href && s.href !== '#')
 
   return (
     <footer style={{ backgroundColor: 'var(--color-bg)', borderTop: '1px solid rgba(var(--color-gold-rgb),0.15)' }}>
@@ -111,7 +123,14 @@ export default function Footer({ settings, hasGallery = true }: { settings: Site
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
             {SOCIALS.map(({ href, icon, label }) => (
-              <a key={label} href={href} aria-label={label} className="footer-social-btn">
+              <a
+                key={label}
+                href={href}
+                aria-label={label}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-social-btn"
+              >
                 {icon}
               </a>
             ))}
@@ -127,7 +146,7 @@ export default function Footer({ settings, hasGallery = true }: { settings: Site
             {navLinks.map((link) => (
               <button
                 key={link.id}
-                onClick={() => scrollToSection(link.id)}
+                onClick={() => { if (!scrollToSection(link.id)) router.push(`/#${link.id}`) }}
                 className="footer-link"
                 style={{ background: 'none', border: 'none', textAlign: 'left', fontFamily: 'inherit', cursor: 'pointer' }}
               >
@@ -168,7 +187,7 @@ export default function Footer({ settings, hasGallery = true }: { settings: Site
         gap: 12,
       }}>
         <p style={{ color: 'var(--color-text-faintest)', fontSize: 12, margin: 0 }}>
-          © 2024 Mila Football Academy. All rights reserved.
+          © {new Date().getFullYear()} Mila Academy. All rights reserved.
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <p style={{ color: 'var(--color-text-faintest)', fontSize: 12, margin: 0 }}>

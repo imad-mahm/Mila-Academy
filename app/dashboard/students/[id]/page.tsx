@@ -11,8 +11,9 @@ import {
   generateAttendance, generateRatings, generatePayments,
   type StudentRow, type RatingEntry, type PaymentEntry,
 } from '../data'
-import { getCurrentUser } from '@/lib/auth'
+import { useSession } from '@/lib/use-session'
 import { fetchStudent, fetchTeams, type TeamRow } from '../api'
+import { useModal, modalOverlayProps } from '../../hooks/useModal'
 
 // ── Shared mini-components ─────────────────────────────────────────────────────
 
@@ -159,8 +160,10 @@ function AddRatingModal({
     onClose()
   }
 
+  useModal(onClose)
+
   return (
-    <div style={{
+    <div {...modalOverlayProps} aria-label="Add rating" style={{
       position: 'fixed', inset: 0, zIndex: 1000,
       backgroundColor: 'rgba(0,0,0,0.75)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
@@ -632,34 +635,43 @@ export default function StudentDetailPage() {
   const params  = useParams<{ id: string }>()
   const [student, setStudent] = useState<StudentRow | null>(null)
   const [teams,   setTeams]   = useState<TeamRow[]>([])
-  const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('overview')
 
-  const authUser = getCurrentUser()
-  const role = authUser?.role ?? 'admin'
+  // `loading` is derived from which id we have finished fetching, rather than a
+  // separate flag flipped at the top of the effect (a setState-in-effect).
+  const [loadedId, setLoadedId] = useState<string | null>(null)
+  const loading = loadedId !== params.id
+
+  // Read via the session store, not getCurrentUser() during render: that hit
+  // localStorage on every render and returned null on the server, so the tab
+  // list hydrated differently than it rendered.
+  const { user: authUser, ready } = useSession()
+  // Fall back to the LEAST privileged role, not 'admin' - with the old default
+  // the Payments tab rendered for a split second before the session resolved.
+  const role = authUser?.role ?? 'student'
 
   const TABS = ALL_TABS.filter(t =>
     t.key !== 'payments' || (role !== 'coach' && role !== 'student')
   )
 
   useEffect(() => {
+    if (!ready) return
     if (!authUser) { router.replace('/dashboard/login'); return }
     if ((authUser.role === 'parent' || authUser.role === 'student') && params.id !== String(authUser.studentId)) {
       router.replace(`/dashboard/students/${authUser.studentId ?? ''}`)
     }
-  }, [params.id, router])
+  }, [ready, authUser, params.id, router])
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     Promise.all([fetchStudent(params.id), fetchTeams()])
       .then(([s, t]) => { if (!cancelled) { setStudent(s); setTeams(t) } })
       .catch(() => { if (!cancelled) setStudent(null) })
-      .finally(() => { if (!cancelled) setLoading(false) })
+      .finally(() => { if (!cancelled) setLoadedId(params.id) })
     return () => { cancelled = true }
   }, [params.id])
 
-  if (loading) return null
+  if (loading || !ready) return null
 
   if (!student) {
     return (

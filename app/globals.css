@@ -70,17 +70,24 @@
   --nav-bg:                rgba(255, 255, 255, 0.9);
 }
 
-/* ── Global transition for smooth theme switching ───────────────────────────── */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* ── Theme-switch transition ─────────────────────────────────────────────────
+   Scoped to the elements that actually carry themed colours. This used to be on
+   the universal `*` selector, which made every hover, every card, and every
+   dropdown animate its colours on a 200ms delay — and forced the browser to
+   track transitions on every node in the tree. */
+body, header, footer, nav, aside, main, section, article,
+div, p, span, a, button, li, td, th, label, input, textarea, select {
   transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 
-/* Exclude elements where transitions would cause problems */
 input, textarea, select {
   transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.15s;
 }
@@ -92,6 +99,28 @@ body {
   color: var(--color-text);
   font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Native `#section` jumps must clear the 60px fixed navbar, or the heading they
+   land on sits underneath it. */
+html {
+  scroll-padding-top: 76px;
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────────
+   The public site runs GSAP count-ups, a continuously spinning ball on the
+   hero, an auto-advancing testimonial carousel and Lenis smooth scrolling.
+   Honour the OS setting and stand all of it down. (SmoothScrollProvider checks
+   the same query in JS and skips Lenis entirely.) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Scrollbar ──────────────────────────────────────────────────────────────── */

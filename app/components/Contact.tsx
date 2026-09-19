@@ -110,12 +110,20 @@ function FloatingField({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function Contact({ settings }: { settings: SiteSettings }) {
+  // Skip entries the site settings haven't been filled in for, rather than
+  // rendering a card with a label and a blank value under it.
   const INFO = [
     { Icon: IconMapPin, label: 'Location',       value: settings.location     },
     { Icon: IconPhone,  label: 'Phone',          value: settings.phone_display },
     { Icon: IconMail,   label: 'Email',          value: settings.email        },
     { Icon: IconClock,  label: 'Training Hours', value: settings.hours        },
-  ]
+  ].filter(i => i.value)
+
+  const SOCIALS = [
+    { href: settings.instagram_url, icon: <IgSvg />, label: 'Instagram' },
+    { href: settings.facebook_url,  icon: <FbSvg />, label: 'Facebook'  },
+    { href: settings.youtube_url,   icon: <YtSvg />, label: 'YouTube'   },
+  ].filter(s => s.href && s.href !== '#')
   const [form, setForm] = useState({ name: '', email: '', phone: '', age: '', academy: '', message: '' })
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
 
@@ -194,6 +202,8 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
               </label>
               <select
                 value={form.academy}
+                required
+                aria-label="Select Academy"
                 onChange={e => setForm(p => ({ ...p, academy: e.target.value }))}
                 style={{
                   width: '100%',
@@ -270,7 +280,9 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
         {/* ── RIGHT — Info ──────────────────────────────────────────────────── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
 
-          {/* WhatsApp CTA */}
+          {/* WhatsApp CTA — hidden entirely if no number is configured, since
+              https://wa.me/ with no number is a dead link. */}
+          {settings.whatsapp_number && (
           <a
             href={`https://wa.me/${settings.whatsapp_number}`}
             target="_blank"
@@ -293,6 +305,7 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
             <WaSvg size={24} />
             Chat on WhatsApp
           </a>
+          )}
 
           {/* Info cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -316,20 +329,19 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
           </div>
 
           {/* Social icons */}
+          {SOCIALS.length > 0 && (
           <div>
             <p style={{ color: 'var(--color-text-faintest)', fontSize: 11, fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', margin: '0 0 14px' }}>
               Follow Us
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
-              {[
-                { href: settings.instagram_url, icon: <IgSvg />, label: 'Instagram' },
-                { href: settings.facebook_url,  icon: <FbSvg />, label: 'Facebook'  },
-                { href: settings.youtube_url,   icon: <YtSvg />, label: 'YouTube'   },
-              ].map(({ href, icon, label }) => (
+              {SOCIALS.map(({ href, icon, label }) => (
                 <a
                   key={label}
                   href={href}
                   aria-label={label}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{
                     width: 42,
                     height: 42,
@@ -349,6 +361,7 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
               ))}
             </div>
           </div>
+          )}
         </div>
       </div>
     </section>

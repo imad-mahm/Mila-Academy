@@ -7,7 +7,8 @@ import {
   IconUsers,
 } from '@tabler/icons-react'
 import { TEAMS, loadAllStudents, teamName, type StudentRow } from '../students/data'
-import { getCurrentUser, hasAccess, type AcademyFilter } from '@/lib/auth'
+import { hasAccess } from '@/lib/auth'
+import { useSession, useSelectedAcademy, useHydrated } from '@/lib/use-session'
 import { useRequireAccess } from '../hooks/useRequireAccess'
 import { DUMMY_SESSIONS, type Status, type SessionRecord } from './data'
 
@@ -118,42 +119,48 @@ export default function AttendancePage() {
   const { user: guardedUser, loading: guardLoading } = useRequireAccess('attendance')
   const canTakeAttendance = !!guardedUser && hasAccess('attendance', 'edit', guardedUser)
 
-  // ── Take attendance state ────────────────────────────────────────────────
-  const [selectedAcademy, setSelectedAcademy] = useState<AcademyFilter>(
-    () => getCurrentUser()?.selectedAcademy ?? 'Both'
-  )
+  const { user: session } = useSession()
+  const hydrated = useHydrated()
 
-  const [teamId,      setTeamId]      = useState(() => {
-    const u = getCurrentUser()
-    return (u?.role === 'coach' && u.teamId) ? u.teamId : ''
-  })
-  const [date,        setDate]        = useState(isoToday)
+  // ── Take attendance state ────────────────────────────────────────────────
+  const selectedAcademy = useSelectedAcademy()
+
+  // Seeded empty and defaulted after hydration: reading the session in the
+  // initialiser gave '' on the prerendered server markup and the coach's team on
+  // the client. Same for the date - isoToday() at render time would have baked
+  // the *build* date into the static HTML.
+  const [teamIdOverride, setTeamId] = useState<string | null>(null)
+  const defaultTeamId = (hydrated && session?.role === 'coach' && session.teamId) ? session.teamId : ''
+  const teamId = teamIdOverride ?? defaultTeamId
+
+  const [dateOverride, setDate] = useState<string | null>(null)
+  const date = dateOverride ?? (hydrated ? isoToday() : '')
   const [statusMap,   setStatusMap]   = useState<Record<string, Status>>({})
   const [toast,       setToast]       = useState('')
   const [toastKind,   setToastKind]   = useState<'success' | 'error' | 'info'>('success')
-  const authUser = getCurrentUser()
-  const [coachName]   = useState(() => authUser?.name ?? 'Coach')
-  const [allStudents] = useState<StudentRow[]>(() => {
+  const coachName = session?.name ?? 'Coach'
+  // Recomputed per render rather than frozen in a useState initialiser, which
+  // ran before the session was known and so never applied the coach/parent
+  // narrowing on the prerendered markup.
+  const allStudents = useMemo<StudentRow[]>(() => {
     const all = loadAllStudents()
-    if (!authUser) return all
-    if (authUser.role === 'coach' && authUser.teamId) return all.filter(s => s.team_id === authUser.teamId)
-    if (authUser.role === 'parent' || authUser.role === 'student') {
-      return all.filter(s => String(s.id) === String(authUser.studentId))
+    if (!session) return all
+    if (session.role === 'coach' && session.teamId) return all.filter(s => s.team_id === session.teamId)
+    if (session.role === 'parent' || session.role === 'student') {
+      return all.filter(s => String(s.id) === String(session.studentId))
     }
     return all
-  })
+  }, [session])
 
-  useEffect(() => {
-    function onAcademyChange() {
-      const u = getCurrentUser()
-      if (!u) return
-      setSelectedAcademy(u.selectedAcademy)
-      setTeamId('')
-      setStatusMap({})
-    }
-    window.addEventListener('mila_academy_changed', onAcademyChange)
-    return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
-  }, [])
+  // Switching academy clears the in-progress sheet, which belongs to the team
+  // that is about to stop being visible. Adjusted during render (React's
+  // documented alternative to a reset effect) so the stale sheet never paints.
+  const [lastAcademy, setLastAcademy] = useState(selectedAcademy)
+  if (lastAcademy !== selectedAcademy) {
+    setLastAcademy(selectedAcademy)
+    setTeamId(null)
+    setStatusMap({})
+  }
 
   // ── History state ────────────────────────────────────────────────────────
   const [savedSessions, setSavedSessions] = useState<SessionRecord[]>(() => {

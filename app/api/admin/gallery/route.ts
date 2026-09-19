@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { dbError, unauthorized } from '@/lib/api-fields'
 
 export async function GET() {
-  if (!(await isAdminRequest())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!(await isAdminRequest())) return unauthorized()
+
   const { data, error } = await getSupabaseAdmin()
     .from('gallery_photos')
     .select('*')
     .order('sort_order', { ascending: true })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return dbError('gallery.list', error)
   return NextResponse.json({ data })
 }

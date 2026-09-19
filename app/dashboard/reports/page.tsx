@@ -2,7 +2,10 @@
 
 import { useState } from 'react'
 import { IconChartBar, IconCheck } from '@tabler/icons-react'
-import { TEAMS, loadAllStudents, generatePayments, generateAttendance, generateRatings, teamName } from '../students/data'
+import {
+  TEAMS, loadAllStudents, generatePayments, generateAttendance, generateRatings, teamName,
+  CURRENT_PAYMENT_MONTH,
+} from '../students/data'
 import { toast } from '../components/toast'
 import { useRequireAccess } from '../hooks/useRequireAccess'
 
@@ -39,7 +42,7 @@ async function generateAttendancePDF() {
   const autoTable = await getAutoTable()
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
   const students = loadAllStudents()
-  const month = 'June 2026'
+  const month = CURRENT_PAYMENT_MONTH
 
   pdfHeader(doc, `Monthly Attendance Report — ${month}`, `Generated ${new Date().toLocaleDateString('en-GB')}`)
 
@@ -49,7 +52,9 @@ async function generateAttendancePDF() {
     const pres = att.filter(a => a.status === 'present').length
     const late = att.filter(a => a.status === 'late').length
     const abs  = att.filter(a => a.status === 'absent').length
-    const rate = Math.round(((pres + late) / att.length) * 100)
+    // att.length is 0 for a student with no sessions logged; without the guard
+    // this divides by zero and the report prints "NaN%".
+    const rate = att.length ? Math.round(((pres + late) / att.length) * 100) : 0
     return [s.name, teamName(s.team_id), att.length, pres, late, abs, `${rate}%`]
   })
 
@@ -70,7 +75,7 @@ async function generateAttendancePDF() {
 async function generatePaymentExcel() {
   const XLSX = await import('xlsx')
   const students = loadAllStudents()
-  const month = 'June 2026'
+  const month = CURRENT_PAYMENT_MONTH
 
   const rows = students.map(s => {
     const payments = generatePayments(s.id, s.payment_status)

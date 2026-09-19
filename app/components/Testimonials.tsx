@@ -7,6 +7,7 @@ const CARD_GAP = 24
 export default function Testimonials({ testimonials }: { testimonials: Testimonial[] }) {
   const [idx,         setIdx]         = useState(0)
   const [windowWidth, setWindowWidth] = useState(0)
+  const [paused,      setPaused]      = useState(false)
   const trackRef              = useRef<HTMLDivElement>(null)
   const idxRef                = useRef(0)
   const timerRef              = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -25,8 +26,15 @@ export default function Testimonials({ testimonials }: { testimonials: Testimoni
   const maxIdx  = Math.max(0, testimonials.length - visible)
 
   // Direct DOM control of the track transform — avoids React batching issues on wrap
-  const moveTo = useCallback((next: number) => {
-    const nextOffset = Math.min(next,          maxIdx) * stride
+  const moveTo = useCallback((raw: number) => {
+    // Clamp into the range the track can actually travel. Callers used to wrap
+    // modulo `testimonials.length`, but the last `visible - 1` of those indices
+    // all resolve to the same maximum offset — so the carousel sat visually
+    // frozen for several ticks at the end of every cycle while the dots and the
+    // highlighted-card border kept advancing past it.
+    const next = Math.max(0, Math.min(raw, maxIdx))
+
+    const nextOffset = next          * stride
     const currOffset = Math.min(idxRef.current, maxIdx) * stride
 
     if (trackRef.current) {
@@ -52,19 +60,31 @@ export default function Testimonials({ testimonials }: { testimonials: Testimoni
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current)
-    if (testimonials.length <= visible) return
-    timerRef.current = setInterval(() => moveTo((idxRef.current + 1) % testimonials.length), 4000)
-  }, [moveTo, testimonials.length, visible])
+    if (paused || maxIdx === 0) return
+    // Autoplay is motion the user didn't ask for — WCAG 2.2.2 wants it stoppable,
+    // and "reduce motion" means don't start it at all.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    timerRef.current = setInterval(() => {
+      // Wrap within the travelable range, not the raw testimonial count.
+      moveTo(idxRef.current >= maxIdx ? 0 : idxRef.current + 1)
+    }, 4000)
+  }, [moveTo, maxIdx, paused])
 
   useEffect(() => {
     resetTimer()
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [resetTimer])
 
+  // A shrinking viewport lowers maxIdx; without this the track can be left
+  // parked past the new limit, showing a band of empty space.
+  useEffect(() => {
+    if (idxRef.current > maxIdx) moveTo(maxIdx)
+  }, [maxIdx, moveTo])
+
   if (testimonials.length === 0) return null
 
-  const goPrev = () => { moveTo((idxRef.current - 1 + testimonials.length) % testimonials.length); resetTimer() }
-  const goNext = () => { moveTo((idxRef.current + 1)                        % testimonials.length); resetTimer() }
+  const goPrev = () => { moveTo(idxRef.current <= 0      ? maxIdx : idxRef.current - 1); resetTimer() }
+  const goNext = () => { moveTo(idxRef.current >= maxIdx ? 0      : idxRef.current + 1); resetTimer() }
 
   return (
     <section style={{ backgroundColor: 'var(--color-bg)', padding: '100px 20px' }}>
@@ -80,8 +100,15 @@ export default function Testimonials({ testimonials }: { testimonials: Testimoni
         What Families Say
       </h2>
 
-      {/* Carousel wrapper */}
-      <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto' }}>
+      {/* Carousel wrapper — autoplay pauses while the user is reading a card
+          (hover) or tabbing through it (focus), per WCAG 2.2.2. */}
+      <div
+        style={{ position: 'relative', maxWidth: 1200, margin: '0 auto' }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocusCapture={() => setPaused(true)}
+        onBlurCapture={() => setPaused(false)}
+      >
 
         {/* Prev arrow */}
         <button
@@ -211,13 +238,16 @@ export default function Testimonials({ testimonials }: { testimonials: Testimoni
         </button>
       </div>
 
-      {/* Dot indicators */}
+      {/* Dot indicators — one per scroll position, not one per testimonial.
+          There used to be a dot for every card, so the trailing dots selected
+          an offset the track had already reached and appeared to do nothing. */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 36 }}>
-        {testimonials.map((t, i) => (
+        {Array.from({ length: maxIdx + 1 }, (_, i) => (
           <button
-            key={t.id}
+            key={i}
             onClick={() => { moveTo(i); resetTimer() }}
             aria-label={`Go to testimonial ${i + 1}`}
+            aria-current={idx === i}
             style={{
               width: idx === i ? 24 : 8,
               height: 8,

@@ -1,3 +1,5 @@
+import { notifySessionChanged } from './session-events'
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 export type Academy       = 'MFA' | 'MBA'
@@ -177,7 +179,7 @@ export function login(email: string, password: string): SessionUser | null {
   )
   if (!user) return null
 
-  const { password: _pw, ...rest } = user
+  const { password: _password, ...rest } = user
   const session: SessionUser = {
     ...rest,
     selectedAcademy: defaultAcademy(user),
@@ -186,9 +188,16 @@ export function login(email: string, password: string): SessionUser | null {
 
   try {
     localStorage.setItem(SESSION_KEY, JSON.stringify(session))
-    // Minimal cookie payload for middleware — role lets us skip unnecessary DB calls later
-    writeCookie(encodeURIComponent(JSON.stringify({ id: session.id, role: session.role })))
+    // Minimal cookie payload for middleware. `sid` is the linked student, so the
+    // API can scope a parent/student request to their own child's record rather
+    // than trusting an id in the URL.
+    writeCookie(encodeURIComponent(JSON.stringify({
+      id: session.id,
+      role: session.role,
+      sid: session.studentId ?? null,
+    })))
   } catch {}
+  notifySessionChanged()
 
   return session
 }
@@ -199,6 +208,7 @@ export function logout(): void {
     localStorage.removeItem(SESSION_KEY)
     clearCookie()
   } catch {}
+  notifySessionChanged()
 }
 
 /** Read the current session from localStorage. Returns null if not logged in. */
@@ -220,6 +230,13 @@ export function setSelectedAcademy(filter: AcademyFilter): void {
   try {
     localStorage.setItem(SESSION_KEY, JSON.stringify({ ...user, selectedAcademy: filter }))
   } catch {}
+  notifySessionChanged()
+  // Dashboard pages (students, matches, payments, attendance, coaches, home)
+  // refilter their lists off this event. Dispatched here rather than from the
+  // switcher button, so any caller of setSelectedAcademy keeps them in sync.
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('mila_academy_changed'))
+  }
 }
 
 /**

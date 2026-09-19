@@ -1,37 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { pick, readJson, dbError, badRequest, unauthorized } from '@/lib/api-fields'
+
+export const TESTIMONIALS_FIELDS = ['quote', 'name', 'initials', 'role', 'rating', 'sort_order'] as const
 
 export async function GET() {
-  if (!(await isAdminRequest())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!(await isAdminRequest())) return unauthorized()
+
   const { data, error } = await getSupabaseAdmin()
     .from('testimonials')
     .select('*')
     .order('sort_order', { ascending: true })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return dbError('testimonials.list', error)
   return NextResponse.json({ data })
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await isAdminRequest())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  const body = await req.json()
-  const { quote, name, initials, role, rating, sort_order } = body
+  if (!(await isAdminRequest())) return unauthorized()
 
-  if (!quote || !name) {
-    return NextResponse.json({ error: 'quote and name are required' }, { status: 400 })
+  const body = await readJson(req)
+  if (!body) return badRequest('Invalid JSON body')
+
+  if (typeof body.quote !== 'string' || !body.quote.trim() || typeof body.name !== 'string' || !body.name.trim()) {
+    return badRequest('quote and name are required')
   }
 
   const { data, error } = await getSupabaseAdmin()
     .from('testimonials')
-    .insert({ quote, name, initials, role, rating, sort_order })
+    .insert(pick(body, TESTIMONIALS_FIELDS))
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return dbError('testimonials.create', error)
   return NextResponse.json({ data }, { status: 201 })
 }

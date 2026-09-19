@@ -1,32 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { dbError, badRequest, unauthorized } from '@/lib/api-fields'
 
-const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+// Maps the accepted MIME types to the extension used in storage. The extension
+// is derived from the (validated) content type rather than the uploaded
+// filename, which is attacker-controlled and can carry path separators.
+const EXT_BY_TYPE: Record<string, string> = {
+  'image/png':  'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'image/gif':  'gif',
+}
+
+// Must match the `check (category in (...))` constraint on gallery_photos.
+const CATEGORIES = ['football', 'basketball', 'events'] as const
+
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 
 export async function POST(req: NextRequest) {
-  if (!(await isAdminRequest())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await isAdminRequest())) return unauthorized()
+
+  let form: FormData
+  try {
+    form = await req.formData()
+  } catch {
+    return badRequest('Expected multipart/form-data')
   }
 
-  const form = await req.formData()
-  const file = form.get('file') as File | null
-  const category = form.get('category') as string | null
+  const file = form.get('file')
+  const category = form.get('category')
   const caption = (form.get('caption') as string | null) ?? ''
-  const sortOrder = Number(form.get('sort_order') ?? 0)
+  const rawSort = Number(form.get('sort_order') ?? 0)
+  const sortOrder = Number.isFinite(rawSort) ? rawSort : 0
 
-  if (!file || !category) {
-    return NextResponse.json({ error: 'file and category are required' }, { status: 400 })
-  }
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 })
-  }
-  if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: 'File too large (max 5MB)' }, { status: 400 })
+  if (!(file instanceof File)) return badRequest('file is required')
+
+  // Validated against the allowed set before it is used to build the storage
+  // path — an unchecked value went straight into `${category}/...`, so a
+  // caller could steer the write elsewhere in the bucket with `../`.
+  if (typeof category !== 'string' || !CATEGORIES.includes(category as typeof CATEGORIES[number])) {
+    return badRequest(`category must be one of: ${CATEGORIES.join(', ')}`)
   }
 
-  const ext = file.name.split('.').pop() || 'jpg'
+  const ext = EXT_BY_TYPE[file.type]
+  if (!ext) return badRequest('Unsupported file type')
+  if (file.size === 0) return badRequest('File is empty')
+  if (file.size > MAX_SIZE) return badRequest('File too large (max 5MB)')
+
   const path = `${category}/${crypto.randomUUID()}.${ext}`
 
   const admin = getSupabaseAdmin()
@@ -34,9 +55,7 @@ export async function POST(req: NextRequest) {
     .from('gallery')
     .upload(path, file, { contentType: file.type })
 
-  if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 })
-  }
+  if (uploadError) return dbError('gallery.upload', uploadError)
 
   const { data: urlData } = admin.storage.from('gallery').getPublicUrl(path)
 
@@ -45,7 +64,7 @@ export async function POST(req: NextRequest) {
     .insert({
       image_url: urlData.publicUrl,
       category,
-      caption,
+      caption: String(caption).slice(0, 300),
       sort_order: sortOrder,
       storage_path: path,
     })
@@ -55,7 +74,7 @@ export async function POST(req: NextRequest) {
   if (error) {
     // Roll back the uploaded file if the DB insert failed
     await admin.storage.from('gallery').remove([path])
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return dbError('gallery.insert', error)
   }
 
   return NextResponse.json({ data }, { status: 201 })

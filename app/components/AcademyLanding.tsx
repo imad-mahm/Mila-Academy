@@ -6,8 +6,9 @@ import ProgramsExplorer from './ProgramsExplorer'
 
 export default function AcademyLanding({ academy, settings }: { academy: Academy; settings: SiteSettings }) {
   const meta = ACADEMY_META[academy]
-  const wa = `https://wa.me/${settings.whatsapp_number}`
-  const bannerSeed = academy === 'football' ? 700 : 701
+  // Empty when site_settings has no number — the WhatsApp CTAs are hidden in
+  // that case rather than pointing at a bare https://wa.me/ .
+  const wa = settings.whatsapp_number ? `https://wa.me/${settings.whatsapp_number}` : ''
 
   const heroBtn: React.CSSProperties = {
     padding: '12px 26px', borderRadius: 8, fontWeight: 700, fontSize: 14,
@@ -22,17 +23,27 @@ export default function AcademyLanding({ academy, settings }: { academy: Academy
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         textAlign: 'center', padding: '60px 24px 0',
       }}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- remote picsum placeholder banner, matches Gallery.tsx */}
-        <img
-          src={`https://picsum.photos/seed/${bannerSeed}/1600/600`}
-          alt=""
+        {/* Branded backdrop in the academy's accent colour.
+            REPLACE WITH REAL PHOTOGRAPHY: this used to pull a random photo from
+            picsum.photos, which put unrelated stock images of strangers behind
+            the hero of a children's sports academy — and made the hero depend on
+            a third-party service staying up. Swap in a real training photo when
+            the academy supplies one. */}
+        <div
           aria-hidden
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{
+            position: 'absolute', inset: 0,
+            backgroundColor: '#0a0a0a',
+            backgroundImage: `
+              radial-gradient(ellipse 80% 60% at 50% 0%, rgba(${meta.accentRgb}, 0.28) 0%, transparent 70%),
+              radial-gradient(ellipse 60% 50% at 80% 100%, rgba(245, 197, 24, 0.12) 0%, transparent 70%)
+            `,
+          }}
         />
-        {/* Dark scrim keeps white hero text readable over any photo, in both themes */}
+        {/* Scrim keeps the white hero text readable in both themes */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.74) 100%)',
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.6) 100%)',
         }} />
 
         <div style={{
@@ -49,9 +60,11 @@ export default function AcademyLanding({ academy, settings }: { academy: Academy
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, margin: 0 }}>{meta.est}</p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginTop: 10 }}>
             <a href="#programs" style={{ ...heroBtn, backgroundColor: meta.accent }}>View Programs</a>
-            <a href={wa} target="_blank" rel="noopener noreferrer" style={{ ...heroBtn, backgroundColor: '#25D366' }}>
-              Chat on WhatsApp
-            </a>
+            {wa && (
+              <a href={wa} target="_blank" rel="noopener noreferrer" style={{ ...heroBtn, backgroundColor: '#25D366' }}>
+                Chat on WhatsApp
+              </a>
+            )}
           </div>
         </div>
       </section>
@@ -72,12 +85,14 @@ export default function AcademyLanding({ academy, settings }: { academy: Academy
             Reach out and our team will help you choose the right program and get started.
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <a href={wa} target="_blank" rel="noopener noreferrer" style={{
-              backgroundColor: '#25D366', color: '#fff', padding: '13px 28px', borderRadius: 10,
-              fontWeight: 700, fontSize: 15, textDecoration: 'none',
-            }}>
-              Chat on WhatsApp
-            </a>
+            {wa && (
+              <a href={wa} target="_blank" rel="noopener noreferrer" style={{
+                backgroundColor: '#25D366', color: '#fff', padding: '13px 28px', borderRadius: 10,
+                fontWeight: 700, fontSize: 15, textDecoration: 'none',
+              }}>
+                Chat on WhatsApp
+              </a>
+            )}
             <Link href="/#contact" style={{
               backgroundColor: 'transparent', color: meta.accent, border: `1px solid ${meta.accent}`,
               padding: '13px 28px', borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: 'none',

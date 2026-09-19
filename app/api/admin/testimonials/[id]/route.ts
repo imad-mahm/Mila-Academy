@@ -1,33 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { pick, readJson, dbError, badRequest, unauthorized, notFound } from '@/lib/api-fields'
+import { TESTIMONIALS_FIELDS } from '../route'
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await isAdminRequest())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!(await isAdminRequest())) return unauthorized()
+
   const { id } = await params
-  const body = await req.json()
-  const { quote, name, initials, role, rating, sort_order } = body
+  const body = await readJson(req)
+  if (!body) return badRequest('Invalid JSON body')
+
+  // Only the fields actually sent. This used to write every column on every
+  // PATCH, so updating one field blanked the rest of the row.
+  const values = pick(body, TESTIMONIALS_FIELDS)
+  if (Object.keys(values).length === 0) return badRequest('No updatable fields provided')
 
   const { data, error } = await getSupabaseAdmin()
     .from('testimonials')
-    .update({ quote, name, initials, role, rating, sort_order })
+    .update(values)
     .eq('id', id)
     .select()
-    .single()
+    .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return dbError('testimonials.update', error)
+  if (!data) return notFound('Testimonial not found')
   return NextResponse.json({ data })
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await isAdminRequest())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  const { id } = await params
-  const { error } = await getSupabaseAdmin().from('testimonials').delete().eq('id', id)
+  if (!(await isAdminRequest())) return unauthorized()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const { id } = await params
+  const { error, count } = await getSupabaseAdmin()
+    .from('testimonials').delete({ count: 'exact' }).eq('id', id)
+
+  if (error) return dbError('testimonials.delete', error)
+  if (!count) return notFound('Testimonial not found')
   return NextResponse.json({ ok: true })
 }

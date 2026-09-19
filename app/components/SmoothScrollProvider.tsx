@@ -1,14 +1,32 @@
 'use client'
 import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import Lenis from 'lenis'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { setLenisInstance } from '@/lib/lenis-store'
+import { setLenisInstance, scrollToHash } from '@/lib/lenis-store'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+
   useEffect(() => {
+    // Respect the OS "reduce motion" setting: smooth-scroll hijacking is
+    // exactly the kind of motion WCAG 2.3.3 asks us to drop. Without this the
+    // page keeps easing under the user no matter what they've asked for.
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) {
+      // Still replay an inbound /#section link, just without the animation.
+      const id = window.location.hash.slice(1)
+      if (id) {
+        requestAnimationFrame(() => {
+          document.getElementById(id)?.scrollIntoView()
+        })
+      }
+      return
+    }
+
     const lenis = new Lenis()
     setLenisInstance(lenis)
 
@@ -26,8 +44,21 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
     return () => {
       gsap.ticker.remove(tick)
       lenis.destroy()
+      setLenisInstance(null)
     }
   }, [])
+
+  // Replay the URL hash after every navigation.
+  //
+  // Two things suppress the browser's own jump: Lenis takes ownership of the
+  // scroll position, and this provider lives in the root layout so it does not
+  // remount when the route changes. Without this, arriving at /#contact from the
+  // football page (or on a cold load) just lands at the top of the homepage.
+  useEffect(() => {
+    if (!window.location.hash) return
+    const t = window.setTimeout(scrollToHash, 120)
+    return () => window.clearTimeout(t)
+  }, [pathname])
 
   return <>{children}</>
 }

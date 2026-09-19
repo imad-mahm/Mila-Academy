@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { scrollToSection } from '@/lib/lenis-store'
+import { useTheme, toggleTheme } from '@/lib/theme'
 
 const NAV_LINKS = [
   { label: 'Home',     id: 'hero'     },
@@ -50,34 +52,41 @@ function CloseIcon() {
   )
 }
 
-export default function Navbar({ hasGallery = true }: { hasGallery?: boolean }) {
+export default function Navbar({
+  hasGallery = true,
+  hasPrograms = true,
+}: { hasGallery?: boolean; hasPrograms?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
-  const navLinks = hasGallery ? NAV_LINKS : NAV_LINKS.filter(l => l.id !== 'gallery')
-
-  useEffect(() => {
-    const saved = localStorage.getItem('mila-theme') as 'dark' | 'light' | null
-    if (saved) setTheme(saved)
-  }, [])
+  const theme = useTheme()
+  const router = useRouter()
+  // A nav item whose section isn't on the page is a dead link — Programs and
+  // Gallery each render nothing when their table is empty.
+  const navLinks = NAV_LINKS.filter(l =>
+    (l.id !== 'gallery'  || hasGallery) &&
+    (l.id !== 'programs' || hasPrograms)
+  )
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
-  function toggleTheme() {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
-    localStorage.setItem('mila-theme', next)
-    const html = document.documentElement
-    html.classList.remove('dark', 'light')
-    html.classList.add(next)
-    html.setAttribute('data-theme', next)
-  }
+  // Esc closes the fullscreen mobile menu — it was previously dismissable only
+  // by hitting the small × or picking a link.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [menuOpen])
 
   function handleNav(id: string) {
     setMenuOpen(false)
-    scrollToSection(id === 'hero' ? 'top' : id)
+    // Falls back to the homepage anchor when the section isn't on this page
+    // (the academy pages render only #programs and #enroll).
+    if (!scrollToSection(id === 'hero' ? 'top' : id)) {
+      router.push(`/#${id}`)
+    }
   }
 
   return (
@@ -167,7 +176,11 @@ export default function Navbar({ hasGallery = true }: { hasGallery?: boolean }) 
           <button className="nb-join" onClick={() => handleNav('contact')} style={{ marginRight: 8 }}>
             Enroll Now
           </button>
-          <button className="nb-theme" onClick={toggleTheme} aria-label="Toggle theme">
+          <button
+            className="nb-theme"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>
           <button
@@ -183,7 +196,7 @@ export default function Navbar({ hasGallery = true }: { hasGallery?: boolean }) 
 
       {/* ── Mobile fullscreen overlay ────────────────────────────────────────────── */}
       {menuOpen && (
-        <div style={{
+        <div role="dialog" aria-modal="true" aria-label="Site menu" style={{
           position: 'fixed', inset: 0, zIndex: 9999,
           backgroundColor: 'var(--color-bg)',
           display: 'flex', flexDirection: 'column',

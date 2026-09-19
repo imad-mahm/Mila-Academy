@@ -49,6 +49,11 @@ function FloatingField({
 }
 
 // ── Quick-fill demo credential buttons ────────────────────────────────────────
+// Development only. `process.env.NODE_ENV` is inlined at build time, so in a
+// production build this constant is `false` and the whole block below - the
+// credentials included - is dropped from the client bundle. It previously
+// shipped every seed account's password in plain sight on a public login page.
+const SHOW_DEMO_LOGINS = process.env.NODE_ENV !== 'production'
 
 const DEMOS = [
   { label: 'Admin',   email: 'admin@milaacademy.com',  pw: 'admin123'   },
@@ -119,7 +124,8 @@ export default function LoginPage() {
           Where Champions Are Made
         </p>
 
-        {/* Demo quick-fill */}
+        {/* Demo quick-fill (development builds only) */}
+        {SHOW_DEMO_LOGINS && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
           {DEMOS.map(d => (
             <button
@@ -138,6 +144,7 @@ export default function LoginPage() {
             </button>
           ))}
         </div>
+        )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <FloatingField label="Email address" type="email" value={email} onChange={setEmail} />
@@ -178,11 +185,12 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Credential hint */}
-        <p style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'center', marginTop: 20, lineHeight: 1.6 }}>
-          Use the quick-fill buttons above to log in as different roles.<br />
-          Passwords: <span style={{ color: 'var(--text-secondary)' }}>admin123 · coach123 · parent123 · student123</span>
-        </p>
+        {/* Credential hint (development builds only) */}
+        {SHOW_DEMO_LOGINS && (
+          <p style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'center', marginTop: 20, lineHeight: 1.6 }}>
+            Development build — use the quick-fill buttons above to sign in as each role.
+          </p>
+        )}
       </div>
     </div>
   )

@@ -5,78 +5,18 @@ import { IconPlus, IconX } from '@tabler/icons-react'
 import { TEAMS, teamName } from '../students/data'
 import { toast } from '../components/toast'
 import { useRequireAccess } from '../hooks/useRequireAccess'
+import { useModal, modalOverlayProps } from '../hooks/useModal'
+import { useAllCoaches, addCoach, type CoachRow } from './data'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface CoachRow {
-  id: string
-  name: string
-  session_name: string  // matches attendance records e.g. 'Coach Nader'
-  specialty: string
-  teams: string[]
-  experience: number
-  bio: string
-  phone: string
-  email: string
-  nationality: string
-  certifications: string[]
-  languages: string[]
-  joined: string
-  salary: string
-  contract_end: string
-  added?: boolean
-}
+
 
 interface SessionRecord {
   id: string; date: string; team_id: string; team_name: string
   coach: string; records: Record<string, string>
   student_names: Record<string, string>; saved_at: string
 }
-
-// ── Static coach data ──────────────────────────────────────────────────────────
-
-const BASE_COACHES: CoachRow[] = [
-  {
-    id: 'coach-1', name: 'Ahmad Nader', session_name: 'Coach Nader',
-    specialty: 'Attack & Finishing', teams: ['mfa-u17'], experience: 8,
-    bio: 'Former professional midfielder in the Lebanese Premier League. Joined Mila in 2019. Known for high-intensity attack drills and exceptional finishing technique training.',
-    phone: '+961 70 100 200', email: 'ahmad.nader@milaacademy.com',
-    nationality: 'Lebanese',
-    certifications: ['UEFA B License', 'LFF Level 2 Coaching Certificate'],
-    languages: ['Arabic', 'French', 'English'],
-    joined: '2019-09-01', salary: '$1,400/month', contract_end: '2027-06-30',
-  },
-  {
-    id: 'coach-2', name: 'Bilal Akar', session_name: 'Coach Bilal',
-    specialty: 'Youth Development', teams: ['mfa-u14'], experience: 5,
-    bio: 'Specialist in youth football development with a degree in Sports Science from LAU. Focuses on building fundamental skills and tactical awareness in younger age groups.',
-    phone: '+961 76 200 300', email: 'bilal.akar@milaacademy.com',
-    nationality: 'Lebanese',
-    certifications: ['LFF Level 1 Coaching Certificate', 'FIFA Grassroots Certificate'],
-    languages: ['Arabic', 'English'],
-    joined: '2021-01-15', salary: '$1,100/month', contract_end: '2026-12-31',
-  },
-  {
-    id: 'coach-3', name: 'Samer Khalil', session_name: 'Coach Samer',
-    specialty: 'Basketball — Guard Play', teams: ['mba-u16'], experience: 3,
-    bio: 'Former FIBA referee turned coach. Deep knowledge of basketball rules and mechanics. Specialises in guard play, dribbling circuits, and team coordination.',
-    phone: '+961 70 300 400', email: 'samer.khalil@milaacademy.com',
-    nationality: 'Lebanese',
-    certifications: ['FIBA Level 1 Coach', 'Lebanese Basketball Federation Certificate'],
-    languages: ['Arabic', 'English', 'Spanish'],
-    joined: '2023-09-01', salary: '$1,000/month', contract_end: '2026-08-31',
-  },
-  {
-    id: 'coach-4', name: 'Nadia Frem', session_name: 'Coach Nadia',
-    specialty: 'Fitness & Conditioning', teams: ['mfa-u17', 'mfa-u14'], experience: 6,
-    bio: 'Certified sports physiotherapist and strength coach. Works with all MFA teams on conditioning, injury prevention, and athletic performance optimisation.',
-    phone: '+961 71 400 500', email: 'nadia.frem@milaacademy.com',
-    nationality: 'Lebanese',
-    certifications: ['NSCA Certified Strength Coach', 'Sports Physiotherapy Certificate'],
-    languages: ['Arabic', 'French'],
-    joined: '2020-03-01', salary: '$1,200/month', contract_end: '2027-03-31',
-  },
-]
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -121,8 +61,10 @@ function AddCoachModal({ userRole, onSave, onClose }: { userRole: string; onSave
     onSave(c)
   }
 
+  useModal(onClose)
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
+    <div {...modalOverlayProps} aria-label="Add coach" style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: 28 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
           <h2 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700, margin: 0 }}>Add Coach</h2>
@@ -212,8 +154,10 @@ function CoachDetailModal({ coach, userRole, onClose }: { coach: CoachRow; userR
 
   const col = '#f5c518'
 
+  useModal(onClose)
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
+    <div {...modalOverlayProps} aria-label={`Coach ${coach.name}`} style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto', padding: 28 }}>
         {/* Header */}
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 24 }}>
@@ -398,32 +342,19 @@ export default function CoachesPage() {
     return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
   }, [])
 
-  const [coaches,    setCoaches]    = useState<CoachRow[]>(() => {
-    try {
-      const added: CoachRow[] = JSON.parse(localStorage.getItem('mila_coaches_added') ?? '[]')
-      return added.length ? [...BASE_COACHES, ...added] : BASE_COACHES
-    } catch {
-      return BASE_COACHES
-    }
-  })
-  const [userRole]   = useState(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem('mila_user') ?? '{}')
-      return u.role || 'admin'
-    } catch {
-      return 'admin'
-    }
-  })
+  // From the shared store. This used to read localStorage in a useState
+  // initialiser, which runs on the server too (where it throws and silently
+  // falls back), so the server markup omitted every added coach.
+  const coaches = useAllCoaches()
+
+  const userRole = authUser?.role ?? 'student'
   const [selected,   setSelected]   = useState<CoachRow | null>(null)
   const [showAdd,    setShowAdd]    = useState(false)
   const [search,     setSearch]     = useState('')
   const [filterTeam, setFilterTeam] = useState('All')
 
   function saveCoach(c: CoachRow) {
-    const updated = [...coaches, c]
-    setCoaches(updated)
-    const added = updated.filter(x => x.added)
-    try { localStorage.setItem('mila_coaches_added', JSON.stringify(added)) } catch {}
+    addCoach(c)
     setShowAdd(false)
     toast(`${c.name} added successfully`)
   }

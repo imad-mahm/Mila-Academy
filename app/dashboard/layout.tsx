@@ -11,11 +11,14 @@ import {
   IconListDetails, IconQuote, IconPhoto,
 } from '@tabler/icons-react'
 import { ToastContainer } from './components/ToastContainer'
+import { useTheme, toggleTheme } from '@/lib/theme'
 import { loadAllStudents } from './students/data'
+import { loadAllCoaches } from './coaches/data'
 import {
-  getCurrentUser, logout, seedUsers, setSelectedAcademy,
+  logout, seedUsers, setSelectedAcademy,
   type SessionUser, type AcademyFilter,
 } from '@/lib/auth'
+import { useSession } from '@/lib/use-session'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -88,10 +91,7 @@ function AcademySwitcher({ user }: { user: SessionUser }) {
           return (
             <button
               key={opt}
-              onClick={() => {
-                setSelectedAcademy(opt)
-                window.dispatchEvent(new Event('mila_academy_changed'))
-              }}
+              onClick={() => setSelectedAcademy(opt)}
               style={{
                 flex: 1, padding: '5px 0', borderRadius: 6, fontSize: 11, fontWeight: 700,
                 border: `1px solid ${active ? hex : 'var(--border)'}`,
@@ -110,9 +110,6 @@ function AcademySwitcher({ user }: { user: SessionUser }) {
 }
 
 // ── Global Search ─────────────────────────────────────────────────────────────
-
-const COACH_NAMES = ['Ahmad Nader', 'Bilal Akar', 'Samer Khalil', 'Nadia Frem']
-const COACH_SPECS = ['Attack & Finishing', 'Youth Development', 'Basketball — Guard Play', 'Fitness & Conditioning']
 
 function GlobalSearch() {
   const [query, setQuery] = useState('')
@@ -133,11 +130,15 @@ function GlobalSearch() {
       })
     } catch {}
 
-    COACH_NAMES.forEach((name, i) => {
-      if (name.toLowerCase().includes(lq) || COACH_SPECS[i].toLowerCase().includes(lq)) {
-        out.push({ label: name, sub: COACH_SPECS[i], href: '/dashboard/coaches', category: 'Coach' })
-      }
-    })
+    // Reads the same source as the Coaches page, so coaches staff have added
+    // are searchable. This used to be a hardcoded list of the four seed names.
+    try {
+      loadAllCoaches().forEach(c => {
+        if (c.name.toLowerCase().includes(lq) || c.specialty.toLowerCase().includes(lq)) {
+          out.push({ label: c.name, sub: c.specialty, href: '/dashboard/coaches', category: 'Coach' })
+        }
+      })
+    } catch {}
 
     try {
       const matches: Array<{ id: string; opponent: string; team_name: string; date: string; status: string }> =
@@ -329,45 +330,37 @@ function Sidebar({
 // ── Layout ────────────────────────────────────────────────────────────────────
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [user,        setUser]        = useState<SessionUser | null>(null)
-  const [checking,    setChecking]    = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [theme,       setTheme]       = useState<'dark' | 'light'>('dark')
+  const theme = useTheme()
   const router   = useRouter()
   const pathname = usePathname()
+
+  // Session comes from the shared external store rather than being copied into
+  // local state inside an effect, which rendered once as logged-out first.
+  const { user: session, ready } = useSession()
+  const isLoginPage = pathname === '/dashboard/login'
+  const user = session?.loggedIn ? session : null
+  const checking = !ready
 
   // Touch tracking for swipe gestures
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
 
+  useEffect(() => { seedUsers() }, [])
+
   useEffect(() => {
-    seedUsers()
+    if (!ready || isLoginPage) return
+    if (!user) router.replace('/dashboard/login')
+  }, [ready, isLoginPage, user, router])
 
-    if (pathname === '/dashboard/login') {
-      setChecking(false)
-      return
-    }
-
-    const stored = getCurrentUser()
-    if (!stored?.loggedIn) {
-      router.replace('/dashboard/login')
-      return
-    }
-
-    setUser(stored)
-    setChecking(false)
-  }, [pathname, router])
-
-  // Sync theme from localStorage
-  useEffect(() => {
-    const saved = (localStorage.getItem('mila-theme') ?? 'dark') as 'dark' | 'light'
-    setTheme(saved)
-  }, [])
-
-  // Close sidebar on route change (mobile)
-  useEffect(() => {
+  // Close the sidebar when the route changes. Adjusting state during render is
+  // React's documented alternative to a setState-in-effect here: it re-renders
+  // before committing, so the sidebar never paints open on the new page.
+  const [lastPath, setLastPath] = useState(pathname)
+  if (lastPath !== pathname) {
+    setLastPath(pathname)
     setSidebarOpen(false)
-  }, [pathname])
+  }
 
   // Close sidebar on desktop resize
   useEffect(() => {
@@ -401,31 +394,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       main.removeEventListener('touchstart', onTouchStart)
       main.removeEventListener('touchend',   onTouchEnd)
     }
-  }, [checking])
-
-  // Re-read user when academy switcher fires
-  useEffect(() => {
-    function onAcademyChange() {
-      const u = getCurrentUser()
-      if (u) setUser({ ...u })
-    }
-    window.addEventListener('mila_academy_changed', onAcademyChange)
-    return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
-  }, [])
+  }, [checking])  // re-runs once the guard resolves and #dash-main exists
 
   function handleLogout() {
     logout()
     router.replace('/dashboard/login')
   }
 
-  function toggleTheme() {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
-    localStorage.setItem('mila-theme', next)
-    document.documentElement.setAttribute('data-theme', next)
-    document.documentElement.classList.remove('dark', 'light')
-    document.documentElement.classList.add(next)
-  }
 
   if (pathname === '/dashboard/login') {
     if (checking) return null

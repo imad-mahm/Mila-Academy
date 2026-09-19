@@ -6,8 +6,9 @@ import {
   IconTrophy, IconChevronDown, IconChevronUp, IconUsers, IconX,
 } from '@tabler/icons-react'
 import { TEAMS, loadAllStudents, type StudentRow } from '../students/data'
-import { getCurrentUser } from '@/lib/auth'
+import { useSelectedAcademy } from '@/lib/use-session'
 import { DUMMY_MATCHES, type MatchRecord, type Scorer } from './data'
+import { useModal, modalOverlayProps } from '../hooks/useModal'
 
 type FormationKey = '4-3-3' | '4-4-2'
 interface FSlot { label: string; x: number; y: number }
@@ -67,8 +68,9 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
 // ── Modal overlay ──────────────────────────────────────────────────────────────
 
 function Modal({ children, onClose, wide }: { children: React.ReactNode; onClose: () => void; wide?: boolean }) {
+  useModal(onClose)
   return (
-    <div style={{
+    <div {...modalOverlayProps} style={{
       position: 'fixed', inset: 0, zIndex: 2000,
       backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 16,
@@ -851,17 +853,7 @@ function LeagueTable({ results }: { results: MatchRecord[] }) {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function MatchesPage() {
-  const [selectedAcademy, setSelectedAcademy] = useState<'MFA' | 'MBA' | 'Both'>(
-    () => (getCurrentUser()?.selectedAcademy ?? 'Both') as 'MFA' | 'MBA' | 'Both'
-  )
-  useEffect(() => {
-    function onAcademyChange() {
-      const u = getCurrentUser()
-      if (u) setSelectedAcademy(u.selectedAcademy as 'MFA' | 'MBA' | 'Both')
-    }
-    window.addEventListener('mila_academy_changed', onAcademyChange)
-    return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
-  }, [])
+  const selectedAcademy = useSelectedAcademy()
 
   const [tab, setTab] = useState<'upcoming' | 'results'>('upcoming')
   const [matches, setMatches] = useState<MatchRecord[]>(() => {

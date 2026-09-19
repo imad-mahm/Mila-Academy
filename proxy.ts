@@ -11,14 +11,19 @@ export function proxy(request: NextRequest) {
 
   // Check the session cookie set by lib/auth.ts login()
   const session = request.cookies.get('mila_session')
-  if (!session?.value) {
-    const loginUrl = new URL('/dashboard/login', request.url)
-    return NextResponse.redirect(loginUrl)
+  if (session?.value) return NextResponse.next()
+
+  // Admin API routes each verify the caller's role themselves; this is a second
+  // gate so a route added later that forgets the check still isn't reachable
+  // anonymously. It answers with JSON — redirecting an API call to an HTML
+  // login page would surface to fetch() as an unhelpful parse error.
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  return NextResponse.next()
+  return NextResponse.redirect(new URL('/dashboard/login', request.url))
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/dashboard/:path*', '/api/admin/:path*'],
 }

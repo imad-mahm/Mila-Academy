@@ -276,9 +276,18 @@ export function generateRatings(id: string, overallRating: number): RatingEntry[
   ]
 }
 
-const MONTHS_2026 = [
+// The billing periods the mock payment data covers. Exported so the Payments
+// screen and the Reports exports agree on which months exist and which one is
+// "current" — Reports used to hard-code the string 'June 2026', so every
+// exported report was labelled June no matter when it was run.
+export const PAYMENT_MONTHS = [
   'January 2026','February 2026','March 2026','April 2026','May 2026','June 2026',
-]
+] as const
+
+/** The most recent billing period in the data set. */
+export const CURRENT_PAYMENT_MONTH = PAYMENT_MONTHS[PAYMENT_MONTHS.length - 1]
+
+const MONTHS_2026 = PAYMENT_MONTHS
 const METHODS: Array<PaymentEntry['method']> = ['cash', 'bank', 'whatsapp', 'cash', 'bank', 'cash']
 
 export function generatePayments(id: string, currentStatus: StudentRow['payment_status']): PaymentEntry[] {

@@ -5,10 +5,13 @@ import {
   IconCheck, IconX, IconFilter, IconChevronDown, IconCalendar,
 } from '@tabler/icons-react'
 import { useRequireAccess } from '../hooks/useRequireAccess'
-import { getCurrentUser } from '@/lib/auth'
+import { useSelectedAcademy, useSession } from '@/lib/use-session'
+import { toast } from '../components/toast'
+import { useModal, modalOverlayProps } from '../hooks/useModal'
 import {
   TEAMS, loadAllStudents, generatePayments, teamName,
   type StudentRow, type PaymentEntry,
+  PAYMENT_MONTHS, CURRENT_PAYMENT_MONTH,
 } from '../students/data'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -25,11 +28,6 @@ interface HistoryEntry extends PaymentEntry {
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-
-const MONTHS = [
-  'January 2026', 'February 2026', 'March 2026',
-  'April 2026',   'May 2026',      'June 2026',
-]
 
 const STATUS_CFG = {
   paid:    { label: 'Paid',    color: '#16a34a', bg: 'rgba(22,163,74,0.12)'  },
@@ -57,6 +55,12 @@ function paymentForMonth(student: StudentRow, month: string, overrides: PaymentO
 }
 
 function sendWhatsApp(student: StudentRow, month: string) {
+  // Without a number this opens https://wa.me/?text=... — a WhatsApp error page
+  // with the message lost. Tell the user what's missing instead.
+  if (!student.parent_whatsapp) {
+    toast(`No WhatsApp number on file for ${student.parent_name}`, 'error')
+    return
+  }
   const text = encodeURIComponent(
     `Dear ${student.parent_name}, this is a friendly reminder that ${student.name}'s monthly fee of $150 for ${month} is due on ${student.payment_due_date}. Please arrange payment at your earliest convenience.\n\nThank you,\nMila Academy`
   )
@@ -207,8 +211,12 @@ function MarkPaidModal({
   const [method,    setMethod]    = useState<PaymentEntry['method']>(current.method || 'cash')
   const [notes,     setNotes]     = useState('')
 
+  useModal(onClose)
+
   return (
     <div
+      {...modalOverlayProps}
+      aria-label={`Record payment for ${student.name}`}
       style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
       onClick={onClose}
     >
@@ -266,30 +274,25 @@ export default function PaymentsPage() {
       return {}
     }
   })
-  const [recordedBy]    = useState(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem('mila_user') ?? '{}')
-      return u.name || 'Admin'
-    } catch {
-      return 'Admin'
-    }
-  })
-  const [selectedMonth, setSelectedMonth] = useState('June 2026')
+  const { user: session } = useSession()
+  const selectedAcademy = useSelectedAcademy()
+  // From the session store rather than a raw localStorage read in a useState
+  // initialiser, which ran on the server and always froze this to 'Admin'.
+  const recordedBy = session?.name ?? 'Admin'
+  const [selectedMonth, setSelectedMonth] = useState<string>(CURRENT_PAYMENT_MONTH)
 
-  // Filters
-  const [fAcademy, setFAcademy] = useState(() => {
-    const u = getCurrentUser()
-    if (!u || u.selectedAcademy === 'Both') return 'All'
-    return u.selectedAcademy
-  })
+  // Filters. The academy filter follows the sidebar switcher unless the user
+  // picks something else here; it used to be seeded from localStorage in the
+  // initialiser, which runs on the server too and so always prerendered 'All'.
+  const [fAcademyOverride, setFAcademy] = useState<string | null>(null)
+  const fAcademy = fAcademyOverride ?? (selectedAcademy === 'Both' ? 'All' : selectedAcademy)
   const [fTeam,    setFTeam]    = useState('All')
   const [fStatus,  setFStatus]  = useState('All')
 
   useEffect(() => {
     function onAcademyChange() {
-      const u = getCurrentUser()
-      if (!u) return
-      setFAcademy(u.selectedAcademy === 'Both' ? 'All' : u.selectedAcademy)
+      // Switching academy in the sidebar clears any local override.
+      setFAcademy(null)
     }
     window.addEventListener('mila_academy_changed', onAcademyChange)
     return () => window.removeEventListener('mila_academy_changed', onAcademyChange)
@@ -386,7 +389,13 @@ export default function PaymentsPage() {
           <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>Track and manage student fees across all teams.</p>
         </div>
         <button
-          onClick={() => exportToExcel(filteredRows, selectedMonth)}
+          onClick={() => {
+            // The export is async and was called bare: a failure (e.g. the xlsx
+            // chunk failing to load) rejected unhandled and the button appeared
+            // to simply do nothing.
+            exportToExcel(filteredRows, selectedMonth)
+              .catch(() => toast('Could not build the Excel export', 'error'))
+          }}
           style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)', border: '0.5px solid var(--border)', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
         >
           ↓ Export Excel
@@ -423,7 +432,7 @@ export default function PaymentsPage() {
 
           {/* Month selector */}
           <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} style={filterSel}>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+            {PAYMENT_MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
 
           {/* Academy */}
@@ -544,7 +553,7 @@ export default function PaymentsPage() {
                           </button>
                         )}
                         {payment.status === 'paid' && (
-                          <button onClick={() => generateReceipt(student, payment)} style={{ display: 'flex', alignItems: 'center', gap: 4, backgroundColor: 'rgba(245,197,24,0.1)', border: '0.5px solid rgba(245,197,24,0.3)', color: '#f5c518', fontSize: 11, fontWeight: 700, padding: '6px 10px', borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                          <button onClick={() => { generateReceipt(student, payment).catch(() => toast('Could not build the receipt PDF', 'error')) }} style={{ display: 'flex', alignItems: 'center', gap: 4, backgroundColor: 'rgba(245,197,24,0.1)', border: '0.5px solid rgba(245,197,24,0.3)', color: '#f5c518', fontSize: 11, fontWeight: 700, padding: '6px 10px', borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                             🧾 Receipt
                           </button>
                         )}

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { GalleryPhoto } from '@/lib/site-data'
 
 type Category = 'all' | 'football' | 'basketball' | 'events'
@@ -14,9 +14,17 @@ const FILTERS: { key: Category; label: string }[] = [
 export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
   const [activeTab,    setActiveTab]    = useState<Category>('all')
   const [visible,      setVisible]      = useState(true)
-  const [displayed,    setDisplayed]    = useState(photos)
   const [hoveredId,    setHoveredId]    = useState<string | null>(null)
   const [lightboxIdx,  setLightboxIdx]  = useState<number | null>(null)
+
+  // Derived from props rather than copied into state. The photos list is
+  // refetched by the server every 60s (`revalidate`), and a state copy taken at
+  // mount would keep showing the old set — including photos an admin had just
+  // deleted — until a full reload.
+  const displayed = useMemo(
+    () => (activeTab === 'all' ? photos : photos.filter(img => img.category === activeTab)),
+    [photos, activeTab],
+  )
 
   // Keyboard navigation for lightbox
   useEffect(() => {
@@ -36,16 +44,20 @@ export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
     return () => { document.body.style.overflow = '' }
   }, [lightboxIdx])
 
+  // Clear a pending fade on unmount so it can't fire against a gone component.
+  const fadeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (fadeTimer.current) clearTimeout(fadeTimer.current) }, [])
+
   const switchTab = useCallback((tab: Category) => {
     if (tab === activeTab) return
     setLightboxIdx(null)
     setVisible(false)
-    setTimeout(() => {
+    if (fadeTimer.current) clearTimeout(fadeTimer.current)
+    fadeTimer.current = setTimeout(() => {
       setActiveTab(tab)
-      setDisplayed(tab === 'all' ? photos : photos.filter(img => img.category === tab))
       setVisible(true)
     }, 200)
-  }, [activeTab, photos])
+  }, [activeTab])
 
   const openLightbox = (img: GalleryPhoto) => {
     const idx = displayed.findIndex(d => d.id === img.id)
@@ -103,12 +115,18 @@ export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
       {/* Masonry grid */}
       <div style={{ maxWidth: 1200, margin: '0 auto', opacity: visible ? 1 : 0, transition: 'opacity 0.2s ease' }}>
         <div className="gallery-grid">
+          {/* Each tile is a real <button>, not a clickable <div> — the lightbox
+              was mouse-only before, unreachable by keyboard or screen reader. */}
           {displayed.map(img => (
-            <div
+            <button
               key={img.id}
+              type="button"
               onMouseEnter={() => setHoveredId(img.id)}
               onMouseLeave={() => setHoveredId(null)}
+              onFocus={() => setHoveredId(img.id)}
+              onBlur={() => setHoveredId(null)}
               onClick={() => openLightbox(img)}
+              aria-label={`Open photo: ${img.caption || 'untitled'}`}
               style={{
                 breakInside: 'avoid',
                 marginBottom: 12,
@@ -116,6 +134,12 @@ export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
                 overflow: 'hidden',
                 position: 'relative',
                 cursor: 'pointer',
+                display: 'block',
+                width: '100%',
+                padding: 0,
+                border: 'none',
+                background: 'none',
+                textAlign: 'left',
               }}
             >
               {/* Image */}
@@ -158,7 +182,7 @@ export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
               }}>
                 {img.caption}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -167,6 +191,9 @@ export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
       {activeLightbox && (
         <div
           onClick={() => setLightboxIdx(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={activeLightbox.caption || 'Photo viewer'}
           style={{
             position: 'fixed',
             inset: 0,
@@ -180,6 +207,7 @@ export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
           {/* Close */}
           <button
             onClick={() => setLightboxIdx(null)}
+            aria-label="Close photo viewer"
             style={{
               position: 'absolute', top: 20, right: 24,
               background: 'none', border: 'none',
@@ -193,6 +221,7 @@ export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
           {/* Prev */}
           <button
             onClick={e => { e.stopPropagation(); setLightboxIdx(p => (p! - 1 + displayed.length) % displayed.length) }}
+            aria-label="Previous photo"
             style={{
               position: 'absolute', left: 20,
               background: 'none', border: 'none',
@@ -221,6 +250,7 @@ export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
           {/* Next */}
           <button
             onClick={e => { e.stopPropagation(); setLightboxIdx(p => (p! + 1) % displayed.length) }}
+            aria-label="Next photo"
             style={{
               position: 'absolute', right: 20,
               background: 'none', border: 'none',

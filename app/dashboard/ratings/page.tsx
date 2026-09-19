@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { IconStar, IconUsers, IconX, IconCheck } from '@tabler/icons-react'
 import { TEAMS, loadAllStudents, generateRatings, teamName, type StudentRow, type RatingEntry } from '../students/data'
 import { toast } from '../components/toast'
+import { useModal, modalOverlayProps } from '../hooks/useModal'
 import { getCurrentUser } from '@/lib/auth'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -109,8 +110,10 @@ function RateSessionModal({
     { key: 'teamwork',  label: 'Teamwork'  },
   ]
 
+  useModal(onClose)
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
+    <div {...modalOverlayProps} aria-label="Rate session" style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 680, maxHeight: '92vh', overflowY: 'auto', padding: 28 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>

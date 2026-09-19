@@ -79,17 +79,27 @@ function ProgramCard({
         transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
       }}
     >
-      {/* Photo + badges */}
-      <div style={{ position: 'relative', height: 160, flexShrink: 0, overflow: 'hidden' }}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- remote picsum placeholder, matches Gallery.tsx */}
-        <img
-          src={`https://picsum.photos/seed/${p.imageSeed}/600/400`}
-          alt={p.name}
-          style={{
-            width: '100%', height: '100%', objectFit: 'cover', display: 'block',
-            transform: hover ? 'scale(1.05)' : 'scale(1)', transition: 'transform 0.45s ease',
-          }}
-        />
+      {/* Header band + badges.
+          REPLACE WITH REAL PHOTOGRAPHY: each card used to load a random photo
+          from picsum.photos — 20 unrelated stock images across the two academy
+          pages, plus 20 third-party requests. Swap in real programme photos when
+          the academy supplies them. */}
+      <div style={{
+        position: 'relative', height: 160, flexShrink: 0, overflow: 'hidden',
+        backgroundColor: 'var(--color-bg)',
+        backgroundImage: `radial-gradient(ellipse 70% 100% at 50% 100%, rgba(${accentRgb}, ${hover ? 0.3 : 0.2}) 0%, transparent 70%)`,
+        transition: 'background-image 0.45s ease',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div aria-hidden style={{
+          color: accent, opacity: hover ? 0.4 : 0.25,
+          transform: hover ? 'scale(1.08)' : 'scale(1)',
+          transition: 'transform 0.45s ease, opacity 0.45s ease',
+        }}>
+          {icon === 'football'
+            ? <IconBallFootball size={72} stroke={1.25} />
+            : <IconBallBasketball size={72} stroke={1.25} />}
+        </div>
         <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
           <span style={badge(true)}>{p.level}</span>
           <span style={badge(false)}>{p.gender}</span>

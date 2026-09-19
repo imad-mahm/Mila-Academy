@@ -21,14 +21,14 @@ export default async function Home() {
 
   return (
     <>
-      <Navbar hasGallery={photos.length > 0} />
+      <Navbar hasGallery={photos.length > 0} hasPrograms={programs.length > 0} />
       <Hero />
       <Stats settings={settings} />
       <Programs programs={programs} />
       <Gallery photos={photos} />
       <Testimonials testimonials={testimonials} />
       <Contact settings={settings} />
-      <Footer settings={settings} hasGallery={photos.length > 0} />
+      <Footer settings={settings} hasGallery={photos.length > 0} hasPrograms={programs.length > 0} />
 
       <WhatsAppButton whatsappNumber={settings.whatsapp_number} />
     </>

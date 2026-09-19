@@ -1,6 +1,10 @@
 'use client'
 
 export default function WhatsAppButton({ whatsappNumber }: { whatsappNumber: string }) {
+  // No number configured in site_settings — render nothing rather than a
+  // floating button linking to https://wa.me/ , which opens a WhatsApp error.
+  if (!whatsappNumber) return null
+
   return (
     <a
       href={`https://wa.me/${whatsappNumber}`}

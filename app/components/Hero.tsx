@@ -1,24 +1,20 @@
 'use client'
 import type { CSSProperties } from 'react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
 
 export default function Hero() {
-  const [isMobile, setIsMobile] = useState(false)
   const [leftHov,  setLeftHov]  = useState(false)
   const [rightHov, setRightHov] = useState(false)
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check, { passive: true })
-    return () => window.removeEventListener('resize', check)
-  }, [])
-
+  // Layout is driven by CSS media queries, not a JS `isMobile` flag. The flag
+  // started false on the server, so phones rendered the side-by-side desktop
+  // hero on first paint and only snapped to the stacked layout after hydration.
   const halfBase: CSSProperties = {
     flex: 1,
+    minHeight: 0,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -27,7 +23,6 @@ export default function Hero() {
     backgroundColor: 'var(--color-bg)',
     position: 'relative',
     overflow: 'hidden',
-    ...(isMobile ? { width: '100%', height: '50vh', flex: 'none' } : {}),
   }
 
   const enterBtn: CSSProperties = {
@@ -53,25 +48,40 @@ export default function Hero() {
           to   { transform: rotateZ(360deg); }
         }
         .enter-btn:hover { opacity: 0.85 !important; }
+
+        .hero-split {
+          /* dvh tracks the collapsing mobile URL bar; vh is the fallback for
+             browsers without it, where 100vh overflows behind the bar. */
+          height: 100vh;
+          height: 100dvh;
+          display: flex;
+          flex-direction: row;
+          padding-top: 60px;
+        }
+        /* The ball shrinks with the viewport instead of holding 280px and
+           pushing the name and Enter button off a short screen. */
+        .hero-ball { width: 280px; height: 280px; }
+        .hero-divider { width: 1px; height: auto; }
+
+        @media (max-width: 768px) {
+          .hero-split   { flex-direction: column; }
+          .hero-ball    { width: min(280px, 34vh); height: min(280px, 34vh); }
+          .hero-divider { width: auto; height: 1px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-ball img { animation: none !important; }
+        }
       `}</style>
 
-      <section
-        id="hero"
-        style={{
-          height: '100vh',
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          paddingTop: 60,
-        }}
-      >
+      <section id="hero" className="hero-split">
         {/* ── Left: Football ──────────────────────────────────────────────────── */}
         <div
           onMouseEnter={() => setLeftHov(true)}
           onMouseLeave={() => setLeftHov(false)}
           style={halfBase}
         >
-          <div style={{
-            position: 'relative', width: 280, height: 280, flexShrink: 0,
+          <div className="hero-ball" style={{
+            position: 'relative', flexShrink: 0,
             perspective: 700,
             filter: leftHov
               ? 'drop-shadow(0 0 48px rgba(22,163,74,0.45))'
@@ -113,10 +123,8 @@ export default function Hero() {
           </Link>
         </div>
 
-        {/* ── Divider ─────────────────────────────────────────────────────────── */}
-        {isMobile ? null : (
-          <div style={{ width: 1, backgroundColor: 'var(--color-border-soft)', flexShrink: 0, alignSelf: 'stretch' }} />
-        )}
+        {/* ── Divider (vertical on desktop, horizontal when stacked) ──────────── */}
+        <div className="hero-divider" style={{ backgroundColor: 'var(--color-border-soft)', flexShrink: 0, alignSelf: 'stretch' }} />
 
         {/* ── Right: Basketball ───────────────────────────────────────────────── */}
         <div
@@ -124,8 +132,8 @@ export default function Hero() {
           onMouseLeave={() => setRightHov(false)}
           style={halfBase}
         >
-          <div style={{
-            position: 'relative', width: 280, height: 280, flexShrink: 0,
+          <div className="hero-ball" style={{
+            position: 'relative', flexShrink: 0,
             perspective: 700,
             filter: rightHov
               ? 'drop-shadow(0 0 48px rgba(249,115,22,0.5))'
