@@ -40,25 +40,33 @@ SQL migration files are in `supabase/` for reference/reproducibility — **alrea
 - `migration_gallery_storage_path.sql` — adds `gallery_photos.storage_path` (tracks the file for cleanup on delete).
 - `gallery_photos` is currently **empty** — no photos uploaded yet (there's no upload UI; the API exists, see below).
 
-## What's NOT done — pick up here
+## Admin CMS + user accounts (done)
 
-**The actual admin screens don't exist yet.** The API is ready; nobody can use it without writing raw `fetch()` calls. This is the main remaining work:
+### One-time setup
+1. Run `supabase/migration_admin_cms.sql` in the Supabase SQL Editor (after the two schema files). It adds `app_users`, merges the two program catalogs into the `programs` table, creates the `site-assets` storage bucket, and adds `enrollment_inquiries.handled`.
+2. Create the first admin: `npm run create-admin -- you@example.com "Your Name" <password>`. The same command recovers access if every admin is locked out (it resets that account to an enabled admin).
+3. Everything else is done from the dashboard.
 
-1. `app/dashboard/content/programs/page.tsx` — list/add/edit/delete Programs. Mid-edit in `app/dashboard/layout.tsx`: nav items for "Programs", "Testimonials", "Gallery" were just added (pointing to `/dashboard/content/programs`, `/dashboard/content/testimonials`, `/dashboard/content/gallery`) — **these routes don't exist yet, so those nav links currently 404.**
-2. `app/dashboard/content/testimonials/page.tsx` — same, for testimonials.
-3. `app/dashboard/content/gallery/page.tsx` — same, for gallery photos, needs a file `<input>` posting `multipart/form-data` to `/api/admin/gallery/upload`.
-4. `app/dashboard/settings/page.tsx` — the nav already links here (`Settings`, pre-existing nav item) but the page was never built. Should be a simple form editing the `site_settings` key/value pairs (Stats numbers, phone/email/location/hours, social URLs) via `PATCH /api/admin/settings`.
+### What the admin can edit (dashboard sidebar)
+- **Website → Site Content** (`/dashboard/website`): every text and image on the public site — brand name, SEO title/description, tab icon, share image, nav labels, hero, stats, headings, contact details, social links, footer, and each academy's name/tagline/logo/banner/CTA. Driven by `lib/content-schema.ts`: add a field there and it appears in the editor; components read `content.<key>`. Values live in `site_settings`; a missing row shows the schema default.
+- **Website → Programs / Testimonials / Gallery**: full CRUD, reordering, show-on-homepage (programs `featured`), hide without deleting (programs `active`), image uploads.
+- **Website → Inquiries**: enquiry-form submissions, mark handled, delete.
+- **Admin → Users** (`/dashboard/users`): create/edit/disable/delete accounts, set role and academies, link coaches to a team and parents/students to a student, reset passwords (temporary password shown once; user must change it on first sign-in). Guards: you can't demote/disable/delete yourself, and the last active admin can't be removed.
+- **My Account**: every user can change their own password.
 
-Match the existing dashboard's visual style — look at `app/dashboard/students/page.tsx` or `app/dashboard/coaches/page.tsx` for the established table/card patterns and CSS variables (`var(--bg-card)`, `var(--border)`, `var(--text-primary)`, `var(--accent-gold)`, etc., defined in `app/globals.css`).
+Saves call `revalidatePath('/', 'layout')` (`lib/server/revalidate.ts`), so changes are live immediately.
 
-## Known issues / flagged, not fixed
+### Auth architecture (built to swap for Supabase Auth later)
+- Users in `app_users` with scrypt password hashes (`lib/server/passwords.ts`). No hardcoded accounts remain.
+- Login runs on the server (`app/api/auth/*`) and sets an **HMAC-signed, httpOnly** `mila_session` cookie (`lib/session-token.ts`). Forged cookies are rejected by `proxy.ts` and by every API route.
+- `lib/api-auth.ts` `getSession()` is the single server-side source of truth: it verifies the cookie, then re-reads the user so disabling, role changes and password resets take effect on the next request (`session_version`).
+- The browser keeps only a display copy of the user in localStorage (`lib/auth.ts`), refreshed from `/api/auth/me` on each dashboard visit.
+- Migrating to Supabase Auth later = replace `lib/api-auth.ts` + `app/api/auth/*`, and move `app_users` profile columns to a `profiles` table keyed on `auth.users.id`. Pages and admin routes don't change.
 
-- **`lib/auth.ts` is not real auth.** Login checks credentials against a hardcoded plaintext array (`SEED_USERS`, e.g. `admin@milaacademy.com` / `admin123`) and the session is an unsigned, forgeable cookie (`mila_session`). The new admin API routes trust this same cookie — consistent with the rest of the app's current security model, but **not real security**. Anyone who knows the cookie format could forge admin access. Replacing this with real Supabase Auth should be a priority before this is treated as production-ready for a real business.
-- **The repo was briefly public** with those plaintext passwords visible before this session made it private and invited a collaborator. If it's ever made public again, rotate `lib/auth.ts`'s passwords first.
-- **Two separate program catalogs exist and are out of sync**: the new `programs` Supabase table (6 simple entries, powers the homepage) vs. `lib/programs.ts` (a richer, still-hardcoded 20-program catalog with level/gender/sessions, powers `/football` and `/basketball`'s `ProgramsExplorer`). Whether these should be unified into one schema is a design decision nobody's made yet — flagged, not resolved.
-- **Students/Teams/Coaches/Matches/Attendance/Ratings/Payments** (the rest of the existing `/dashboard`) still run entirely on `localStorage` mock data (`app/dashboard/students/data.ts` etc.), not Supabase. This was explicitly scoped out as "phase 2" — a separate, larger migration from the content-CMS work done this session.
-- Pre-existing, unrelated to this session: several `react-hooks/set-state-in-effect` ESLint errors in `app/dashboard/**` (a background task was already spawned earlier to track this — search for it or just re-run `npx eslint app/dashboard` to see current state).
-- `metadataBase` isn't set in `app/layout.tsx`'s metadata export (cosmetic Next.js warning, needs a real production domain — none exists yet).
+## Still not done
+
+- **Students/Teams/Coaches/Matches/Attendance/Ratings/Payments**: Students, Teams and Coaches have real APIs; Attendance, Matches, Ratings and Payments still run on `localStorage` mock data. Coaches linked to a real team (uuid) won't match the mock data's team ids on those pages until they're migrated.
+- The dashboard's own chrome (sidebar logos, "MILA ACADEMY", login subtitle) is not part of Site Content.
 
 ## Useful commands
 

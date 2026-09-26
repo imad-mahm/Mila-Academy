@@ -1,26 +1,25 @@
+import type { Metadata } from 'next'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import WhatsAppButton from '../components/WhatsAppButton'
 import AcademyLanding from '../components/AcademyLanding'
-import { getSiteSettings } from '@/lib/site-data'
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  title: 'Mila Football Academy',
-  description:
-    'Youth football training in Lebanon since 2016 — programmes for every age and level, from beginner to pro pathway.',
-}
+import { getPrograms, getSiteContent } from '@/lib/site-data'
 
 export const revalidate = 60
 
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getSiteContent()
+  return { title: content.football_seo_title, description: content.football_seo_description }
+}
+
 export default async function FootballPage() {
-  const settings = await getSiteSettings()
+  const [content, programs] = await Promise.all([getSiteContent(), getPrograms('football')])
   return (
     <>
-      <Navbar hasGallery={false} />
-      <AcademyLanding academy="football" settings={settings} />
-      <Footer settings={settings} hasGallery={false} />
-      <WhatsAppButton whatsappNumber={settings.whatsapp_number} />
+      <Navbar content={content} hasGallery={false} />
+      <AcademyLanding academy="football" content={content} programs={programs} />
+      <Footer content={content} hasGallery={false} />
+      <WhatsAppButton whatsappNumber={content.whatsapp_number} />
     </>
   )
 }

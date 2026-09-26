@@ -6,16 +6,16 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   IconHome, IconUsers, IconCalendarCheck, IconTrophy, IconClipboardList,
-  IconCash, IconStar, IconChartBar, IconSettings, IconLogout,
+  IconCash, IconStar, IconChartBar, IconLogout,
   IconSearch, IconX, IconBuildingArch, IconMenu2, IconSun, IconMoon,
-  IconListDetails, IconQuote, IconPhoto,
+  IconListDetails, IconQuote, IconPhoto, IconWorld, IconInbox, IconUserShield, IconUserCircle,
 } from '@tabler/icons-react'
 import { ToastContainer } from './components/ToastContainer'
 import { useTheme, toggleTheme } from '@/lib/theme'
 import { loadAllStudents } from './students/data'
 import { loadAllCoaches } from './coaches/data'
 import {
-  logout, seedUsers, setSelectedAcademy,
+  logout, refreshSession, setSelectedAcademy,
   type SessionUser, type AcademyFilter,
 } from '@/lib/auth'
 import { useSession } from '@/lib/use-session'
@@ -37,7 +37,9 @@ const ROLE_COLORS: Record<SessionUser['role'], string> = {
 
 // ── Nav config ────────────────────────────────────────────────────────────────
 
-const ALL_NAV = [
+type NavItem = { label: string; href: string; Icon: typeof IconHome; section?: string }
+
+const MAIN_NAV: NavItem[] = [
   { label: 'Dashboard',    href: '/dashboard',                  Icon: IconHome          },
   { label: 'Students',     href: '/dashboard/students',         Icon: IconUsers         },
   { label: 'Attendance',   href: '/dashboard/attendance',       Icon: IconCalendarCheck },
@@ -46,19 +48,27 @@ const ALL_NAV = [
   { label: 'Payments',     href: '/dashboard/payments',         Icon: IconCash          },
   { label: 'Ratings',      href: '/dashboard/ratings',          Icon: IconStar          },
   { label: 'Reports',      href: '/dashboard/reports',          Icon: IconChartBar      },
-  // Routes not built yet — rendered disabled with a "Soon" badge, see Sidebar's nav loop.
-  { label: 'Programs',     href: '/dashboard/content/programs',     Icon: IconListDetails, comingSoon: true },
-  { label: 'Testimonials', href: '/dashboard/content/testimonials', Icon: IconQuote,       comingSoon: true },
-  { label: 'Gallery',      href: '/dashboard/content/gallery',      Icon: IconPhoto,       comingSoon: true },
-  { label: 'Settings',     href: '/dashboard/settings',             Icon: IconSettings,    comingSoon: true },
 ]
 
-function navItemsFor(user: SessionUser) {
-  if (user.role === 'admin') return ALL_NAV
-  if (user.role === 'coach') return ALL_NAV.filter(n => !['Payments', 'Settings', 'Programs', 'Testimonials', 'Gallery'].includes(n.label))
+// Admin-only: the public website editor and account management.
+const ADMIN_NAV: NavItem[] = [
+  { label: 'Site Content', href: '/dashboard/website',               Icon: IconWorld,       section: 'Website' },
+  { label: 'Programs',     href: '/dashboard/content/programs',      Icon: IconListDetails, section: 'Website' },
+  { label: 'Testimonials', href: '/dashboard/content/testimonials',  Icon: IconQuote,       section: 'Website' },
+  { label: 'Gallery',      href: '/dashboard/content/gallery',       Icon: IconPhoto,       section: 'Website' },
+  { label: 'Inquiries',    href: '/dashboard/content/inquiries',     Icon: IconInbox,       section: 'Website' },
+  { label: 'Users',        href: '/dashboard/users',                 Icon: IconUserShield,  section: 'Admin'   },
+]
+
+const ACCOUNT_NAV: NavItem = { label: 'My Account', href: '/dashboard/account', Icon: IconUserCircle, section: 'Account' }
+
+function navItemsFor(user: SessionUser): NavItem[] {
+  if (user.role === 'admin') return [...MAIN_NAV, ...ADMIN_NAV, ACCOUNT_NAV]
+  if (user.role === 'coach') return [...MAIN_NAV.filter(n => n.label !== 'Payments'), ACCOUNT_NAV]
   return [
     { label: 'My Profile', href: `/dashboard/students/${user.studentId ?? ''}`, Icon: IconBuildingArch },
     { label: 'Matches',    href: '/dashboard/matches', Icon: IconTrophy },
+    ACCOUNT_NAV,
   ]
 }
 
@@ -256,31 +266,25 @@ function Sidebar({
         <AcademySwitcher user={user} />
 
         <nav style={{ flex: 1, padding: '4px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {navItems.map(({ label, href, Icon, comingSoon }) => (
-            comingSoon ? (
-              <div
-                key={href}
-                className="nav-item"
-                aria-disabled="true"
-                title={`${label} — coming soon`}
-                style={{ cursor: 'default', opacity: 0.45, pointerEvents: 'none' }}
+          {navItems.map(({ label, href, Icon, section }, i) => (
+            <div key={href} style={{ display: 'contents' }}>
+              {section && section !== navItems[i - 1]?.section && (
+                <p style={{
+                  color: 'var(--text-muted)', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
+                  textTransform: 'uppercase', margin: '14px 0 4px 16px',
+                }}>
+                  {section}
+                </p>
+              )}
+              <Link
+                href={href}
+                className={`nav-item${pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/')) ? ' active' : ''}`}
+                onClick={onClose}
               >
                 <Icon size={20} stroke={1.8} />
                 {label}
-                <span style={{
-                  marginLeft: 'auto', fontSize: 9, fontWeight: 700, letterSpacing: '0.04em',
-                  textTransform: 'uppercase', padding: '2px 6px', borderRadius: 20,
-                  border: '1px solid var(--border)', color: 'var(--text-muted)',
-                }}>
-                  Soon
-                </span>
-              </div>
-            ) : (
-              <Link key={href} href={href} className={`nav-item${pathname === href ? ' active' : ''}`} onClick={onClose}>
-                <Icon size={20} stroke={1.8} />
-                {label}
               </Link>
-            )
+            </div>
           ))}
         </nav>
 
@@ -346,12 +350,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
 
-  useEffect(() => { seedUsers() }, [])
+  // The cached session is only for rendering; confirm it with the server once
+  // per dashboard visit so role/name changes an admin made show up, and a
+  // disabled or reset account is signed out instead of browsing a stale UI.
+  useEffect(() => {
+    if (isLoginPage) return
+    refreshSession()
+  }, [isLoginPage])
 
   useEffect(() => {
     if (!ready || isLoginPage) return
     if (!user) router.replace('/dashboard/login')
-  }, [ready, isLoginPage, user, router])
+    else if (user.mustChangePassword && pathname !== '/dashboard/account') router.replace('/dashboard/account?first=1')
+  }, [ready, isLoginPage, user, router, pathname])
 
   // Close the sidebar when the route changes. Adjusting state during render is
   // React's documented alternative to a setState-in-effect here: it re-renders
@@ -396,8 +407,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [checking])  // re-runs once the guard resolves and #dash-main exists
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    await logout()
     router.replace('/dashboard/login')
   }
 

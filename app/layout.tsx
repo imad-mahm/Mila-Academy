@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SmoothScrollProvider from "./components/SmoothScrollProvider";
+import { getSiteContent } from "@/lib/site-data";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,13 +14,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: "Mila Academy",
-  description: "Mila Football Academy & Mila Basket Academy — Train with the best in Lebanon.",
-  icons: { icon: "/logos/mfa_favicon.png" },
-  openGraph: { images: ["/logos/mfa_hq_transparent.png"] },
-};
+// Title, description, tab icon and link-preview image are all editable from
+// the dashboard (Website → Site Content → General).
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getSiteContent();
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+    title: content.site_title,
+    description: content.site_description,
+    icons: content.favicon ? { icon: content.favicon } : undefined,
+    openGraph: content.share_image ? { images: [content.share_image] } : undefined,
+  };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -2,14 +2,15 @@
 import { useState } from 'react'
 import { IconBallFootball, IconBallBasketball } from '@tabler/icons-react'
 import { scrollToSection } from '@/lib/lenis-store'
-import type { Program } from '@/lib/site-data'
+import type { SiteContent } from '@/lib/content-schema'
+import { ageLabel, priceLabel, sessionsLabel, type Program } from '@/lib/programs'
 
 const SPORT_STYLE = {
   football:   { color: 'var(--color-football)',   colorRgb: 'var(--color-football-rgb)',   Icon: IconBallFootball   },
   basketball: { color: 'var(--color-basketball)', colorRgb: 'var(--color-basketball-rgb)', Icon: IconBallBasketball },
 } as const
 
-export default function Programs({ programs }: { programs: Program[] }) {
+export default function Programs({ programs, content }: { programs: Program[]; content: SiteContent }) {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
 
   if (programs.length === 0) return null
@@ -39,7 +40,7 @@ export default function Programs({ programs }: { programs: Program[] }) {
             lineHeight: 1.1,
           }}
         >
-          Our Programs
+          {content.programs_title}
         </h2>
         <p
           style={{
@@ -49,7 +50,7 @@ export default function Programs({ programs }: { programs: Program[] }) {
             letterSpacing: '1px',
           }}
         >
-          Choose your path
+          {content.programs_subtitle}
         </p>
       </div>
 
@@ -122,7 +123,7 @@ export default function Programs({ programs }: { programs: Program[] }) {
 
               {/* Detail rows */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 11, flex: 1 }}>
-                {[prog.age_range, prog.frequency, `$${prog.price_month} / month`].map((text) => (
+                {[ageLabel(prog), sessionsLabel(prog), priceLabel(prog)].map((text) => (
                   <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span
                       style={{
@@ -156,7 +157,7 @@ export default function Programs({ programs }: { programs: Program[] }) {
                   letterSpacing: '0.3px',
                 }}
               >
-                Enroll Now
+                {content.programs_enroll_label}
               </button>
             </div>
           )

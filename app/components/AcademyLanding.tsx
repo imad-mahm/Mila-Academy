@@ -1,11 +1,23 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import type { SiteSettings } from '@/lib/site-data'
-import { ACADEMY_META, type Academy } from '@/lib/programs'
+import type { SiteContent } from '@/lib/content-schema'
+import { ACADEMY_STYLE, type Academy, type Program } from '@/lib/programs'
 import ProgramsExplorer from './ProgramsExplorer'
 
-export default function AcademyLanding({ academy, settings }: { academy: Academy; settings: SiteSettings }) {
-  const meta = ACADEMY_META[academy]
+export default function AcademyLanding({
+  academy, content, programs,
+}: { academy: Academy; content: SiteContent; programs: Program[] }) {
+  const meta = {
+    ...ACADEMY_STYLE[academy],
+    name:      content[`${academy}_name`],
+    tagline:   content[`${academy}_tagline`],
+    est:       content[`${academy}_est`],
+    logo:      content[`${academy}_logo`],
+    heroImage: content[`${academy}_hero_image`],
+    ctaTitle:  content[`${academy}_cta_title`],
+    ctaText:   content[`${academy}_cta_text`],
+  }
+  const settings = content
   // Empty when site_settings has no number — the WhatsApp CTAs are hidden in
   // that case rather than pointing at a bare https://wa.me/ .
   const wa = settings.whatsapp_number ? `https://wa.me/${settings.whatsapp_number}` : ''
@@ -23,12 +35,8 @@ export default function AcademyLanding({ academy, settings }: { academy: Academy
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         textAlign: 'center', padding: '60px 24px 0',
       }}>
-        {/* Branded backdrop in the academy's accent colour.
-            REPLACE WITH REAL PHOTOGRAPHY: this used to pull a random photo from
-            picsum.photos, which put unrelated stock images of strangers behind
-            the hero of a children's sports academy — and made the hero depend on
-            a third-party service staying up. Swap in a real training photo when
-            the academy supplies one. */}
+        {/* Branded backdrop in the academy's accent colour, or the banner
+            photo an admin uploaded (Site Content → academy → Page banner photo). */}
         <div
           aria-hidden
           style={{
@@ -40,6 +48,9 @@ export default function AcademyLanding({ academy, settings }: { academy: Academy
             `,
           }}
         />
+        {meta.heroImage && (
+          <Image src={meta.heroImage} alt="" fill sizes="100vw" style={{ objectFit: 'cover' }} preload />
+        )}
         {/* Scrim keeps the white hero text readable in both themes */}
         <div style={{
           position: 'absolute', inset: 0,
@@ -59,10 +70,10 @@ export default function AcademyLanding({ academy, settings }: { academy: Academy
           </p>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, margin: 0 }}>{meta.est}</p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginTop: 10 }}>
-            <a href="#programs" style={{ ...heroBtn, backgroundColor: meta.accent }}>View Programs</a>
+            <a href="#programs" style={{ ...heroBtn, backgroundColor: meta.accent }}>{content.academy_view_programs}</a>
             {wa && (
               <a href={wa} target="_blank" rel="noopener noreferrer" style={{ ...heroBtn, backgroundColor: '#25D366' }}>
-                Chat on WhatsApp
+                {content.whatsapp_label}
               </a>
             )}
           </div>
@@ -70,7 +81,7 @@ export default function AcademyLanding({ academy, settings }: { academy: Academy
       </section>
 
       {/* ── Sortable / filterable programs ──────────────────────────────────── */}
-      <ProgramsExplorer academy={academy} />
+      <ProgramsExplorer academy={academy} programs={programs} content={content} />
 
       {/* ── Enroll CTA ──────────────────────────────────────────────────────── */}
       <section id="enroll" style={{
@@ -79,10 +90,10 @@ export default function AcademyLanding({ academy, settings }: { academy: Academy
       }}>
         <div style={{ maxWidth: 620, margin: '0 auto' }}>
           <h2 style={{ color: 'var(--color-text)', fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 800, margin: '0 0 14px', lineHeight: 1.15 }}>
-            Ready to join {meta.short}?
+            {meta.ctaTitle}
           </h2>
           <p style={{ color: 'var(--color-text-dim)', fontSize: 15, lineHeight: 1.7, margin: '0 0 28px' }}>
-            Reach out and our team will help you choose the right program and get started.
+            {meta.ctaText}
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
             {wa && (
@@ -90,14 +101,14 @@ export default function AcademyLanding({ academy, settings }: { academy: Academy
                 backgroundColor: '#25D366', color: '#fff', padding: '13px 28px', borderRadius: 10,
                 fontWeight: 700, fontSize: 15, textDecoration: 'none',
               }}>
-                Chat on WhatsApp
+                {content.whatsapp_label}
               </a>
             )}
             <Link href="/#contact" style={{
               backgroundColor: 'transparent', color: meta.accent, border: `1px solid ${meta.accent}`,
               padding: '13px 28px', borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: 'none',
             }}>
-              Enroll Now →
+              {content.academy_enroll_label}
             </Link>
           </div>
         </div>

@@ -1,10 +1,10 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { IconBallFootball, IconBallBasketball } from '@tabler/icons-react'
+import type { SiteContent } from '@/lib/content-schema'
 import {
-  PROGRAMS,
   LEVEL_ORDER,
-  ACADEMY_META,
+  ACADEMY_STYLE,
   ageLabel,
   priceLabel,
   sessionsLabel,
@@ -53,9 +53,9 @@ function Pill({
 
 // ── Single program card (enriched Programs.tsx card + photo + badges) ────────────
 function ProgramCard({
-  p, accent, accentRgb, icon,
+  p, accent, accentRgb, icon, enrollLabel,
 }: {
-  p: Program; accent: string; accentRgb: string; icon: Academy
+  p: Program; accent: string; accentRgb: string; icon: Academy; enrollLabel: string
 }) {
   const [hover, setHover] = useState(false)
 
@@ -91,7 +91,11 @@ function ProgramCard({
         transition: 'background-image 0.45s ease',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <div aria-hidden style={{
+        {p.image_url && (
+          // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded photo, any host/size
+          <img src={p.image_url} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        )}
+        {!p.image_url && <div aria-hidden style={{
           color: accent, opacity: hover ? 0.4 : 0.25,
           transform: hover ? 'scale(1.08)' : 'scale(1)',
           transition: 'transform 0.45s ease, opacity 0.45s ease',
@@ -99,7 +103,7 @@ function ProgramCard({
           {icon === 'football'
             ? <IconBallFootball size={72} stroke={1.25} />
             : <IconBallBasketball size={72} stroke={1.25} />}
-        </div>
+        </div>}
         <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
           <span style={badge(true)}>{p.level}</span>
           <span style={badge(false)}>{p.gender}</span>
@@ -150,7 +154,7 @@ function ProgramCard({
             textAlign: 'center', textDecoration: 'none', display: 'block', cursor: 'pointer',
           }}
         >
-          Enroll Now
+          {enrollLabel}
         </a>
       </div>
     </div>
@@ -158,8 +162,10 @@ function ProgramCard({
 }
 
 // ── Explorer ─────────────────────────────────────────────────────────────────────
-export default function ProgramsExplorer({ academy }: { academy: Academy }) {
-  const meta = ACADEMY_META[academy]
+export default function ProgramsExplorer({
+  academy, programs, content,
+}: { academy: Academy; programs: Program[]; content: SiteContent }) {
+  const meta = { ...ACADEMY_STYLE[academy], icon: academy }
 
   const [sortKey, setSortKey] = useState<SortKey>('age')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
@@ -167,19 +173,19 @@ export default function ProgramsExplorer({ academy }: { academy: Academy }) {
   const [level,   setLevel]   = useState<Level | 'All'>('All')
 
   const list = useMemo(() => {
-    let r = PROGRAMS.filter((p) => p.academy === academy)
+    let r = programs
     if (gender !== 'All') r = r.filter((p) => p.gender === gender)
     if (level  !== 'All') r = r.filter((p) => p.level === level)
     r = [...r].sort((a, b) => {
       let c = 0
-      if (sortKey === 'age')    c = a.ageMin - b.ageMin
-      if (sortKey === 'price')  c = a.priceMonthly - b.priceMonthly
+      if (sortKey === 'age')    c = a.age_min - b.age_min
+      if (sortKey === 'price')  c = a.price_month - b.price_month
       if (sortKey === 'level')  c = LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level]
       if (sortKey === 'gender') c = a.gender.localeCompare(b.gender)
       return sortDir === 'asc' ? c : -c
     })
     return r
-  }, [academy, gender, level, sortKey, sortDir])
+  }, [programs, gender, level, sortKey, sortDir])
 
   const labelStyle: React.CSSProperties = {
     color: 'var(--color-text-faint)', fontSize: 11, fontWeight: 700,
@@ -198,10 +204,10 @@ export default function ProgramsExplorer({ academy }: { academy: Academy }) {
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {/* Header */}
         <h2 style={{ color: 'var(--color-text)', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.1 }}>
-          Our Programs
+          {content.academy_programs_title}
         </h2>
         <p style={{ color: meta.accent, fontSize: 14, margin: '0 0 32px', letterSpacing: '0.5px' }}>
-          {list.length} program{list.length === 1 ? '' : 's'} · pick the right team
+          {list.length} program{list.length === 1 ? '' : 's'} · {content.academy_programs_hint}
         </p>
 
         {/* Controls */}
@@ -267,7 +273,7 @@ export default function ProgramsExplorer({ academy }: { academy: Academy }) {
         ) : (
           <div className="pe-grid">
             {list.map((p) => (
-              <ProgramCard key={p.id} p={p} accent={meta.accent} accentRgb={meta.accentRgb} icon={meta.icon} />
+              <ProgramCard key={p.id} p={p} accent={meta.accent} accentRgb={meta.accentRgb} icon={meta.icon} enrollLabel={content.programs_enroll_label} />
             ))}
           </div>
         )}

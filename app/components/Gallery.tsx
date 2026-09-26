@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { GalleryPhoto } from '@/lib/site-data'
+import type { SiteContent } from '@/lib/content-schema'
 
 type Category = 'all' | 'football' | 'basketball' | 'events'
 
@@ -11,7 +12,7 @@ const FILTERS: { key: Category; label: string }[] = [
   { key: 'events',     label: 'Events'     },
 ]
 
-export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
+export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; content: SiteContent }) {
   const [activeTab,    setActiveTab]    = useState<Category>('all')
   const [visible,      setVisible]      = useState(true)
   const [hoveredId,    setHoveredId]    = useState<string | null>(null)
@@ -85,7 +86,7 @@ export default function Gallery({ photos }: { photos: GalleryPhoto[] }) {
         margin: '0 0 48px',
         lineHeight: 1.1,
       }}>
-        Our Academy in Action
+        {content.gallery_title}
       </h2>
 
       {/* Filter tabs */}

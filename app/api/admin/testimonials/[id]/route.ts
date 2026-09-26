@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { revalidateSite } from '@/lib/server/revalidate'
 import { pick, readJson, dbError, badRequest, unauthorized, notFound } from '@/lib/api-fields'
 import { TESTIMONIALS_FIELDS } from '../route'
 
@@ -25,6 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (error) return dbError('testimonials.update', error)
   if (!data) return notFound('Testimonial not found')
+  revalidateSite()
   return NextResponse.json({ data })
 }
 
@@ -37,5 +39,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
   if (error) return dbError('testimonials.delete', error)
   if (!count) return notFound('Testimonial not found')
+  revalidateSite()
   return NextResponse.json({ ok: true })
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { revalidateSite } from '@/lib/server/revalidate'
 import { pick, readJson, dbError, badRequest, unauthorized } from '@/lib/api-fields'
 
 export const TESTIMONIALS_FIELDS = ['quote', 'name', 'initials', 'role', 'rating', 'sort_order'] as const
@@ -34,5 +35,6 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return dbError('testimonials.create', error)
+  revalidateSite()
   return NextResponse.json({ data }, { status: 201 })
 }

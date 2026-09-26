@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  images: {
+    // Logos and photos uploaded from the dashboard are served from Supabase
+    // Storage; next/image refuses remote hosts that aren't listed here.
+    remotePatterns: [{ protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' }],
+  },
 };
 
 export default nextConfig;

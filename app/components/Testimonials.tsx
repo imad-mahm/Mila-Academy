@@ -1,10 +1,11 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Testimonial } from '@/lib/site-data'
+import type { SiteContent } from '@/lib/content-schema'
 
 const CARD_GAP = 24
 
-export default function Testimonials({ testimonials }: { testimonials: Testimonial[] }) {
+export default function Testimonials({ testimonials, content }: { testimonials: Testimonial[]; content: SiteContent }) {
   const [idx,         setIdx]         = useState(0)
   const [windowWidth, setWindowWidth] = useState(0)
   const [paused,      setPaused]      = useState(false)
@@ -97,7 +98,7 @@ export default function Testimonials({ testimonials }: { testimonials: Testimoni
         margin: '0 0 60px',
         lineHeight: 1.1,
       }}>
-        What Families Say
+        {content.testimonials_title}
       </h2>
 
       {/* Carousel wrapper — autoplay pauses while the user is reading a card

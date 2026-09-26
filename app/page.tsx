@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Stats from './components/Stats'
@@ -7,30 +8,37 @@ import Testimonials from './components/Testimonials'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
 import WhatsAppButton from './components/WhatsAppButton'
-import { getPrograms, getTestimonials, getGalleryPhotos, getSiteSettings } from '@/lib/site-data'
+import { getFeaturedPrograms, getTestimonials, getGalleryPhotos, getSiteContent } from '@/lib/site-data'
 
-export const revalidate = 60 // re-fetch content at most once a minute
+// Re-fetch content at most once a minute. Saves from the dashboard also
+// revalidate every page immediately (see lib/server/revalidate.ts).
+export const revalidate = 60
+
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getSiteContent()
+  return { title: content.site_title, description: content.site_description }
+}
 
 export default async function Home() {
-  const [programs, testimonials, photos, settings] = await Promise.all([
-    getPrograms(),
+  const [programs, testimonials, photos, content] = await Promise.all([
+    getFeaturedPrograms(),
     getTestimonials(),
     getGalleryPhotos(),
-    getSiteSettings(),
+    getSiteContent(),
   ])
 
   return (
     <>
-      <Navbar hasGallery={photos.length > 0} hasPrograms={programs.length > 0} />
-      <Hero />
-      <Stats settings={settings} />
-      <Programs programs={programs} />
-      <Gallery photos={photos} />
-      <Testimonials testimonials={testimonials} />
-      <Contact settings={settings} />
-      <Footer settings={settings} hasGallery={photos.length > 0} hasPrograms={programs.length > 0} />
+      <Navbar content={content} hasGallery={photos.length > 0} hasPrograms={programs.length > 0} />
+      <Hero content={content} />
+      <Stats content={content} />
+      <Programs programs={programs} content={content} />
+      <Gallery photos={photos} content={content} />
+      <Testimonials testimonials={testimonials} content={content} />
+      <Contact content={content} />
+      <Footer content={content} hasGallery={photos.length > 0} hasPrograms={programs.length > 0} />
 
-      <WhatsAppButton whatsappNumber={settings.whatsapp_number} />
+      <WhatsAppButton whatsappNumber={content.whatsapp_number} />
     </>
   )
 }

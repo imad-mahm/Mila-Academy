@@ -5,21 +5,14 @@ import { notifySessionChanged } from './session-events'
 export type Academy       = 'MFA' | 'MBA'
 export type AcademyFilter = 'MFA' | 'MBA' | 'Both'
 export type Role          = 'admin' | 'coach' | 'parent' | 'student'
-export type Resource      = 'students' | 'attendance' | 'matches' | 'coaches' | 'payments' | 'ratings' | 'reports' | 'settings'
+export type Resource      = 'students' | 'attendance' | 'matches' | 'coaches' | 'payments' | 'ratings' | 'reports' | 'settings' | 'website' | 'users'
 export type Action        = 'view' | 'edit' | 'create' | 'delete'
 
-export interface MilaUser {
-  id: string
-  email: string
-  password: string
-  role: Role
-  name: string
-  academies: Academy[]
-  teamId?: string | null
-  studentId?: string
-}
-
-/** Shape stored in localStorage mila_user (no password) */
+/**
+ * Shape cached in localStorage `mila_user`, for rendering only (names, nav,
+ * academy switcher). It is not what grants access: the server decides that
+ * from the signed httpOnly `mila_session` cookie on every request.
+ */
 export interface SessionUser {
   id: string
   email: string
@@ -28,187 +21,104 @@ export interface SessionUser {
   academies: Academy[]
   teamId?: string | null
   studentId?: string
+  mustChangePassword?: boolean
   selectedAcademy: AcademyFilter
   loggedIn: true
 }
 
+/** What /api/auth/login, /me and /password return as `user`. */
+type ServerUser = Omit<SessionUser, 'selectedAcademy' | 'loggedIn'>
+
 // ── Keys ───────────────────────────────────────────────────────────────────────
 
-const USERS_KEY   = 'mila_users'
 const SESSION_KEY = 'mila_user'
-const COOKIE_NAME = 'mila_session'
-const COOKIE_DAYS = 7
-
-// ── Seed data ─────────────────────────────────────────────────────────────────
-// studentIds reference actual student IDs from app/dashboard/students/data.ts:
-//   '6' → Ali Hassan   (mfa-u14)
-//   '9' → Nour Saleh   (mba-u16)
-//   '2' → Omar Khalil  (mfa-u17)
-
-const SEED_USERS: MilaUser[] = [
-  {
-    id: 'admin-1',
-    email: 'admin@milaacademy.com',
-    password: 'admin123',
-    role: 'admin',
-    name: 'Admin User',
-    academies: ['MFA', 'MBA'],
-  },
-  {
-    id: 'coach-mfa-1',
-    email: 'coach.mfa@milaacademy.com',
-    password: 'coach123',
-    role: 'coach',
-    name: 'Coach Ahmad',
-    academies: ['MFA'],
-    teamId: 'mfa-u14',
-  },
-  {
-    id: 'coach-mba-1',
-    email: 'coach.mba@milaacademy.com',
-    password: 'coach123',
-    role: 'coach',
-    name: 'Coach Karim',
-    academies: ['MBA'],
-    teamId: 'mba-u16',
-  },
-  {
-    id: 'coach-both-1',
-    email: 'coach.both@milaacademy.com',
-    password: 'coach123',
-    role: 'coach',
-    name: 'Coach Samir',
-    academies: ['MFA', 'MBA'],
-    teamId: null,
-  },
-  {
-    id: 'parent-1',
-    email: 'parent1@gmail.com',
-    password: 'parent123',
-    role: 'parent',
-    name: 'Mr. Hassan',
-    academies: ['MFA'],
-    studentId: '6',
-  },
-  {
-    id: 'parent-2',
-    email: 'parent2@gmail.com',
-    password: 'parent123',
-    role: 'parent',
-    name: 'Mrs. Nour',
-    academies: ['MBA'],
-    studentId: '9',
-  },
-  {
-    id: 'student-001',
-    email: 'student1@mila.com',
-    password: 'student123',
-    role: 'student',
-    name: 'Ali Hassan',
-    academies: ['MFA'],
-    studentId: '6',
-  },
-  {
-    id: 'student-002',
-    email: 'student2@mila.com',
-    password: 'student123',
-    role: 'student',
-    name: 'Maya Nour',
-    academies: ['MBA'],
-    studentId: '9',
-  },
-  {
-    id: 'student-003',
-    email: 'student3@mila.com',
-    password: 'student123',
-    role: 'student',
-    name: 'Omar Saad',
-    academies: ['MFA', 'MBA'],
-    studentId: '2',
-  },
-]
 
 // ── Internal helpers ───────────────────────────────────────────────────────────
 
-function getUsers(): MilaUser[] {
-  if (typeof window === 'undefined') return SEED_USERS
-  try {
-    const raw = localStorage.getItem(USERS_KEY)
-    return raw ? (JSON.parse(raw) as MilaUser[]) : SEED_USERS
-  } catch {
-    return SEED_USERS
+function defaultAcademy(academies: Academy[]): AcademyFilter {
+  if (academies.includes('MFA') && academies.includes('MBA')) return 'Both'
+  return academies[0] ?? 'MFA'
+}
+
+/** Cache the server's view of the user, keeping the academy filter if still valid. */
+function storeSession(u: ServerUser): SessionUser {
+  const previous = getCurrentUser()
+  const keep = previous?.id === u.id && previous.selectedAcademy
+    && (previous.selectedAcademy === 'Both' ? u.academies.length === 2 : u.academies.includes(previous.selectedAcademy))
+  const session: SessionUser = {
+    ...u,
+    studentId: u.studentId ?? undefined,
+    selectedAcademy: keep ? previous!.selectedAcademy : defaultAcademy(u.academies),
+    loggedIn: true,
   }
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)) } catch {}
+  notifySessionChanged()
+  return session
 }
 
-function defaultAcademy(u: MilaUser): AcademyFilter {
-  if (u.academies.includes('MFA') && u.academies.includes('MBA')) return 'Both'
-  return u.academies[0] ?? 'MFA'
-}
-
-function writeCookie(value: string): void {
-  if (typeof document === 'undefined') return
-  const maxAge = COOKIE_DAYS * 24 * 60 * 60
-  document.cookie = `${COOKIE_NAME}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`
-}
-
-function clearCookie(): void {
-  if (typeof document === 'undefined') return
-  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`
+function clearStoredSession(): void {
+  try { localStorage.removeItem(SESSION_KEY) } catch {}
+  notifySessionChanged()
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
-/** Seed default users into localStorage if the store is empty. Call on app init. */
-export function seedUsers(): void {
-  if (typeof window === 'undefined') return
+export type LoginResult = { ok: true; user: SessionUser } | { ok: false; error: string }
+
+/**
+ * Check credentials on the server. On success the server sets the signed
+ * session cookie and this caches the user for the UI.
+ */
+export async function login(email: string, password: string): Promise<LoginResult> {
   try {
-    if (!localStorage.getItem(USERS_KEY)) {
-      localStorage.setItem(USERS_KEY, JSON.stringify(SEED_USERS))
-    }
-  } catch {}
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) return { ok: false, error: body?.error ?? 'Sign-in failed.' }
+    return { ok: true, user: storeSession(body.user as ServerUser) }
+  } catch {
+    return { ok: false, error: 'Could not reach the server. Check your connection.' }
+  }
+}
+
+/** End the session on the server and forget the cached user. */
+export async function logout(): Promise<void> {
+  clearStoredSession()
+  try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
 }
 
 /**
- * Validate credentials and create a session.
- * Returns the session user on success, or null on failure.
+ * Re-read the session from the server. Picks up changes an admin made to this
+ * account (role, name, academies) and signs out a disabled/reset account.
+ * Returns false when there is no valid session.
  */
-export function login(email: string, password: string): SessionUser | null {
-  const users = getUsers()
-  const user  = users.find(
-    u => u.email.toLowerCase() === email.toLowerCase().trim() && u.password === password
-  )
-  if (!user) return null
-
-  const { password: _password, ...rest } = user
-  const session: SessionUser = {
-    ...rest,
-    selectedAcademy: defaultAcademy(user),
-    loggedIn: true,
-  }
-
+export async function refreshSession(): Promise<boolean> {
   try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
-    // Minimal cookie payload for middleware. `sid` is the linked student, so the
-    // API can scope a parent/student request to their own child's record rather
-    // than trusting an id in the URL.
-    writeCookie(encodeURIComponent(JSON.stringify({
-      id: session.id,
-      role: session.role,
-      sid: session.studentId ?? null,
-    })))
-  } catch {}
-  notifySessionChanged()
-
-  return session
+    const res = await fetch('/api/auth/me', { cache: 'no-store' })
+    if (res.status === 401) { clearStoredSession(); return false }
+    if (!res.ok) return true // server trouble: keep the cached session rather than bounce the user
+    const body = await res.json()
+    storeSession(body.user as ServerUser)
+    return true
+  } catch {
+    return true
+  }
 }
 
-/** Clear session from localStorage and cookie. */
-export function logout(): void {
-  try {
-    localStorage.removeItem(SESSION_KEY)
-    clearCookie()
-  } catch {}
-  notifySessionChanged()
+/** Change your own password. The server re-issues the session cookie. */
+export async function changePassword(currentPassword: string, newPassword: string): Promise<string | null> {
+  const res = await fetch('/api/auth/password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) return body?.error ?? 'Could not change the password.'
+  storeSession(body.user as ServerUser)
+  return null
 }
 
 /** Read the current session from localStorage. Returns null if not logged in. */
@@ -249,9 +159,11 @@ export function hasAccess(resource: Resource, action: Action, user: SessionUser)
       return true
 
     case 'coach':
-      // Coaches cannot see financial data or global settings
+      // Coaches cannot see financial data, the website editor, or accounts
       if (resource === 'payments') return false
       if (resource === 'settings') return false
+      if (resource === 'website')  return false
+      if (resource === 'users')    return false
       // Coaches can view & manage everything else for their teams
       return true
 

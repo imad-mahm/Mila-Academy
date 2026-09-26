@@ -3,14 +3,15 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { scrollToSection } from '@/lib/lenis-store'
 import { useTheme, toggleTheme } from '@/lib/theme'
+import type { SiteContent } from '@/lib/content-schema'
 
 const NAV_LINKS = [
-  { label: 'Home',     id: 'hero'     },
-  { label: 'About',    id: 'about'    },
-  { label: 'Programs', id: 'programs' },
-  { label: 'Gallery',  id: 'gallery'  },
-  { label: 'Contact',  id: 'contact'  },
-]
+  { key: 'nav_home',     id: 'hero'     },
+  { key: 'nav_about',    id: 'about'    },
+  { key: 'nav_programs', id: 'programs' },
+  { key: 'nav_gallery',  id: 'gallery'  },
+  { key: 'nav_contact',  id: 'contact'  },
+] as const
 
 function SunIcon() {
   return (
@@ -53,9 +54,10 @@ function CloseIcon() {
 }
 
 export default function Navbar({
+  content,
   hasGallery = true,
   hasPrograms = true,
-}: { hasGallery?: boolean; hasPrograms?: boolean }) {
+}: { content: SiteContent; hasGallery?: boolean; hasPrograms?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const theme = useTheme()
   const router = useRouter()
@@ -64,7 +66,7 @@ export default function Navbar({
   const navLinks = NAV_LINKS.filter(l =>
     (l.id !== 'gallery'  || hasGallery) &&
     (l.id !== 'programs' || hasPrograms)
-  )
+  ).map(l => ({ id: l.id, label: content[l.key] }))
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
@@ -153,7 +155,7 @@ export default function Navbar({
           color: 'var(--color-text)', fontSize: 13, fontWeight: 600,
           letterSpacing: '0.08em', whiteSpace: 'nowrap', flexShrink: 0,
         }}>
-          MILA ACADEMY
+          {content.brand_name}
         </span>
 
         {/* Center: nav links */}
@@ -174,7 +176,7 @@ export default function Navbar({
         {/* Right: enroll + theme + hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 'auto' }}>
           <button className="nb-join" onClick={() => handleNav('contact')} style={{ marginRight: 8 }}>
-            Enroll Now
+            {content.nav_enroll}
           </button>
           <button
             className="nb-theme"
@@ -220,7 +222,7 @@ export default function Navbar({
             </button>
           ))}
           <button className="mob-link" onClick={() => handleNav('contact')} style={{ color: 'var(--color-text-dim)', fontSize: 16, marginTop: 8 }}>
-            Enroll Now
+            {content.nav_enroll}
           </button>
         </div>
       )}

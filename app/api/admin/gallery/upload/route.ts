@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { revalidateSite } from '@/lib/server/revalidate'
 import { dbError, badRequest, unauthorized } from '@/lib/api-fields'
 
 // Maps the accepted MIME types to the extension used in storage. The extension
@@ -77,5 +78,6 @@ export async function POST(req: NextRequest) {
     return dbError('gallery.insert', error)
   }
 
+  revalidateSite()
   return NextResponse.json({ data }, { status: 201 })
 }

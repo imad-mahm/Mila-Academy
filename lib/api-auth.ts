@@ -1,47 +1,58 @@
 import 'server-only'
+import { cache } from 'react'
 import { cookies } from 'next/headers'
+import { SESSION_COOKIE, SESSION_MAX_AGE, signSession, verifySession, type Role } from '@/lib/session-token'
+import { findUserById, type UserRecord } from '@/lib/server/users'
 
-const COOKIE_NAME = 'mila_session'
-
-type Role = 'admin' | 'coach' | 'parent' | 'student'
+// The single place the server decides who is making a request. Every API
+// route goes through getSession(), so replacing this login system later (e.g.
+// with Supabase Auth) means changing this file and app/api/auth/* only.
 
 export interface ApiSession {
   id: string
   role: Role
   /** The student this account is linked to (parent / student roles). */
   studentId: string | null
+  /** The team this account is linked to (coach role). */
+  teamId: string | null
+  academies: string[]
+  user: UserRecord
 }
 
 /**
- * Reads the same cookie the client-side dashboard auth (lib/auth.ts) sets.
+ * The signed-in user, or null.
  *
- * NOTE: this cookie is a plain, unsigned JSON blob the browser could forge —
- * it is only as strong as the existing dashboard login, not a real
- * server-verified session. Treat replacing it with real auth as a priority.
- * The checks below still matter: they stop an ordinary logged-in parent from
- * reading another family's record by changing the id in the URL.
+ * The cookie's signature proves the server issued it; the user row is then
+ * re-read so a disabled account, a changed role or a password reset takes
+ * effect on the very next request rather than when the cookie expires.
+ * Memoised per request with React's cache().
  */
-export async function getSession(): Promise<ApiSession | null> {
+export const getSession = cache(async (): Promise<ApiSession | null> => {
   const store = await cookies()
-  const raw = store.get(COOKIE_NAME)?.value
-  if (!raw) return null
+  const payload = await verifySession(store.get(SESSION_COOKIE)?.value)
+  if (!payload) return null
+
+  let user: UserRecord | null
   try {
-    const parsed = JSON.parse(decodeURIComponent(raw))
-    const role = parsed?.role
-    if (role !== 'admin' && role !== 'coach' && role !== 'parent' && role !== 'student') {
-      return null
-    }
-    return {
-      id: String(parsed.id ?? ''),
-      role,
-      studentId: parsed.sid != null ? String(parsed.sid) : null,
-    }
-  } catch {
+    user = await findUserById(payload.uid)
+  } catch (err) {
+    // Fail closed: if the database can't confirm the account, nobody is signed in.
+    console.error('[api-auth] session lookup failed:', err instanceof Error ? err.message : err)
     return null
   }
-}
+  if (!user || user.disabled || user.session_version !== payload.ver) return null
 
-/** Reads just the role out of the session cookie, or null if not logged in. */
+  return {
+    id: user.id,
+    role: user.role,
+    studentId: user.student_id,
+    teamId: user.team_id,
+    academies: user.academies,
+    user,
+  }
+})
+
+/** Reads just the role, or null if not logged in. */
 export async function getSessionRole(): Promise<Role | null> {
   return (await getSession())?.role ?? null
 }
@@ -54,4 +65,27 @@ export async function requireRole(...allowed: Role[]): Promise<boolean> {
 
 export async function isAdminRequest(): Promise<boolean> {
   return requireRole('admin')
+}
+
+/** Issue (or re-issue) the session cookie for a user. Route handlers only. */
+export async function setSessionCookie(user: Pick<UserRecord, 'id' | 'role' | 'session_version'>): Promise<void> {
+  const token = await signSession({
+    uid: user.id,
+    role: user.role,
+    ver: user.session_version,
+    exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
+  })
+  const store = await cookies()
+  store.set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: SESSION_MAX_AGE,
+  })
+}
+
+export async function clearSessionCookie(): Promise<void> {
+  const store = await cookies()
+  store.set(SESSION_COOKIE, '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 })
 }

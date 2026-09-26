@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { IconMapPin, IconPhone, IconMail, IconClock } from '@tabler/icons-react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import type { SiteSettings } from '@/lib/site-data'
+import type { SiteContent } from '@/lib/content-schema'
 
 // ── Inline SVGs ───────────────────────────────────────────────────────────────
 
@@ -109,7 +109,8 @@ function FloatingField({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function Contact({ settings }: { settings: SiteSettings }) {
+export default function Contact({ content }: { content: SiteContent }) {
+  const settings = content
   // Skip entries the site settings haven't been filled in for, rather than
   // rendering a card with a label and a blank value under it.
   const INFO = [
@@ -173,7 +174,7 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
         {/* ── LEFT — Form ───────────────────────────────────────────────────── */}
         <div>
           <h2 style={{ color: 'var(--color-text)', fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 800, margin: '0 0 36px', lineHeight: 1.15 }}>
-            Join Mila Academy
+            {content.contact_title}
           </h2>
 
           <form onSubmit={handleSubmit}>
@@ -225,8 +226,8 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
                 }}
               >
                 <option value="" disabled />
-                <option value="mfa">Mila Football Academy</option>
-                <option value="mba">Mila Basket Academy</option>
+                <option value="mfa">{content.football_name}</option>
+                <option value="mba">{content.basketball_name}</option>
               </select>
             </div>
 
@@ -264,14 +265,14 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
                   display: 'inline-block',
                 }} />
               )}
-              {(status === 'idle' || status === 'error') && 'Enroll Now'}
+              {(status === 'idle' || status === 'error') && content.contact_submit}
               {status === 'loading' && 'Sending…'}
-              {status === 'done'    && '✓  Enrolled! We\'ll contact you soon'}
+              {status === 'done'    && content.contact_success}
             </button>
 
             {status === 'error' && (
               <p style={{ color: '#f87171', fontSize: 13, marginTop: 12, textAlign: 'center' }}>
-                Something went wrong sending your request — please try WhatsApp instead.
+                {content.contact_error}
               </p>
             )}
           </form>
@@ -303,7 +304,7 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
             }}
           >
             <WaSvg size={24} />
-            Chat on WhatsApp
+            {content.whatsapp_label}
           </a>
           )}
 
@@ -332,7 +333,7 @@ export default function Contact({ settings }: { settings: SiteSettings }) {
           {SOCIALS.length > 0 && (
           <div>
             <p style={{ color: 'var(--color-text-faintest)', fontSize: 11, fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', margin: '0 0 14px' }}>
-              Follow Us
+              {content.contact_follow}
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
               {SOCIALS.map(({ href, icon, label }) => (

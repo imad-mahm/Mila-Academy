@@ -26,7 +26,7 @@ function pdfHeader(doc: InstanceType<Awaited<ReturnType<typeof getPDF>>>, title:
   doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(245, 197, 24)
   doc.text('MILA ACADEMY', W / 2, 16, { align: 'center' })
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(140, 140, 140)
-  doc.text('Beirut, Lebanon  ·  info@milaacademy.com', W / 2, 23, { align: 'center' })
+  doc.text('Baissour, Lebanon  ·  info@milaacademy.com', W / 2, 23, { align: 'center' })
   doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.setTextColor(20, 20, 20)
   doc.text(title, W / 2, 46, { align: 'center' })
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(120, 120, 120)

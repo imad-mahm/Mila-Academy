@@ -80,7 +80,7 @@ async function generateReceipt(student: StudentRow, payment: PaymentEntry) {
   doc.text('MILA ACADEMY', W / 2, 20, { align: 'center' })
 
   doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(140, 140, 140)
-  doc.text('MFA · MBA · Beirut, Lebanon', W / 2, 29, { align: 'center' })
+  doc.text('MFA · MBA · Baissour, Lebanon', W / 2, 29, { align: 'center' })
   doc.text('+961 70 000 000  ·  info@milaacademy.com', W / 2, 35, { align: 'center' })
 
   // — Title

@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { seedUsers, login } from '@/lib/auth'
+import { login } from '@/lib/auth'
 
 // ── Floating label input ───────────────────────────────────────────────────────
 
@@ -48,20 +48,6 @@ function FloatingField({
   )
 }
 
-// ── Quick-fill demo credential buttons ────────────────────────────────────────
-// Development only. `process.env.NODE_ENV` is inlined at build time, so in a
-// production build this constant is `false` and the whole block below - the
-// credentials included - is dropped from the client bundle. It previously
-// shipped every seed account's password in plain sight on a public login page.
-const SHOW_DEMO_LOGINS = process.env.NODE_ENV !== 'production'
-
-const DEMOS = [
-  { label: 'Admin',   email: 'admin@milaacademy.com',  pw: 'admin123'   },
-  { label: 'Coach',   email: 'coach.mfa@milaacademy.com', pw: 'coach123' },
-  { label: 'Parent',  email: 'parent1@gmail.com',      pw: 'parent123'  },
-  { label: 'Student', email: 'student1@mila.com',      pw: 'student123' },
-]
-
 // ── Login page ─────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
@@ -71,21 +57,23 @@ export default function LoginPage() {
   const [loading,  setLoading]  = useState(false)
   const router = useRouter()
 
-  // Seed default users on first visit
-  useEffect(() => { seedUsers() }, [])
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    await new Promise<void>(r => setTimeout(r, 400))
+    const result = await login(email, password)
 
-    const session = login(email, password)
-
-    if (!session) {
-      setError('Invalid email or password.')
+    if (!result.ok) {
+      setError(result.error)
       setLoading(false)
+      return
+    }
+    const session = result.user
+
+    // Accounts created or reset by an admin start with a temporary password.
+    if (session.mustChangePassword) {
+      router.replace('/dashboard/account?first=1')
       return
     }
 
@@ -123,28 +111,6 @@ export default function LoginPage() {
         <p style={{ color: '#f5c518', fontSize: 12, textAlign: 'center', margin: '0 0 28px', letterSpacing: '0.5px' }}>
           Where Champions Are Made
         </p>
-
-        {/* Demo quick-fill (development builds only) */}
-        {SHOW_DEMO_LOGINS && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
-          {DEMOS.map(d => (
-            <button
-              key={d.label}
-              type="button"
-              onClick={() => { setEmail(d.email); setPassword(d.pw); setError('') }}
-              style={{
-                flex: 1, minWidth: 72, padding: '5px 6px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-                backgroundColor: 'rgba(245,197,24,0.08)', border: '1px solid rgba(245,197,24,0.2)',
-                color: '#f5c518', cursor: 'pointer', transition: 'background 0.15s ease',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(245,197,24,0.16)')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'rgba(245,197,24,0.08)')}
-            >
-              {d.label}
-            </button>
-          ))}
-        </div>
-        )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <FloatingField label="Email address" type="email" value={email} onChange={setEmail} />
@@ -185,12 +151,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Credential hint (development builds only) */}
-        {SHOW_DEMO_LOGINS && (
-          <p style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'center', marginTop: 20, lineHeight: 1.6 }}>
-            Development build — use the quick-fill buttons above to sign in as each role.
-          </p>
-        )}
       </div>
     </div>
   )

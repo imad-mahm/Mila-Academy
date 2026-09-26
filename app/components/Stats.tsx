@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import type { SiteSettings } from '@/lib/site-data'
+import type { SiteContent } from '@/lib/content-schema'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -14,16 +14,16 @@ function parseStat(raw: string): { value: number; suffix: string } {
   return { value: Number(match[1]), suffix: match[2] }
 }
 
-export default function Stats({ settings }: { settings: SiteSettings }) {
+export default function Stats({ content }: { content: SiteContent }) {
   // Drop any figure that is missing or zero rather than advertising
   // "0 Players Trained". site_settings falling back (unset env, unreachable DB,
   // a cleared field) used to render the whole row as zeros on the live site.
   const STATS = useMemo(() => [
-    { ...parseStat(settings.players_trained),  label: 'Players Trained'     },
-    { ...parseStat(settings.years_excellence), label: 'Years of Excellence' },
-    { ...parseStat(settings.academies_count),  label: 'Academies'           },
-    { ...parseStat(settings.success_rate),     label: 'Success Rate'        },
-  ].filter(s => s.value > 0), [settings])
+    { ...parseStat(content.players_trained),  label: content.stat1_label },
+    { ...parseStat(content.years_excellence), label: content.stat2_label },
+    { ...parseStat(content.academies_count),  label: content.stat3_label },
+    { ...parseStat(content.success_rate),     label: content.stat4_label },
+  ].filter(s => s.value > 0), [content])
 
   const sectionRef  = useRef<HTMLElement>(null)
   const numRefs     = useRef<(HTMLSpanElement | null)[]>([])
@@ -87,7 +87,7 @@ export default function Stats({ settings }: { settings: SiteSettings }) {
         textTransform: 'uppercase',
         margin: '0 0 24px',
       }}>
-        By The Numbers
+        {content.about_eyebrow}
       </p>
 
       {/* Headline */}
@@ -101,7 +101,7 @@ export default function Stats({ settings }: { settings: SiteSettings }) {
           lineHeight: 1.1,
         }}
       >
-        Our Legacy Speaks
+        {content.about_title}
       </h2>
 
       {/* Stats grid — omitted entirely when no figures are available */}
@@ -119,7 +119,7 @@ export default function Stats({ settings }: { settings: SiteSettings }) {
         className="stats-grid"
       >
         {STATS.map(({ suffix, label }, i) => (
-          <div key={label} style={{
+          <div key={i} style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -164,6 +164,7 @@ export default function Stats({ settings }: { settings: SiteSettings }) {
       }} />
 
       {/* Quote */}
+      {content.about_quote && (
       <p style={{
         textAlign: 'center',
         color: 'var(--color-text)',
@@ -175,8 +176,9 @@ export default function Stats({ settings }: { settings: SiteSettings }) {
         padding: '0 24px',
         lineHeight: 1.7,
       }}>
-        &ldquo;Mila Academy is not just a place to train — it is a place to become.&rdquo;
+        &ldquo;{content.about_quote}&rdquo;
       </p>
+      )}
 
       {/* Mobile responsive: 2×2 grid */}
       <style>{`

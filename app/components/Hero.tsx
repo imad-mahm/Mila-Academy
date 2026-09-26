@@ -3,9 +3,10 @@ import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import type { SiteContent } from '@/lib/content-schema'
 
 
-export default function Hero() {
+export default function Hero({ content }: { content: SiteContent }) {
   const [leftHov,  setLeftHov]  = useState(false)
   const [rightHov, setRightHov] = useState(false)
 
@@ -90,7 +91,7 @@ export default function Hero() {
           }}>
             <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
               <Image
-                src="/logos/football-ball-soccer-svgrepo-com.svg"
+                src={content.football_ball_image}
                 alt="Football"
                 width={280}
                 height={280}
@@ -111,15 +112,15 @@ export default function Hero() {
 
           <div style={{ textAlign: 'center' }}>
             <p style={{ color: 'var(--color-text)', fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>
-              Mila Football Academy
+              {content.football_name}
             </p>
             <p style={{ color: 'var(--color-text-dim)', fontSize: 13, margin: 0 }}>
-              Est. 2016 · Lebanon
+              {content.football_est}
             </p>
           </div>
 
           <Link href="/football" className="enter-btn" style={enterBtn}>
-            Enter →
+            {content.hero_enter_label}
           </Link>
         </div>
 
@@ -142,7 +143,7 @@ export default function Hero() {
           }}>
             <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
               <Image
-                src="/logos/ball-of-basketball-svgrepo-com.svg"
+                src={content.basketball_ball_image}
                 alt="Basketball"
                 width={280}
                 height={280}
@@ -163,15 +164,15 @@ export default function Hero() {
 
           <div style={{ textAlign: 'center' }}>
             <p style={{ color: 'var(--color-text)', fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>
-              Mila Basket Academy
+              {content.basketball_name}
             </p>
             <p style={{ color: 'var(--color-text-dim)', fontSize: 13, margin: 0 }}>
-              Est. 2024 · Baissour
+              {content.basketball_est}
             </p>
           </div>
 
           <Link href="/basketball" className="enter-btn" style={enterBtn}>
-            Enter →
+            {content.hero_enter_label}
           </Link>
         </div>
       </section>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { revalidateSite } from '@/lib/server/revalidate'
 import { readJson, dbError, badRequest, unauthorized, notFound } from '@/lib/api-fields'
 
 const CATEGORIES = ['football', 'basketball', 'events'] as const
@@ -36,6 +37,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (error) return dbError('gallery.update', error)
   if (!data) return notFound('Photo not found')
+  revalidateSite()
   return NextResponse.json({ data })
 }
 
@@ -60,5 +62,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await admin.storage.from('gallery').remove([existing.storage_path])
   }
 
+  revalidateSite()
   return NextResponse.json({ ok: true })
 }

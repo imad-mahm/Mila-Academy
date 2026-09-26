@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/api-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { pick, readJson, dbError, badRequest, unauthorized } from '@/lib/api-fields'
+import { revalidateSite } from '@/lib/server/revalidate'
+import { readJson, dbError, badRequest, unauthorized } from '@/lib/api-fields'
+import { programValues } from './validate'
 
-export const PROGRAMS_FIELDS = ['sport', 'name', 'subtitle', 'age_range', 'frequency', 'price_month', 'sort_order'] as const
-
+// Every program, including inactive ones — the public site filters those out.
 export async function GET() {
   if (!(await isAdminRequest())) return unauthorized()
 
@@ -23,20 +24,16 @@ export async function POST(req: NextRequest) {
   const body = await readJson(req)
   if (!body) return badRequest('Invalid JSON body')
 
-  if (body.sport !== 'football' && body.sport !== 'basketball') {
-    return badRequest('sport must be football or basketball')
-  }
-
-  if (typeof body.name !== 'string' || !body.name.trim()) {
-    return badRequest('name is required')
-  }
+  const result = programValues(body, false)
+  if ('error' in result) return badRequest(result.error)
 
   const { data, error } = await getSupabaseAdmin()
     .from('programs')
-    .insert(pick(body, PROGRAMS_FIELDS))
+    .insert(result.values)
     .select()
     .single()
 
   if (error) return dbError('programs.create', error)
+  revalidateSite()
   return NextResponse.json({ data }, { status: 201 })
 }

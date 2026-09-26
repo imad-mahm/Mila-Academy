@@ -1,17 +1,17 @@
 'use client'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { SiteSettings } from '@/lib/site-data'
+import type { SiteContent } from '@/lib/content-schema'
 import { useRouter } from 'next/navigation'
 import { scrollToSection } from '@/lib/lenis-store'
 
 const NAV_LINKS = [
-  { label: 'Home',     id: 'top'      },
-  { label: 'About',    id: 'about'    },
-  { label: 'Programs', id: 'programs' },
-  { label: 'Gallery',  id: 'gallery'  },
-  { label: 'Contact',  id: 'contact'  },
-]
+  { key: 'nav_home',     id: 'top'      },
+  { key: 'nav_about',    id: 'about'    },
+  { key: 'nav_programs', id: 'programs' },
+  { key: 'nav_gallery',  id: 'gallery'  },
+  { key: 'nav_contact',  id: 'contact'  },
+] as const
 
 function IgSvg() {
   return (
@@ -38,16 +38,17 @@ function YtSvg() {
 }
 
 export default function Footer({
-  settings,
+  content,
   hasGallery = true,
   hasPrograms = true,
-}: { settings: SiteSettings; hasGallery?: boolean; hasPrograms?: boolean }) {
+}: { content: SiteContent; hasGallery?: boolean; hasPrograms?: boolean }) {
+  const settings = content
   const router = useRouter()
   // Same guard as the navbar: drop links whose section isn't rendered.
   const navLinks = NAV_LINKS.filter(l =>
     (l.id !== 'gallery'  || hasGallery) &&
     (l.id !== 'programs' || hasPrograms)
-  )
+  ).map(l => ({ id: l.id, label: content[l.key] }))
   // Drop socials the site settings haven't been filled in for — the fallback
   // value is '#', which would render a visible icon that goes nowhere.
   const SOCIALS = [
@@ -102,24 +103,23 @@ export default function Footer({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <Image
-              src="/logos/mfa_navbar.png"
-              alt="Mila Football Academy"
+              src={content.football_logo}
+              alt={content.football_name}
               width={60}
               height={40}
               style={{ height: 40, width: 'auto' }}
             />
             <div style={{ width: 1, height: 28, backgroundColor: 'var(--color-gold)', opacity: 0.3 }} />
             <Image
-              src="/logos/mba_navbar.png"
-              alt="Mila Basket Academy"
+              src={content.basketball_logo}
+              alt={content.basketball_name}
               width={60}
               height={40}
               style={{ height: 40, width: 'auto' }}
             />
           </div>
-          <p style={{ color: 'var(--color-text-faintest)', fontSize: 13, lineHeight: 1.7, maxWidth: 260, margin: 0 }}>
-            Train with the best in Lebanon.<br />
-            Developing the next generation of athletes since 2016.
+          <p style={{ color: 'var(--color-text-faintest)', fontSize: 13, lineHeight: 1.7, maxWidth: 260, margin: 0, whiteSpace: 'pre-line' }}>
+            {content.footer_tagline}
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
             {SOCIALS.map(({ href, icon, label }) => (
@@ -187,11 +187,11 @@ export default function Footer({
         gap: 12,
       }}>
         <p style={{ color: 'var(--color-text-faintest)', fontSize: 12, margin: 0 }}>
-          © {new Date().getFullYear()} Mila Academy. All rights reserved.
+          © {new Date().getFullYear()} {content.footer_copyright}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <p style={{ color: 'var(--color-text-faintest)', fontSize: 12, margin: 0 }}>
-            Built with passion · Lebanon
+            {content.footer_note}
           </p>
           <Link
             href="/dashboard"
@@ -199,7 +199,7 @@ export default function Footer({
             onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-text-dim)' }}
             onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-text-faintest)' }}
           >
-            Staff Login
+            {content.footer_staff_login}
           </Link>
         </div>
       </div>
