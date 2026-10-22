@@ -322,7 +322,3 @@ export function loadAllStudents(): StudentRow[] {
     return BASE_STUDENTS
   }
 }
-
-export function findStudent(id: string): StudentRow | undefined {
-  return loadAllStudents().find((s) => s.id === id)
-}
