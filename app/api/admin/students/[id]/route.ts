@@ -22,13 +22,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { data, error } = await getSupabaseAdmin().from('students').select('*').eq('id', id).maybeSingle()
   if (error) return dbError('students.get', error)
   if (!data) return notFound('Student not found')
+  if (session.role === 'coach') {
+    const ok = session.teamId ? data.team_id === session.teamId : session.academies.includes(data.academy)
+    if (!ok) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
   return NextResponse.json({ data })
 }
 
 // Also used to archive/restore — pass { archived_at: <ISO string> } to archive,
 // or { archived_at: null } to restore.
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireRole('admin', 'coach'))) return unauthorized()
+  if (!(await requireRole('admin'))) return unauthorized()
 
   const { id } = await params
   const body = await readJson(req)
@@ -45,12 +49,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json({ data })
 }
 
-// Permanent delete — admin only (coaches can archive via PATCH, not hard-delete).
+// Permanent delete — admin only. A linked login is removed with the student.
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await requireRole('admin'))) return unauthorized()
 
   const { id } = await params
-  const { error, count } = await getSupabaseAdmin()
+  const db = getSupabaseAdmin()
+  await db.from('app_users').delete().eq('student_id', id).in('role', ['parent', 'student'])
+  const { error, count } = await db
     .from('students').delete({ count: 'exact' }).eq('id', id)
   if (error) return dbError('students.delete', error)
   if (!count) return notFound('Student not found')

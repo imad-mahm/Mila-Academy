@@ -208,6 +208,7 @@ const EMPTY_FORM = {
   blood_type: '', allergies: '', injuries: '', doctor_contact: '',
   payment_status: 'paid' as 'paid' | 'unpaid' | 'partial', payment_amount: '150',
   notes: '',
+  create_login: false, login_email: '', login_role: 'parent' as 'parent' | 'student',
 }
 
 function Field({
@@ -292,7 +293,8 @@ function AddStudentModal({
   onAdd: (s: StudentRow) => void
 }) {
   const [form, setForm]     = useState(() => ({ ...EMPTY_FORM, team_id: teams[0]?.id ?? '' }))
-  const [section, setSection] = useState<'basic' | 'parent' | 'medical' | 'payment'>('basic')
+  const [section, setSection] = useState<'basic' | 'parent' | 'medical' | 'payment' | 'login'>('basic')
+  const [created, setCreated] = useState<{ student: StudentRow; login?: { email: string; password: string } } | null>(null)
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState('')
   const set = (k: keyof typeof EMPTY_FORM) => (v: string) => setForm(p => ({ ...p, [k]: v }))
@@ -302,7 +304,7 @@ function AddStudentModal({
     setSaving(true)
     setError('')
     try {
-      const created = await createStudent({
+      const result = await createStudent({
         name: form.name,
         dob: form.dob || null,
         nationality: form.nationality,
@@ -322,9 +324,11 @@ function AddStudentModal({
         payment_amount: parseFloat(form.payment_amount) || 0,
         payment_due_date: new Date().toISOString().split('T')[0],
         notes: form.notes,
+        account: form.create_login ? { email: form.login_email, role: form.login_role } : undefined,
       })
-      onAdd(created)
-      onClose()
+      onAdd(result.student)
+      if (result.login) setCreated(result)
+      else onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add student.')
     } finally {
@@ -337,6 +341,7 @@ function AddStudentModal({
     { key: 'parent' as const,  label: 'Parent Info'  },
     { key: 'medical' as const, label: 'Medical'      },
     { key: 'payment' as const, label: 'Payment'      },
+    { key: 'login' as const,   label: 'Login'        },
   ]
 
   useModal(onClose)
@@ -363,6 +368,28 @@ function AddStudentModal({
           </button>
         </div>
 
+        {created?.login ? (
+          <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+              {created.student.name} was added. Send these sign-in details to the {form.login_role}. The password is shown <strong>only once</strong>; they choose their own on first sign-in and it stays private after that.
+            </p>
+            <div style={{ backgroundColor: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 14, fontFamily: 'var(--font-geist-mono), monospace', fontSize: 14, lineHeight: 1.8 }}>
+              <div><span style={{ color: 'var(--text-muted)' }}>Sign in at: </span>{typeof window !== 'undefined' ? `${window.location.origin}/dashboard/login` : '/dashboard/login'}</div>
+              <div><span style={{ color: 'var(--text-muted)' }}>Email: </span>{created.login.email}</div>
+              <div><span style={{ color: 'var(--text-muted)' }}>Password: </span><span style={{ color: '#f5c518', fontWeight: 700, userSelect: 'all' }}>{created.login.password}</span></div>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button type="button" onClick={() => navigator.clipboard?.writeText(`Email: ${created.login!.email}\nTemporary password: ${created.login!.password}`)} style={{
+                flex: 1, height: 44, borderRadius: 8, border: '1px solid var(--border)',
+                backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              }}>Copy</button>
+              <button type="button" onClick={onClose} style={{
+                flex: 1, height: 44, borderRadius: 8, border: 'none',
+                backgroundColor: '#f5c518', color: '#000', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              }}>Done</button>
+            </div>
+          </div>
+        ) : <>
         {/* Section tabs */}
         <div style={{ display: 'flex', gap: 6, padding: '16px 24px 0' }}>
           {SECTIONS.map(s => (
@@ -448,6 +475,21 @@ function AddStudentModal({
                 />
               </div>
             </>}
+
+            {section === 'login' && <>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)', fontSize: 13, cursor: 'pointer' }}>
+                <input type="checkbox" checked={form.create_login} onChange={e => setForm(p => ({ ...p, create_login: e.target.checked }))} />
+                Create a sign-in for this student
+              </label>
+              <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0, lineHeight: 1.6 }}>
+                A temporary password is generated and shown once. They must change it on first sign-in, after which only they know it.
+              </p>
+              {form.create_login && <>
+                <SelectField label="Account for" value={form.login_role} onChange={v => setForm(p => ({ ...p, login_role: v as 'parent' | 'student' }))}
+                  options={[{ value: 'parent', label: 'Parent / guardian' }, { value: 'student', label: 'The student' }]} />
+                <Field label="Login email *" value={form.login_email} onChange={set('login_email')} type="email" />
+              </>}
+            </>}
           </div>
 
           {error && (
@@ -462,9 +504,9 @@ function AddStudentModal({
             }}>
               Cancel
             </button>
-            {section !== 'payment' ? (
+            {section !== 'login' ? (
               <button type="button" onClick={() => {
-                const order = ['basic', 'parent', 'medical', 'payment'] as const
+                const order = ['basic', 'parent', 'medical', 'payment', 'login'] as const
                 const next = order[order.indexOf(section) + 1]
                 if (next) setSection(next)
               }} style={{
@@ -474,16 +516,17 @@ function AddStudentModal({
                 Next →
               </button>
             ) : (
-              <button type="submit" disabled={saving || !form.name || !form.dob || !form.position} style={{
+              <button type="submit" disabled={saving || !form.name || !form.dob || !form.position || (form.create_login && !form.login_email.trim())} style={{
                 flex: 1, height: 44, borderRadius: 8, border: 'none',
                 backgroundColor: '#16a34a', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                opacity: saving || !form.name || !form.dob || !form.position ? 0.5 : 1,
+                opacity: saving || !form.name || !form.dob || !form.position || (form.create_login && !form.login_email.trim()) ? 0.5 : 1,
               }}>
                 {saving ? 'Adding…' : 'Add Student'}
               </button>
             )}
           </div>
         </form>
+        </>}
       </div>
     </div>
   )
@@ -526,6 +569,7 @@ export default function StudentsPage() {
   const [team,     setTeam]             = useState('All')
   const [payment,  setPayment]          = useState<'All' | 'paid' | 'unpaid' | 'partial'>('All')
   const [showModal, setShowModal]       = useState(false)
+  const isAdmin = getCurrentUser()?.role === 'admin'
 
   useEffect(() => {
     let cancelled = false
@@ -623,7 +667,7 @@ export default function StudentsPage() {
             {loading ? 'Loading…' : `${filtered.length} of ${allStudents.length} students`}
           </p>
         </div>
-        <button
+        {isAdmin && <button
           onClick={() => setShowModal(true)}
           disabled={teams.length === 0}
           style={{
@@ -637,7 +681,7 @@ export default function StudentsPage() {
         >
           <IconPlus size={18} stroke={2} />
           Add Student
-        </button>
+        </button>}
       </div>
 
       {loadError && (

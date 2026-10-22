@@ -50,13 +50,25 @@ export async function fetchStudent(id: string): Promise<StudentRow | null> {
   return toStudentRow(data as ApiStudent)
 }
 
-export async function createStudent(input: Record<string, unknown>): Promise<StudentRow> {
-  const { data } = await json(await fetch('/api/admin/students', {
+export interface CreatedStudent {
+  student: StudentRow
+  /** Present when a sign-in was created with the student; shown to the admin once. */
+  login?: { email: string; password: string }
+}
+
+export async function createStudent(input: Record<string, unknown>): Promise<CreatedStudent> {
+  const { data, temporaryPassword } = await json(await fetch('/api/admin/students', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   }))
-  return toStudentRow(data as ApiStudent)
+  const account = input.account as { email?: string } | undefined
+  return {
+    student: toStudentRow(data as ApiStudent),
+    login: temporaryPassword && account?.email
+      ? { email: account.email.trim().toLowerCase(), password: temporaryPassword }
+      : undefined,
+  }
 }
 
 export async function updateStudent(id: string, patch: Record<string, unknown>): Promise<StudentRow> {

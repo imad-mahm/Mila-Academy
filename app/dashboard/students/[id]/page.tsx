@@ -686,6 +686,31 @@ export default function StudentDetailPage() {
 
   const teamDisplayName = teams.find(t => t.id === student.team_id)?.name ?? '—'
 
+  async function removeStudent(url: string, init: RequestInit, done: string) {
+    const res = await fetch(url, init)
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      window.alert(body?.error ?? `Request failed (${res.status})`)
+      return
+    }
+    window.alert(done)
+    router.push('/dashboard/students')
+  }
+
+  function archiveStudent() {
+    if (!window.confirm(`Archive ${student!.name}? They are hidden from the lists but nothing is deleted, and their login keeps working.`)) return
+    void removeStudent(`/api/admin/students/${student!.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ archived_at: new Date().toISOString() }),
+    }, 'Student archived.')
+  }
+
+  function deleteStudent() {
+    if (!window.confirm(`Permanently delete ${student!.name}, including any parent/student login linked to them? This cannot be undone.`)) return
+    void removeStudent(`/api/admin/students/${student!.id}`, { method: 'DELETE' }, 'Student deleted.')
+  }
+
   const acad  = ACAD_STYLE[student.academy]
   const inits = student.name.split(' ').map(w => w[0] ?? '').join('').toUpperCase().slice(0, 2)
 
@@ -748,6 +773,23 @@ export default function StudentDetailPage() {
             <p style={{ color: '#f5c518', fontSize: 28, fontWeight: 800, margin: 0 }}>{student.attendance_rate}%</p>
             <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>Attendance</p>
           </div>
+
+          {role === 'admin' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+              <button onClick={archiveStudent} style={{
+                padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                backgroundColor: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border)',
+              }}>
+                Archive
+              </button>
+              <button onClick={deleteStudent} style={{
+                padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)',
+              }}>
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </Card>
 
