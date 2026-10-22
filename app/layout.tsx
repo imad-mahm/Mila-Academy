@@ -14,12 +14,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// The public origin, used to turn relative link-preview image paths into
+// absolute URLs. A bad value used to throw inside this root layout and take
+// down every page — and the likeliest mistake is pasting the Netlify domain
+// without "https://", or leaving the variable empty (`??` doesn't catch "").
+// So: trim it, supply a missing scheme, and fall back rather than crash the
+// whole site over a link-preview URL.
+function siteUrl(): URL {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (raw) {
+    try {
+      return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    } catch {
+      // fall through to the default
+    }
+  }
+  return new URL("http://localhost:3000");
+}
+
 // Title, description, tab icon and link-preview image are all editable from
 // the dashboard (Website → Site Content → General).
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getSiteContent();
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+    metadataBase: siteUrl(),
     title: content.site_title,
     description: content.site_description,
     icons: content.favicon ? { icon: content.favicon } : undefined,

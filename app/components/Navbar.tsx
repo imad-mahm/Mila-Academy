@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { scrollToSection } from '@/lib/lenis-store'
 import { useTheme, toggleTheme } from '@/lib/theme'
+import { useSession } from '@/lib/use-session'
 import type { SiteContent } from '@/lib/content-schema'
 
 const NAV_LINKS = [
@@ -61,16 +62,16 @@ export default function Navbar({
   const [menuOpen, setMenuOpen] = useState(false)
   const theme = useTheme()
   const router = useRouter()
-  // Staff who are signed in get a shortcut to the dashboard; visitors see
-  // nothing extra (the footer still has the staff-login link).
-  const [signedIn, setSignedIn] = useState(false)
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/auth/me')
-      .then(r => { if (!cancelled && r.ok) setSignedIn(true) })
-      .catch(() => {})
-    return () => { cancelled = true }
-  }, [])
+  // One way in for everyone: "Log in" for visitors (parents included — the only
+  // entry point before was a footer link labelled "Staff Login"), "Dashboard"
+  // once signed in. Read from the browser's copy of the session rather than
+  // asking /api/auth/me: the public pages are served as cached static files,
+  // and a request here would make every anonymous visit a server function call.
+  // The server renders "Log in", which is right for nearly every visitor.
+  const { user } = useSession()
+  const account = user
+    ? { href: '/dashboard',       label: 'Dashboard' }
+    : { href: '/dashboard/login', label: 'Log in' }
   // A nav item whose section isn't on the page is a dead link — Programs and
   // Gallery each render nothing when their table is empty.
   const navLinks = NAV_LINKS.filter(l =>
@@ -148,11 +149,18 @@ export default function Navbar({
           .nb-hamburger { display: flex !important; }
           .nb-bar { padding: 0 14px !important; }
         }
+        /* Phones: brand, account link, Enroll, theme and hamburger don't all
+           fit — measured, the hamburger was pushed off-screen at 375/390px.
+           Enroll gives way: it is on the page many times over (hero, every
+           programme card, the contact form, WhatsApp) and in the menu, while
+           the account link is the only way in besides the footer. */
+        @media (max-width: 430px) {
+          .nb-join { display: none !important; }
+          .nb-dash { padding: 0 10px; margin-right: 2px; font-size: 12px; }
+        }
         @media (max-width: 360px) {
           .nb-bar { padding: 0 10px !important; }
-          /* On the narrowest phones the brand, Enroll, theme and hamburger
-             no longer all fit; the hamburger menu carries Enroll too. */
-          .nb-join { display: none !important; }
+          .nb-dash { padding: 0 8px; }
         }
         /* Mobile overlay links */
         .mob-link {
@@ -199,7 +207,7 @@ export default function Navbar({
 
         {/* Right: enroll + theme + hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 'auto' }}>
-          {signedIn && <a className="nb-dash" href="/dashboard">Dashboard</a>}
+          <a className="nb-dash" href={account.href}>{account.label}</a>
           <button className="nb-join" onClick={() => handleNav('contact')} style={{ marginRight: 8 }}>
             {content.nav_enroll}
           </button>
@@ -249,7 +257,7 @@ export default function Navbar({
           <button className="mob-link" onClick={() => handleNav('contact')} style={{ color: 'var(--color-text-dim)', fontSize: 16, marginTop: 8 }}>
             {content.nav_enroll}
           </button>
-          {signedIn && <a className="mob-link" href="/dashboard" style={{ color: 'var(--color-gold)', fontSize: 16, marginTop: 8, textDecoration: 'none' }}>Dashboard</a>}
+          <a className="mob-link" href={account.href} style={{ color: 'var(--color-gold)', fontSize: 16, marginTop: 8, textDecoration: 'none' }}>{account.label}</a>
         </div>
       )}
     </>

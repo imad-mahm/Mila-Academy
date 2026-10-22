@@ -177,7 +177,7 @@ export const CONTENT_SECTIONS = [
         'Train with the best in Lebanon.\nDeveloping the next generation of athletes since 2016.', 'Line breaks are kept.'),
       f('footer_copyright', 'Copyright name',   'text', 'Mila Academy. All rights reserved.', 'Shown after "© <year>".'),
       f('footer_note',      'Bottom note',      'text', 'Built with passion · Lebanon'),
-      f('footer_staff_login', 'Staff login link', 'text', 'Staff Login'),
+      f('footer_staff_login', 'Log-in link',      'text', 'Log In'),
     ],
   },
   academySection('football'),
