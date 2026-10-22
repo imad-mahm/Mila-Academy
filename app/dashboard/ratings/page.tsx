@@ -114,16 +114,16 @@ function RateSessionModal({
 
   return (
     <div {...modalOverlayProps} aria-label="Rate session" style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 680, maxHeight: '92vh', overflowY: 'auto', padding: 28 }}>
+      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 680, maxHeight: '92dvh', overflowY: 'auto', padding: 'clamp(18px, 5vw, 28px)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
             <h2 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700, margin: '0 0 2px' }}>Rate Session</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>{students.length} students · each scored 1–10</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><IconX size={20} /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconX size={20} /></button>
         </div>
 
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
           <div style={{ flex: 1 }}>
             <label style={LBL}>SESSION DATE</label>
             <input type="date" style={FIELD} value={date} onChange={e => setDate(e.target.value)} />
@@ -161,7 +161,7 @@ function RateSessionModal({
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
+                <div className="form-row-2" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '8px 16px' }}>
                   {SLIDER_FIELDS.map(({ key, label }) => (
                     <div key={key}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -212,8 +212,8 @@ function Leaderboard({ students }: { students: StudentRow[] }) {
           ↻ Refresh
         </button>
       </div>
-      <div style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="table-scroll" style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 12 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
           <thead>
             <tr>
               {['#', 'Player', 'Team', 'Technique', 'Fitness', 'Attitude', 'Teamwork', 'Overall'].map(h => (
@@ -398,7 +398,7 @@ export default function RatingsPage() {
                         <p style={{ color: 'var(--text-muted)', fontSize: 9, fontWeight: 700, margin: 0 }}>OVERALL</p>
                       </div>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px' }}>
+                    <div className="form-row-2" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '6px 20px' }}>
                       {([['Technique', latest?.technique], ['Fitness', latest?.fitness], ['Attitude', latest?.attitude], ['Teamwork', latest?.teamwork]] as [string, number | undefined][]).map(([label, val]) => (
                         <div key={label}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>

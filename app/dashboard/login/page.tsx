@@ -87,7 +87,7 @@ export default function LoginPage() {
 
   return (
     <div style={{
-      minHeight: '100vh', backgroundColor: 'var(--bg)',
+      minHeight: '100dvh', backgroundColor: 'var(--bg)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
     }}>
       <style>{`@keyframes login-spin { to { transform: rotate(360deg); } }`}</style>
@@ -95,7 +95,8 @@ export default function LoginPage() {
       <div style={{
         width: '100%', maxWidth: 420,
         backgroundColor: 'var(--bg-card)', border: '1px solid rgba(245,197,24,0.15)',
-        borderRadius: 16, padding: '40px 36px', boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+        borderRadius: 16, padding: 'clamp(28px, 7vw, 40px) clamp(20px, 6vw, 36px)',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
       }}>
 
         {/* Logos */}

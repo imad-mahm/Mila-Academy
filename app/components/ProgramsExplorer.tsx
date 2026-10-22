@@ -193,11 +193,11 @@ export default function ProgramsExplorer({
   }
 
   return (
-    <section id="programs" style={{ backgroundColor: 'var(--color-bg)', padding: '80px 24px' }}>
+    <section id="programs" style={{ backgroundColor: 'var(--color-bg)', padding: 'clamp(56px, 10vw, 80px) 18px' }}>
       <style>{`
-        .pe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        @media (max-width: 1024px) { .pe-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 640px)  { .pe-grid { grid-template-columns: 1fr; } }
+        .pe-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+        @media (max-width: 1024px) { .pe-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 640px)  { .pe-grid { grid-template-columns: minmax(0, 1fr); } }
         .pe-controls-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
       `}</style>
 
@@ -224,6 +224,7 @@ export default function ProgramsExplorer({
               onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
               title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
               aria-label={`Sort direction: ${sortDir === 'asc' ? 'ascending' : 'descending'}`}
+              className="tap-exempt"
               style={{
                 width: 38, height: 34, borderRadius: 8, cursor: 'pointer',
                 border: '1px solid var(--color-border-soft)', backgroundColor: 'transparent',

@@ -181,7 +181,7 @@ function AddRatingModal({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 0' }}>
           <h2 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700, margin: 0 }}>Add Rating</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><IconX size={20} /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconX size={20} /></button>
         </div>
         <form onSubmit={handleSubmit} style={{ padding: 24 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 20 }}>
@@ -241,7 +241,7 @@ function OverviewTab({ student, teamDisplayName }: { student: StudentRow; teamDi
   const dobStr = dob.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }} className="overview-grid">
+    <div className="overview-grid">
       {/* Personal info */}
       <Card style={{ padding: '0 20px' }}>
         <p style={{ color: '#f5c518', fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', margin: '20px 0 0' }}>
@@ -297,7 +297,7 @@ function OverviewTab({ student, teamDisplayName }: { student: StudentRow; teamDi
       {/* Notes — full width */}
       <div style={{ gridColumn: '1 / -1' }}>
         <Card style={{ padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
             <p style={{ color: '#f5c518', fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>
               <IconNotes size={13} style={{ verticalAlign: 'middle', marginRight: 6 }} />Coach Notes (private)
             </p>
@@ -399,7 +399,7 @@ function RatingsTab({ student }: { student: StudentRow }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Circular progress rings */}
       <Card style={{ padding: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
           <p style={{ color: '#f5c518', fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>
             Average Scores
           </p>
@@ -415,7 +415,7 @@ function RatingsTab({ student }: { student: StudentRow }) {
             <IconPlus size={16} /> Add Rating
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+        <div className="metric-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
           <CircleRing label="Technique"  score={avgScore('technique')}  />
           <CircleRing label="Fitness"    score={avgScore('fitness')}    />
           <CircleRing label="Attitude"   score={avgScore('attitude')}   />
@@ -477,7 +477,7 @@ function AttendanceTab({ student }: { student: StudentRow }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+      <div className="metric-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
         {[
           { label: 'Total Sessions', value: sessions.length, color: 'var(--text-primary)' },
           { label: 'Present',        value: present,         color: '#16a34a'              },
@@ -508,7 +508,7 @@ function AttendanceTab({ student }: { student: StudentRow }) {
         </div>
 
         {/* Dot grid — 5 columns (sessions per week) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+        <div className="metric-grid-5" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 10 }}>
           {sessions.map(({ date, status }) => {
             const dot = STATUS_DOT[status]
             const d   = new Date(date)
@@ -556,7 +556,7 @@ function PaymentsTab({ student }: { student: StudentRow }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+      <div className="metric-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14 }}>
         {[
           { label: 'Total Paid 2026',   value: `$${totalPaid}`,                   color: '#16a34a' },
           { label: 'Months Paid',       value: payments.filter(p=>p.status==='paid').length,   color: 'var(--text-primary)' },
@@ -696,8 +696,8 @@ export default function StudentDetailPage() {
         .tab-btn.active { background: rgba(245,197,24,0.15); color: #f5c518; }
         .tab-btn.inactive { background: none; color: var(--text-muted); }
         .tab-btn.inactive:hover { background: var(--bg-hover); color: var(--text-secondary); }
-        .overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 700px) { .overview-grid { grid-template-columns: 1fr; } }
+        .overview-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+        @media (max-width: 700px) { .overview-grid { grid-template-columns: minmax(0, 1fr); } }
       `}</style>
 
       {/* Back button */}
@@ -709,8 +709,8 @@ export default function StudentDetailPage() {
       </button>
 
       {/* Hero */}
-      <Card style={{ padding: 28, marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+      <Card style={{ padding: 'clamp(18px, 5vw, 28px)', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
           {/* Avatar */}
           <div style={{
             width: 80, height: 80, borderRadius: '50%', flexShrink: 0,
@@ -725,7 +725,7 @@ export default function StudentDetailPage() {
 
           {/* Name + meta */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ color: 'var(--text-primary)', fontSize: 28, fontWeight: 700, margin: '0 0 10px' }}>
+            <h1 style={{ color: 'var(--text-primary)', fontSize: 'clamp(21px, 6vw, 28px)', fontWeight: 700, margin: '0 0 10px' }}>
               {student.name}
             </h1>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
@@ -752,7 +752,7 @@ export default function StudentDetailPage() {
       </Card>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, overflowX: 'auto', paddingBottom: 2 }}>
+      <div className="scroll-row" style={{ display: 'flex', gap: 4, marginBottom: 20, paddingBottom: 2 }}>
         {TABS.map(({ key, label, Icon }) => (
           <button
             key={key}

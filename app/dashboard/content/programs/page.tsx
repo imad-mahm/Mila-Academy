@@ -75,7 +75,7 @@ function ProgramModal({
       </>}
     >
       {error && <ErrorBanner message={error} />}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 14 }}>
         <SelectField label="Academy" value={d.sport} onChange={v => set('sport')(v as Academy)}
           options={[{ value: 'football', label: 'Football' }, { value: 'basketball', label: 'Basketball' }]} />
         <TextField label="Name" value={d.name} onChange={set('name')} placeholder="e.g. U12 Boys" required />
@@ -184,11 +184,11 @@ export default function ProgramsAdminPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <button aria-label="Move up" disabled={i === 0} onClick={() => move(p, -1)}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: i === 0 ? 'default' : 'pointer', opacity: i === 0 ? 0.3 : 1, padding: 2, display: 'flex' }}>
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: i === 0 ? 'default' : 'pointer', opacity: i === 0 ? 0.3 : 1, padding: 2, display: 'flex', minWidth: 36, alignItems: 'center', justifyContent: 'center' }}>
                     <IconArrowUp size={15} />
                   </button>
                   <button aria-label="Move down" disabled={i === shown.length - 1} onClick={() => move(p, 1)}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: i === shown.length - 1 ? 'default' : 'pointer', opacity: i === shown.length - 1 ? 0.3 : 1, padding: 2, display: 'flex' }}>
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: i === shown.length - 1 ? 'default' : 'pointer', opacity: i === shown.length - 1 ? 0.3 : 1, padding: 2, display: 'flex', minWidth: 36, alignItems: 'center', justifyContent: 'center' }}>
                     <IconArrowDown size={15} />
                   </button>
                 </div>

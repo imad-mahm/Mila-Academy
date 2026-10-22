@@ -73,7 +73,7 @@ export default function Stats({ content }: { content: SiteContent }) {
       ref={sectionRef}
       style={{
         backgroundColor: 'var(--color-bg)',
-        padding: '100px 0',
+        padding: 'clamp(64px, 12vw, 100px) 0',
         width: '100%',
       }}
     >
@@ -86,6 +86,7 @@ export default function Stats({ content }: { content: SiteContent }) {
         letterSpacing: '6px',
         textTransform: 'uppercase',
         margin: '0 0 24px',
+        padding: '0 24px',
       }}>
         {content.about_eyebrow}
       </p>
@@ -113,7 +114,7 @@ export default function Stats({ content }: { content: SiteContent }) {
         display: 'grid',
         // Tracks the number of figures actually shown — a fixed repeat(4)
         // squeezed two surviving stats into half the row.
-        gridTemplateColumns: `repeat(${STATS.length}, 1fr)`,
+        gridTemplateColumns: `repeat(${STATS.length}, minmax(0, 1fr))`,
         gap: 0,
       }}
         className="stats-grid"
@@ -124,13 +125,14 @@ export default function Stats({ content }: { content: SiteContent }) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0 20px',
+            padding: '0 8px',
+            minWidth: 0,
             borderRight: i < STATS.length - 1 ? '1px solid rgba(var(--color-gold-rgb),0.25)' : 'none',
           }}>
             <span
               ref={el => { numRefs.current[i] = el }}
               style={{
-                fontSize: 80,
+                fontSize: 'clamp(40px, 11vw, 80px)',
                 fontWeight: 900,
                 color: 'var(--color-gold)',
                 lineHeight: 1,
@@ -141,9 +143,9 @@ export default function Stats({ content }: { content: SiteContent }) {
             </span>
             <span style={{
               display: 'block',
-              fontSize: 14,
+              fontSize: 'clamp(11px, 3vw, 14px)',
               color: 'var(--color-text-dim)',
-              letterSpacing: '2px',
+              letterSpacing: '1.5px',
               textTransform: 'uppercase',
               marginTop: 8,
               textAlign: 'center',
@@ -184,16 +186,23 @@ export default function Stats({ content }: { content: SiteContent }) {
       <style>{`
         @media (max-width: 640px) {
           .stats-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 40px 0 !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 36px 0 !important;
+            padding: 0 16px !important;
           }
+          /* Vertical rules only between the two columns, horizontal ones only
+             between rows — driven by position in the grid rather than a
+             hard-coded "first two", since figures that are unset get filtered
+             out and the count varies. */
           .stats-grid > div {
             border-right: none !important;
           }
-          .stats-grid > div:nth-child(1),
-          .stats-grid > div:nth-child(2) {
+          .stats-grid > div:nth-child(odd):not(:last-child) {
+            border-right: 1px solid rgba(var(--color-gold-rgb),0.25) !important;
+          }
+          .stats-grid > div:nth-last-child(n+3) {
             border-bottom: 1px solid rgba(var(--color-gold-rgb),0.2);
-            padding-bottom: 40px;
+            padding-bottom: 36px;
           }
         }
       `}</style>

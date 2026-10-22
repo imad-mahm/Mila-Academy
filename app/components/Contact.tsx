@@ -158,10 +158,10 @@ export default function Contact({ content }: { content: SiteContent }) {
   }
 
   return (
-    <section id="contact" style={{ backgroundColor: 'var(--color-bg)', padding: '100px 20px' }}>
+    <section id="contact" style={{ backgroundColor: 'var(--color-bg)', padding: 'clamp(64px, 12vw, 100px) 20px' }}>
       <style>{`
-        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; max-width: 1100px; margin: 0 auto; }
-        @media (max-width: 900px) { .contact-grid { grid-template-columns: 1fr; gap: 56px; } }
+        .contact-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 80px; max-width: 1100px; margin: 0 auto; }
+        @media (max-width: 900px) { .contact-grid { grid-template-columns: minmax(0, 1fr); gap: 56px; } }
         @keyframes wa-pulse-inner {
           0%, 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.5); }
           50%       { box-shadow: 0 0 0 12px rgba(37,211,102,0); }

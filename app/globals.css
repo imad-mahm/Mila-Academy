@@ -223,6 +223,9 @@ html {
   .dash-search {
     display: none !important;
   }
+  .dash-sidebar-search {
+    display: block !important;
+  }
   .dash-hamburger {
     display: flex !important;
   }
@@ -237,6 +240,9 @@ html {
 @media (min-width: 769px) {
   .dash-hamburger { display: none !important; }
   .dash-header-title { display: none !important; }
+  /* The drawer's copy of the search box only exists because the header hides
+     its own under 768px. */
+  .dash-sidebar-search { display: none !important; }
 }
 
 /* ── Dashboard: table scroll wrapper ────────────────────────────────────────── */
@@ -251,20 +257,98 @@ html {
 /* ── Dashboard: stat cards — 2 cols on small screens ───────────────────────── */
 @media (max-width: 600px) {
   .stat-grid-4 {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
-/* ── Touch targets — minimum 44px ───────────────────────────────────────────── */
+/* ── Touch targets — minimum 44px ─────────────────────────────────────────────
+   Blanket rule: anything tappable gets a 44px-tall hit area on a phone. It is
+   deliberately broad, so controls whose *geometry* is the point — a carousel
+   dot, a round icon button — opt out with `.tap-exempt`, otherwise the rule
+   stretches a 40x40 circle into a 40x44 oval. */
 @media (max-width: 768px) {
   button, [role="button"], a, select {
     min-height: 44px;
   }
-  input, textarea, select {
+  /* 16px stops iOS zooming in on focus. Checkboxes and radios are excluded:
+     they are square controls, and a min-height turned them into slivers. */
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
     font-size: 16px !important;
     min-height: 44px;
   }
+  .tap-exempt {
+    min-height: 0 !important;
+  }
 }
+
+/* ── Mobile: dashboard page gutters ──────────────────────────────────────────
+   layout.tsx sets `padding` inline (see the note above dash-main-content), so
+   narrowing the side gutters on a phone has to override it. 60px header + 24px
+   of breathing room replaces the 92px desktop top offset. */
+@media (max-width: 768px) {
+  .dash-main-content {
+    padding: 84px 16px 28px !important;
+  }
+}
+@media (max-width: 400px) {
+  .dash-main-content {
+    padding: 84px 12px 24px !important;
+  }
+}
+
+/* ── Mobile: collapse two-column form rows ───────────────────────────────────
+   Paired fields (First/Last, Joined/Contract end) are unusable at ~130px each,
+   and a native date input is wider than that before it even has a value. */
+@media (max-width: 560px) {
+  .form-row-2 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* ── Stat / metric grids ─────────────────────────────────────────────────────
+   Rows of figures, each cell a small card with a large number over a label.
+   A 4-up row needs ~127px a cell before "Attendance Rate" stops fitting on
+   one line, i.e. ~550px of grid.
+
+   The breakpoints are not a simple ladder, because the 260px sidebar comes
+   back at 769px: a 820px window has LESS room for these cards than a 760px
+   one does. So each grid is relaxed twice — once for phones, and once for the
+   narrow-window-with-sidebar band just above the drawer breakpoint. */
+@media (max-width: 580px) {
+  .metric-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (min-width: 769px) and (max-width: 880px) {
+  .metric-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .stat-grid-4   { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 400px) {
+  .metric-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .metric-grid-5 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .stat-grid-4   { grid-template-columns: minmax(0, 1fr) !important; }
+  .pay-stats     { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+/* ── Touch: range slider thumbs ──────────────────────────────────────────────
+   The rating sliders draw a 14-18px thumb, which is fine for a cursor and far
+   too small for a fingertip. */
+@media (pointer: coarse) {
+  .rating-slider { height: 6px !important; }
+  .rating-slider::-webkit-slider-thumb { width: 26px !important; height: 26px !important; }
+  .rating-slider::-moz-range-thumb     { width: 26px !important; height: 26px !important; }
+}
+
+/* ── Mobile: horizontal-scroll row ───────────────────────────────────────────
+   For control rows that must stay on one line (tab strips, formation picker).
+   Momentum scrolling, and the scrollbar hidden so it reads as a swipe area. */
+.scroll-row {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scroll-row::-webkit-scrollbar { display: none; }
+
 
 /* ── Spinner animation ───────────────────────────────────────────────────────── */
 @keyframes spin {

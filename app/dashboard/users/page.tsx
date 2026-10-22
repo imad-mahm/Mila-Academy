@@ -64,6 +64,68 @@ function TempPasswordModal({ email, password, onClose }: { email: string; passwo
   )
 }
 
+// ── Reset password ───────────────────────────────────────────────────────────
+// The admin can type a password to hand over directly, or leave it empty to
+// have one generated. Either way the user is signed out everywhere and has to
+// choose their own on the next sign-in.
+
+function ResetPasswordModal({
+  target, onClose, onDone,
+}: {
+  target: UserRow
+  onClose: () => void
+  onDone: (creds: { email: string; password: string }) => void
+}) {
+  const [password, setPassword] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit() {
+    setSaving(true)
+    setError('')
+    try {
+      const { temporaryPassword } = await api<{ temporaryPassword: string }>(
+        `/api/admin/users/${target.id}/password`,
+        { method: 'POST', json: password.trim() === '' ? {} : { password } },
+      )
+      onDone({ email: target.email, password: temporaryPassword })
+      onClose()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Reset failed')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Modal
+      title={`Set ${target.name}'s password`}
+      onClose={onClose}
+      width={460}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => void submit()} disabled={saving}>{saving ? 'Saving…' : 'Set password'}</Button>
+        </>
+      }
+    >
+      <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+        <strong style={{ color: 'var(--text-primary)' }}>{target.email}</strong> will be signed out on every device and
+        asked to choose their own password the next time they sign in.
+      </p>
+      <TextField
+        label="New password"
+        type="password"
+        value={password}
+        onChange={setPassword}
+        autoComplete="new-password"
+        help="Leave empty to generate one for them. Minimum 8 characters."
+      />
+      {error && <p role="alert" style={{ color: '#f87171', fontSize: 13, margin: 0 }}>{error}</p>}
+    </Modal>
+  )
+}
+
 // ── Create / edit ────────────────────────────────────────────────────────────
 
 function UserModal({
@@ -139,7 +201,7 @@ function UserModal({
       </>}
     >
       {error && <ErrorBanner message={error} />}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 14 }}>
         <TextField label="Full name" value={name} onChange={setName} required />
         <TextField label="Email" type="email" value={email} onChange={setEmail} required autoComplete="off" />
       </div>
@@ -201,6 +263,7 @@ export default function UsersAdminPage() {
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<'all' | Role>('all')
   const [editing, setEditing] = useState<UserRow | null | 'new'>(null)
+  const [resetting, setResetting] = useState<UserRow | null>(null)
   const [reveal, setReveal] = useState<{ email: string; password: string } | null>(null)
 
   // Teams/students only feed the link pickers and labels; the page works without them.
@@ -239,15 +302,9 @@ export default function UsersAdminPage() {
     }
   }
 
-  async function resetPassword(u: UserRow) {
-    if (!confirmAction(`Reset ${u.name}'s password? They'll be signed out and given a temporary password.`)) return
-    try {
-      const { temporaryPassword } = await api<{ temporaryPassword: string }>(`/api/admin/users/${u.id}/password`, { method: 'POST', json: {} })
-      setUsers(list => list.map(x => (x.id === u.id ? { ...x, must_change_password: true } : x)))
-      setReveal({ email: u.email, password: temporaryPassword })
-    } catch (e) {
-      toast(e instanceof Error ? e.message : 'Reset failed', 'error')
-    }
+  function onPasswordSet(creds: { email: string; password: string }) {
+    setUsers(list => list.map(x => (x.email === creds.email ? { ...x, must_change_password: true } : x)))
+    setReveal(creds)
   }
 
   async function remove(u: UserRow) {
@@ -328,7 +385,7 @@ export default function UsersAdminPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     <Button variant="secondary" onClick={() => setEditing(u)}><IconPencil size={14} /> Edit</Button>
-                    {!self && <Button variant="secondary" onClick={() => resetPassword(u)} title="Reset password"><IconKey size={14} /> Reset password</Button>}
+                    {!self && <Button variant="secondary" onClick={() => setResetting(u)} title="Set or reset this user's password"><IconKey size={14} /> Set password</Button>}
                     {!self && (u.disabled
                       ? <Button variant="secondary" onClick={() => setDisabled(u, false)}><IconLockOpen size={14} /> Enable</Button>
                       : <Button variant="secondary" onClick={() => setDisabled(u, true)}><IconLock size={14} /> Disable</Button>)}
@@ -353,6 +410,13 @@ export default function UsersAdminPage() {
           isSelf={editing !== 'new' && editing.id === user.id}
           onClose={() => setEditing(null)}
           onSaved={created => { load(); refreshSession(); if (created) setReveal(created) }}
+        />
+      )}
+      {resetting && (
+        <ResetPasswordModal
+          target={resetting}
+          onClose={() => setResetting(null)}
+          onDone={onPasswordSet}
         />
       )}
       {reveal && <TempPasswordModal email={reveal.email} password={reveal.password} onClose={() => setReveal(null)} />}

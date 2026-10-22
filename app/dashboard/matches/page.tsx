@@ -80,8 +80,8 @@ function Modal({ children, onClose, wide }: { children: React.ReactNode; onClose
         style={{
           backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16,
           width: '100%', maxWidth: wide ? 900 : 520,
-          maxHeight: '90vh', overflowY: 'auto',
-          padding: 28,
+          maxHeight: '90dvh', overflowY: 'auto',
+          padding: 'clamp(18px, 5vw, 28px)',
         }}
       >
         {children}
@@ -94,7 +94,7 @@ function ModalHeader({ title, onClose }: { title: string; onClose: () => void })
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
       <h2 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700, margin: 0 }}>{title}</h2>
-      <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', lineHeight: 1 }}>
+      <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', lineHeight: 1, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <IconX size={20} />
       </button>
     </div>
@@ -146,7 +146,7 @@ function ScheduleMatchModal({ onSave, onClose }: { onSave: (m: MatchRecord) => v
           <label style={labelStyle}>OPPONENT NAME</label>
           <input style={fieldStyle} value={form.opponent} onChange={e => set('opponent', e.target.value)} placeholder="e.g. Al-Nejmeh SC" />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="mt-form-2">
           <div>
             <label style={labelStyle}>DATE</label>
             <input type="date" style={fieldStyle} value={form.date} onChange={e => set('date', e.target.value)} />
@@ -160,7 +160,7 @@ function ScheduleMatchModal({ onSave, onClose }: { onSave: (m: MatchRecord) => v
           <label style={labelStyle}>LOCATION</label>
           <input style={fieldStyle} value={form.location} onChange={e => set('location', e.target.value)} placeholder="e.g. Beirut Municipal Stadium" />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="mt-form-2">
           <div>
             <label style={labelStyle}>TEAM</label>
             <select style={selStyle} value={form.team_id} onChange={e => set('team_id', e.target.value)}>
@@ -308,8 +308,8 @@ function LineupModal({
       <ModalHeader title={`Lineup — ${match.team_name} vs ${match.opponent}`} onClose={onClose} />
 
       {/* Formation selector */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        <span style={{ ...labelStyle, alignSelf: 'center', marginBottom: 0 }}>FORMATION:</span>
+      <div className="scroll-row" style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center' }}>
+        <span style={{ ...labelStyle, alignSelf: 'center', marginBottom: 0, flexShrink: 0 }}>FORMATION:</span>
         {(['4-3-3', '4-4-2'] as FormationKey[]).map(f => (
           <button key={f} onClick={() => setFormation(f)} style={{
             padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
@@ -323,7 +323,7 @@ function LineupModal({
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 20 }}>
+      <div className="mt-lineup">
         {/* Pitch */}
         <PitchCanvas slots={slots} lineup={lineup} students={teamStudents} onSlotClick={removeSlot} />
 
@@ -492,11 +492,11 @@ function LiveMatchCard({
     <div style={{
       background: 'linear-gradient(135deg, #1a0a0a 0%, #1a1a0a 100%)',
       border: '1px solid rgba(239,68,68,0.3)', borderRadius: 16,
-      padding: 28, marginBottom: 24,
+      padding: 'clamp(18px, 5vw, 28px)', marginBottom: 24,
       boxShadow: '0 0 40px rgba(239,68,68,0.08)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <span style={{
             display: 'flex', alignItems: 'center', gap: 6,
             backgroundColor: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
@@ -524,7 +524,7 @@ function LiveMatchCard({
       </div>
 
       {/* Score */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, alignItems: 'center' }}>
+      <div className="mt-score">
         {/* Mila side */}
         <div style={{ textAlign: 'center' }}>
           <p style={{ color: academyColor(match.team_id), fontSize: 12, fontWeight: 700, letterSpacing: '1px', margin: '0 0 6px', textTransform: 'uppercase' }}>
@@ -720,7 +720,7 @@ function ResultCard({ match, students }: { match: MatchRecord; students: Student
 
       {open && (
         <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--border)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 16 }}>
+          <div className="mt-two" style={{ marginTop: 16 }}>
             {/* Scorers */}
             <div>
               <p style={{ ...labelStyle, marginBottom: 8 }}>SCORERS</p>
@@ -952,6 +952,29 @@ export default function MatchesPage() {
           0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(239,68,68,0.4); }
           50%      { opacity:0.85; box-shadow:0 0 0 6px rgba(239,68,68,0); }
         }
+        /* Lineup editor: the pitch and the squad list stack rather than
+           squeezing the pitch into whatever 220px leaves behind. */
+        .mt-lineup { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 20px; }
+        @media (max-width: 720px) {
+          .mt-lineup { grid-template-columns: minmax(0, 1fr); }
+          .mt-lineup > div:last-child > div { max-height: 220px; }
+        }
+        /* Live scoreboard */
+        .mt-score { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: center; }
+        .mt-score-num { font-size: 56px; }
+        @media (max-width: 560px) {
+          .mt-score { gap: 8px; }
+          .mt-score-num { font-size: 40px; }
+        }
+        /* Scorers / cards columns under an expanded result */
+        .mt-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+        @media (max-width: 520px) { .mt-two { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
+        /* Won / drawn / lost tallies */
+        .mt-wdl { display: grid; grid-template-columns: repeat(3,minmax(0, 1fr)); gap: 12px; }
+        @media (max-width: 420px) { .mt-wdl { gap: 8px; } }
+        /* Paired fields in the Schedule Match dialog */
+        .mt-form-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+        @media (max-width: 520px) { .mt-form-2 { grid-template-columns: minmax(0, 1fr); } }
       `}</style>
 
       {/* Header */}
@@ -1035,7 +1058,7 @@ export default function MatchesPage() {
           ) : (
             <>
               {/* Summary row */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 20 }}>
+              <div className="mt-wdl" style={{ marginBottom: 20 }}>
                 {[
                   { label: 'Wins',   val: results.filter(m => matchResult(m) === 'win').length,  color: '#16a34a' },
                   { label: 'Draws',  val: results.filter(m => matchResult(m) === 'draw').length, color: '#888'    },

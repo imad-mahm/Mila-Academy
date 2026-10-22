@@ -220,13 +220,13 @@ function MarkPaidModal({
       style={{ position: 'fixed', inset: 0, zIndex: 2000, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
       onClick={onClose}
     >
-      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 460, padding: 28 }}>
+      <div onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16, width: '100%', maxWidth: 460, padding: 'clamp(18px, 5vw, 28px)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
           <div>
             <h2 style={{ color: 'var(--text-primary)', fontSize: 17, fontWeight: 700, margin: '0 0 2px' }}>Mark as Paid</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>{student.name} · {month}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><IconX size={20} /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconX size={20} /></button>
         </div>
 
         <div style={{ display: 'grid', gap: 14 }}>
@@ -377,8 +377,8 @@ export default function PaymentsPage() {
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto' }}>
       <style>{`
-        .pay-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
-        @media (max-width: 860px) { .pay-stats { grid-template-columns: repeat(2,1fr); } }
+        .pay-stats { display: grid; grid-template-columns: repeat(4,minmax(0, 1fr)); gap: 14px; }
+        @media (max-width: 860px) { .pay-stats { grid-template-columns: repeat(2,minmax(0, 1fr)); } }
         .pay-tr:hover td { background: rgba(255,255,255,0.02) !important; }
       `}</style>
 
@@ -457,7 +457,7 @@ export default function PaymentsPage() {
           </select>
 
           {/* Sort buttons */}
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Sort:</span>
             {(['name', 'status', 'amount'] as const).map(col => (
               <button key={col} onClick={() => clickSort(col)} style={{

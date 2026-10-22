@@ -263,9 +263,9 @@ export default function ReportsPage() {
         <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>Generate and export academy reports in PDF and Excel formats.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }} className="reports-grid">
+      <div className="reports-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
         <style>{`
-          @media (max-width: 640px) { .reports-grid { grid-template-columns: 1fr !important; } }
+          @media (max-width: 640px) { .reports-grid { grid-template-columns: minmax(0, 1fr) !important; } }
           @keyframes spin { to { transform: rotate(360deg); } }
         `}</style>
 

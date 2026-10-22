@@ -25,6 +25,8 @@ export interface StudentRow {
   attendance_rate: number
   overall_rating: number
   awards: string[]
+  /** Set when the student has been archived; null/absent means active. */
+  archived_at?: string | null
 }
 
 export interface Team {

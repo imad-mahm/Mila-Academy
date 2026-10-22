@@ -340,11 +340,11 @@ export function Modal({
     >
       <div style={{
         backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 16,
-        width: '100%', maxWidth: width, maxHeight: '90vh', display: 'flex', flexDirection: 'column',
+        width: '100%', maxWidth: width, maxHeight: '90dvh', display: 'flex', flexDirection: 'column',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--border)' }}>
           <h2 style={{ color: 'var(--text-primary)', fontSize: 17, fontWeight: 700, margin: 0 }}>{title}</h2>
-          <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4, display: 'flex' }}>
+          <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4, display: 'flex', minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
             <IconX size={20} />
           </button>
         </div>

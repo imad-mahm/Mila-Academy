@@ -62,14 +62,14 @@ export default function Footer({
       <style>{`
         .footer-grid {
           display: grid;
-          grid-template-columns: 1.4fr 1fr 1fr;
+          grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
           gap: 56px;
           max-width: 1100px;
           margin: 0 auto;
           padding: 72px 24px 56px;
         }
         @media (max-width: 768px) {
-          .footer-grid { grid-template-columns: 1fr; gap: 40px; padding: 56px 24px 40px; }
+          .footer-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 56px 24px 40px; }
         }
         .footer-link {
           color: var(--color-text-dim);
@@ -79,9 +79,19 @@ export default function Footer({
           transition: color 0.2s ease;
         }
         .footer-link:hover { color: var(--color-gold); }
+        @media (max-width: 768px) {
+          /* The global 44px touch-target rule makes these block boxes taller
+             than their text; centre the label inside instead of leaving it
+             stuck to the top edge. */
+          .footer-link {
+            display: flex;
+            align-items: center;
+          }
+        }
         .footer-social-btn {
           width: 40px;
           height: 40px;
+          min-width: 40px;
           border-radius: 50%;
           background: rgba(var(--color-gold-rgb),0.08);
           border: 1px solid rgba(var(--color-gold-rgb),0.2);
@@ -129,7 +139,7 @@ export default function Footer({
                 aria-label={label}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="footer-social-btn"
+                className="footer-social-btn tap-exempt"
               >
                 {icon}
               </a>

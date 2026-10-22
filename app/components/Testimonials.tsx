@@ -59,6 +59,16 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
     setIdx(next)  // triggers re-render for dots / card borders only
   }, [maxIdx, stride])
 
+  // Horizontal drag/flick. Without this the carousel could only be advanced by
+  // the arrows, which are hidden on a phone (they overlapped the card).
+  const touchX = useRef(0)
+  const touchY = useRef(0)
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchX.current = e.touches[0].clientX
+    touchY.current = e.touches[0].clientY
+  }, [])
+
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current)
     if (paused || maxIdx === 0) return
@@ -87,8 +97,25 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
   const goPrev = () => { moveTo(idxRef.current <= 0      ? maxIdx : idxRef.current - 1); resetTimer() }
   const goNext = () => { moveTo(idxRef.current >= maxIdx ? 0      : idxRef.current + 1); resetTimer() }
 
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchX.current
+    const dy = e.changedTouches[0].clientY - touchY.current
+    // Ignore a mostly-vertical drag — that is the page being scrolled.
+    if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 40) return
+    if (dx < 0) goNext()
+    else        goPrev()
+  }
+
   return (
-    <section style={{ backgroundColor: 'var(--color-bg)', padding: '100px 20px' }}>
+    <section style={{ backgroundColor: 'var(--color-bg)', padding: 'clamp(64px, 12vw, 100px) 20px' }}>
+      <style>{`
+        /* Below 700px a single card fills the width, so arrows anchored at
+           left/right -20px sat on top of the quote. Swipe and the dots take
+           over there. */
+        @media (max-width: 700px) {
+          .tm-arrow { display: none !important; }
+        }
+      `}</style>
       {/* Title */}
       <h2 style={{
         textAlign: 'center',
@@ -113,6 +140,7 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
 
         {/* Prev arrow */}
         <button
+          className="tm-arrow"
           onClick={goPrev}
           aria-label="Previous"
           style={{
@@ -138,8 +166,12 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
           ‹
         </button>
 
-        {/* Clipping viewport */}
-        <div style={{ overflow: 'hidden', padding: '4px 0' }}>
+        {/* Clipping viewport — also the swipe surface on touch devices */}
+        <div
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          style={{ overflow: 'hidden', padding: '4px 0' }}
+        >
           {/* Track — transform is driven directly via ref, not state */}
           <div
             ref={trackRef}
@@ -213,6 +245,7 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
 
         {/* Next arrow */}
         <button
+          className="tm-arrow"
           onClick={goNext}
           aria-label="Next"
           style={{
@@ -242,7 +275,7 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
       {/* Dot indicators — one per scroll position, not one per testimonial.
           There used to be a dot for every card, so the trailing dots selected
           an offset the track had already reached and appeared to do nothing. */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 36 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, marginTop: 20 }}>
         {Array.from({ length: maxIdx + 1 }, (_, i) => (
           <button
             key={i}
@@ -250,16 +283,27 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
             aria-label={`Go to testimonial ${i + 1}`}
             aria-current={idx === i}
             style={{
+              // The visible bar is the inner span; the button itself is a
+              // transparent 44x18 tap area, which is also why the global
+              // mobile touch-target rule has nothing left to stretch here.
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '18px 10px',
+              display: 'flex',
+              alignItems: 'center',
+              lineHeight: 0,
+            }}
+          >
+            <span style={{
+              display: 'block',
               width: idx === i ? 24 : 8,
               height: 8,
               borderRadius: 4,
               backgroundColor: idx === i ? 'var(--color-gold)' : 'var(--color-border-soft)',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
               transition: 'width 0.3s ease, background-color 0.3s ease',
-            }}
-          />
+            }} />
+          </button>
         ))}
       </div>
     </section>

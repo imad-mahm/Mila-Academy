@@ -16,11 +16,11 @@ export default function Hero({ content }: { content: SiteContent }) {
   const halfBase: CSSProperties = {
     flex: 1,
     minHeight: 0,
+    minWidth: 0,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 20,
     backgroundColor: 'var(--color-bg)',
     position: 'relative',
     overflow: 'hidden',
@@ -63,11 +63,22 @@ export default function Hero({ content }: { content: SiteContent }) {
            pushing the name and Enter button off a short screen. */
         .hero-ball { width: 280px; height: 280px; }
         .hero-divider { width: 1px; height: auto; }
+        /* Declared here rather than in the inline style object, so the media
+           queries below can actually override it. */
+        .hero-half { gap: 20px; }
 
         @media (max-width: 768px) {
           .hero-split   { flex-direction: column; }
-          .hero-ball    { width: min(280px, 34vh); height: min(280px, 34vh); }
+          /* Each stacked half gets (100dvh - 60px) / 2. The name, the year and
+             the Enter button need ~127px of that, so the ball has to stay
+             under ~26vh or the button is clipped by the half's hidden overflow. */
+          .hero-ball    { width: min(280px, 26vh); height: min(280px, 26vh); }
           .hero-divider { width: auto; height: 1px; }
+          .hero-half    { gap: 14px; padding: 0 16px; }
+        }
+        @media (max-width: 768px) and (max-height: 780px) {
+          .hero-ball { width: min(280px, 22vh); height: min(280px, 22vh); }
+          .hero-half { gap: 10px; }
         }
         @media (prefers-reduced-motion: reduce) {
           .hero-ball img { animation: none !important; }
@@ -77,6 +88,7 @@ export default function Hero({ content }: { content: SiteContent }) {
       <section id="hero" className="hero-split">
         {/* ── Left: Football ──────────────────────────────────────────────────── */}
         <div
+          className="hero-half"
           onMouseEnter={() => setLeftHov(true)}
           onMouseLeave={() => setLeftHov(false)}
           style={halfBase}
@@ -111,7 +123,7 @@ export default function Hero({ content }: { content: SiteContent }) {
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <p style={{ color: 'var(--color-text)', fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>
+            <p style={{ color: 'var(--color-text)', fontSize: 'clamp(18px, 5vw, 22px)', fontWeight: 600, margin: '0 0 6px' }}>
               {content.football_name}
             </p>
             <p style={{ color: 'var(--color-text-dim)', fontSize: 13, margin: 0 }}>
@@ -129,6 +141,7 @@ export default function Hero({ content }: { content: SiteContent }) {
 
         {/* ── Right: Basketball ───────────────────────────────────────────────── */}
         <div
+          className="hero-half"
           onMouseEnter={() => setRightHov(true)}
           onMouseLeave={() => setRightHov(false)}
           style={halfBase}
@@ -163,7 +176,7 @@ export default function Hero({ content }: { content: SiteContent }) {
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <p style={{ color: 'var(--color-text)', fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>
+            <p style={{ color: 'var(--color-text)', fontSize: 'clamp(18px, 5vw, 22px)', fontWeight: 600, margin: '0 0 6px' }}>
               {content.basketball_name}
             </p>
             <p style={{ color: 'var(--color-text-dim)', fontSize: 13, margin: 0 }}>

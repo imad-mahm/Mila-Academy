@@ -60,7 +60,7 @@ export default function AccountPage() {
       )}
 
       <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '10px 18px', fontSize: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)', gap: '10px 18px', fontSize: 14 }}>
           <span style={{ color: 'var(--text-muted)' }}>Name</span>
           <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{user.name}</span>
           <span style={{ color: 'var(--text-muted)' }}>Email</span>

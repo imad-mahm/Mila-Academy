@@ -11,6 +11,7 @@ export interface TeamRow {
   name: string
   academy: 'MFA' | 'MBA'
   age_group: string
+  coach_id: string | null
 }
 
 type ApiStudent = Omit<StudentRow, 'attendance_rate' | 'overall_rating' | 'awards'> & {
@@ -36,8 +37,9 @@ async function json(res: Response) {
   return body
 }
 
-export async function fetchStudents(): Promise<StudentRow[]> {
-  const { data } = await json(await fetch('/api/admin/students'))
+/** Active students, or every student including archived ones. */
+export async function fetchStudents(includeArchived = false): Promise<StudentRow[]> {
+  const { data } = await json(await fetch(`/api/admin/students${includeArchived ? '?includeArchived=1' : ''}`))
   return (data as ApiStudent[]).map(toStudentRow)
 }
 
@@ -55,6 +57,28 @@ export async function createStudent(input: Record<string, unknown>): Promise<Stu
     body: JSON.stringify(input),
   }))
   return toStudentRow(data as ApiStudent)
+}
+
+export async function updateStudent(id: string, patch: Record<string, unknown>): Promise<StudentRow> {
+  const { data } = await json(await fetch(`/api/admin/students/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  }))
+  return toStudentRow(data as ApiStudent)
+}
+
+/**
+ * Archive or restore a student. Archiving is the reversible option and keeps
+ * the record (and its history) intact; it just drops out of the default list.
+ */
+export function archiveStudent(id: string, archived: boolean): Promise<StudentRow> {
+  return updateStudent(id, { archived_at: archived ? new Date().toISOString() : null })
+}
+
+/** Permanent delete — admin only, and it takes the student's records with it. */
+export async function deleteStudent(id: string): Promise<void> {
+  await json(await fetch(`/api/admin/students/${id}`, { method: 'DELETE' }))
 }
 
 export async function fetchTeams(): Promise<TeamRow[]> {

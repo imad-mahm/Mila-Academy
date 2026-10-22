@@ -16,17 +16,17 @@ export default function Programs({ programs, content }: { programs: Program[]; c
   if (programs.length === 0) return null
 
   return (
-    <section id="programs" style={{ backgroundColor: 'var(--color-bg)', padding: '100px 24px' }}>
+    <section id="programs" style={{ backgroundColor: 'var(--color-bg)', padding: 'clamp(64px, 12vw, 100px) 18px' }}>
       <style>{`
         .programs-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 24px;
           max-width: 1200px;
           margin: 0 auto;
         }
-        @media (max-width: 1024px) { .programs-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 640px)  { .programs-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1024px) { .programs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 640px)  { .programs-grid { grid-template-columns: minmax(0, 1fr); } }
       `}</style>
 
       {/* Header */}

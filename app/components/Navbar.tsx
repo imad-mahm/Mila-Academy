@@ -129,6 +129,13 @@ export default function Navbar({
         @media (max-width: 768px) {
           .nb-center { display: none !important; }
           .nb-hamburger { display: flex !important; }
+          .nb-bar { padding: 0 14px !important; }
+        }
+        @media (max-width: 360px) {
+          .nb-bar { padding: 0 10px !important; }
+          /* On the narrowest phones the brand, Enroll, theme and hamburger
+             no longer all fit; the hamburger menu carries Enroll too. */
+          .nb-join { display: none !important; }
         }
         /* Mobile overlay links */
         .mob-link {
@@ -140,7 +147,7 @@ export default function Navbar({
       `}</style>
 
       {/* ── Navbar bar ──────────────────────────────────────────────────────────── */}
-      <nav style={{
+      <nav className="nb-bar" style={{
         position: 'fixed', top: 0, left: 0, right: 0,
         height: 60, zIndex: 1000,
         backgroundColor: 'var(--nav-bg)',

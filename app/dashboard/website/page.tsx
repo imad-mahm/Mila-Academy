@@ -121,10 +121,10 @@ export default function WebsiteContentPage() {
   return (
     <div style={{ paddingBottom: dirtyKeys.length ? 80 : 0 }}>
       <style>{`
-        .wc-layout { display: grid; grid-template-columns: 230px 1fr; gap: 20px; align-items: start; }
+        .wc-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 20px; align-items: start; }
         .wc-nav { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 2px; }
         @media (max-width: 900px) {
-          .wc-layout { grid-template-columns: 1fr; }
+          .wc-layout { grid-template-columns: minmax(0, 1fr); }
           .wc-nav { position: static; flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
           .wc-nav button { white-space: nowrap; }
         }

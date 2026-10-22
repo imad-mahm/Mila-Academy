@@ -5,7 +5,7 @@ import { notifySessionChanged } from './session-events'
 export type Academy       = 'MFA' | 'MBA'
 export type AcademyFilter = 'MFA' | 'MBA' | 'Both'
 export type Role          = 'admin' | 'coach' | 'parent' | 'student'
-export type Resource      = 'students' | 'attendance' | 'matches' | 'coaches' | 'payments' | 'ratings' | 'reports' | 'settings' | 'website' | 'users'
+export type Resource      = 'students' | 'attendance' | 'matches' | 'coaches' | 'teams' | 'payments' | 'ratings' | 'reports' | 'settings' | 'website' | 'users'
 export type Action        = 'view' | 'edit' | 'create' | 'delete'
 
 /**
@@ -164,6 +164,9 @@ export function hasAccess(resource: Resource, action: Action, user: SessionUser)
       if (resource === 'settings') return false
       if (resource === 'website')  return false
       if (resource === 'users')    return false
+      // Team records are admin-owned: a coach sees them but cannot change
+      // which teams exist or who runs them. /api/admin/teams enforces this too.
+      if (resource === 'teams')    return action === 'view'
       // Coaches can view & manage everything else for their teams
       return true
 

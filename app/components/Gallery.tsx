@@ -27,6 +27,15 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
     [photos, activeTab],
   )
 
+  // The page kept scrolling underneath the open lightbox — very obvious on a
+  // phone, where the backdrop fills the screen and a stray drag moves the page.
+  useEffect(() => {
+    if (lightboxIdx === null) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previous }
+  }, [lightboxIdx])
+
   // Keyboard navigation for lightbox
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -60,6 +69,18 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
     }, 200)
   }, [activeTab])
 
+  const touchX = useRef(0)
+  const touchY = useRef(0)
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchX.current
+    const dy = e.changedTouches[0].clientY - touchY.current
+    if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 40) return
+    setLightboxIdx(prev =>
+      prev === null ? prev : (prev + (dx < 0 ? 1 : -1) + displayed.length) % displayed.length,
+    )
+  }
+
   const openLightbox = (img: GalleryPhoto) => {
     const idx = displayed.findIndex(d => d.id === img.id)
     setLightboxIdx(idx)
@@ -70,11 +91,22 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
   if (photos.length === 0) return null
 
   return (
-    <section id="gallery" style={{ backgroundColor: 'var(--color-bg)', padding: '100px 20px' }}>
+    <section id="gallery" style={{ backgroundColor: 'var(--color-bg)', padding: 'clamp(64px, 12vw, 100px) 20px' }}>
       <style>{`
         .gallery-grid { columns: 3; column-gap: 12px; }
         @media (max-width: 1024px) { .gallery-grid { columns: 2; } }
         @media (max-width: 640px)  { .gallery-grid { columns: 1; } }
+
+        /* Phone lightbox: the photo takes the full width and the two arrows
+           drop to the bottom bar beside the counter instead of sitting on top
+           of it. Swipe works either way. */
+        @media (max-width: 640px) {
+          .lb-img    { max-width: 96vw !important; max-height: 64vh !important; }
+          .lb-arrow  { top: auto !important; bottom: 18px !important; font-size: 40px !important; }
+          .lb-prev   { left: 10px !important; }
+          .lb-next   { right: 10px !important; }
+          .lb-caption{ bottom: 30px !important; padding: 0 76px !important; }
+        }
       `}</style>
 
       {/* Title */}
@@ -192,6 +224,8 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
       {activeLightbox && (
         <div
           onClick={() => setLightboxIdx(null)}
+          onTouchStart={e => { touchX.current = e.touches[0].clientX; touchY.current = e.touches[0].clientY }}
+          onTouchEnd={onTouchEnd}
           role="dialog"
           aria-modal="true"
           aria-label={activeLightbox.caption || 'Photo viewer'}
@@ -210,10 +244,12 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
             onClick={() => setLightboxIdx(null)}
             aria-label="Close photo viewer"
             style={{
-              position: 'absolute', top: 20, right: 24,
+              position: 'absolute', top: 12, right: 12,
               background: 'none', border: 'none',
               color: '#fff', fontSize: 30, lineHeight: 1,
-              cursor: 'pointer', opacity: 0.75, padding: 8,
+              cursor: 'pointer', opacity: 0.75,
+              minWidth: 44, minHeight: 44,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             ✕
@@ -221,6 +257,7 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
 
           {/* Prev */}
           <button
+            className="lb-arrow lb-prev"
             onClick={e => { e.stopPropagation(); setLightboxIdx(p => (p! - 1 + displayed.length) % displayed.length) }}
             aria-label="Previous photo"
             style={{
@@ -236,6 +273,7 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
           {/* Image */}
           {/* eslint-disable-next-line @next/next/no-img-element -- lightbox needs the original remote URL, not a build-time-optimized one */}
           <img
+            className="lb-img"
             src={activeLightbox.image_url}
             alt={activeLightbox.caption}
             onClick={e => e.stopPropagation()}
@@ -250,6 +288,7 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
 
           {/* Next */}
           <button
+            className="lb-arrow lb-next"
             onClick={e => { e.stopPropagation(); setLightboxIdx(p => (p! + 1) % displayed.length) }}
             aria-label="Next photo"
             style={{
@@ -263,9 +302,9 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
           </button>
 
           {/* Caption + counter */}
-          <div style={{
+          <div className="lb-caption" style={{
             position: 'absolute', bottom: 24,
-            left: 0, right: 0, textAlign: 'center',
+            left: 0, right: 0, textAlign: 'center', padding: '0 24px',
           }}>
             <p style={{ color: '#fff', fontSize: 15, opacity: 0.85, margin: '0 0 4px' }}>
               {activeLightbox.caption}

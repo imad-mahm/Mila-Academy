@@ -339,8 +339,21 @@ export default function AttendancePage() {
         @keyframes toastIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
         .hist-row { cursor: pointer; transition: background 0.15s ease; }
         .hist-row:hover td { background: rgba(255,255,255,0.025) !important; }
-        .stat-card-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
-        @media (max-width: 800px) { .stat-card-grid { grid-template-columns: repeat(2,1fr); } }
+        .stat-card-grid { display: grid; grid-template-columns: repeat(4,minmax(0, 1fr)); gap: 14px; }
+        @media (max-width: 800px) { .stat-card-grid { grid-template-columns: repeat(2,minmax(0, 1fr)); } }
+        @media (max-width: 380px) { .stat-card-grid { grid-template-columns: minmax(0, 1fr); } }
+
+        /* Roll-call row: the three status pills need ~245px on their own, so
+           below 560px the name moves above them instead of beside them. */
+        .roll-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .roll-pills { display: flex; gap: 8px; flex-shrink: 0; }
+        @media (max-width: 560px) {
+          .roll-row   { flex-direction: column; align-items: stretch; gap: 10px; }
+          .roll-pills { gap: 6px; }
+          .roll-pills > button { flex: 1; justify-content: center; }
+          /* The "Status" label pointed at a column that no longer exists. */
+          .roll-head > span:last-child { display: none; }
+        }
       `}</style>
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
@@ -360,7 +373,7 @@ export default function AttendancePage() {
 
         {/* Controls row */}
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-          <select value={teamId} onChange={e => selectTeam(e.target.value)} style={{ ...sel, minWidth: 160 }}>
+          <select value={teamId} onChange={e => selectTeam(e.target.value)} style={{ ...sel, minWidth: 160, flex: '1 1 160px' }}>
             <option value="">Select team…</option>
             {visibleTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
@@ -377,7 +390,7 @@ export default function AttendancePage() {
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {/* Column labels */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', padding: '0 12px 8px', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
+              <div className="roll-head" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', padding: '0 12px 8px', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
                 <span style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>Student</span>
                 <span style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>Status</span>
               </div>
@@ -387,11 +400,10 @@ export default function AttendancePage() {
                 return (
                   <div
                     key={student.id}
+                    className="roll-row"
                     style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       padding: '10px 12px', borderRadius: 10,
                       backgroundColor: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
-                      gap: 12,
                     }}
                   >
                     {/* Avatar + name */}
@@ -413,7 +425,7 @@ export default function AttendancePage() {
                     </div>
 
                     {/* Status pills */}
-                    <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                    <div className="roll-pills">
                       {(['present', 'late', 'absent'] as Status[]).map(s => (
                         <StatusPill
                           key={s}
@@ -433,7 +445,7 @@ export default function AttendancePage() {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: 12,
             }}>
-              <div style={{ display: 'flex', gap: 20 }}>
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                 {(['present', 'late', 'absent'] as Status[]).map(s => {
                   const count = Object.values(statusMap).filter(v => v === s).length
                   const cfg   = STATUS[s]
@@ -629,7 +641,7 @@ export default function AttendancePage() {
                             <div style={{
                               backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)',
                               borderRadius: 10, padding: '16px 20px',
-                              display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10,
+                              display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))', gap: 10,
                             }}>
                               {Object.entries(session.records).map(([sid, status]) => {
                                 const name = session.student_names[sid] ?? `Student ${sid}`

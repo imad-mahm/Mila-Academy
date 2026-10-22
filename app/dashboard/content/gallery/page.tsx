@@ -120,7 +120,7 @@ export default function GalleryAdminPage() {
 
       <Card style={{ marginBottom: 20 }}>
         <p style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: 15, margin: '0 0 14px' }}>Add photos</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, alignItems: 'end' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 14, alignItems: 'end' }}>
           <SelectField label="Category" value={category} onChange={v => setCategory(v as Category)} options={CATEGORIES} />
           <TextField label="Caption (optional)" value={caption} onChange={setCaption} help="Applied to every photo in this upload." />
           <div>

@@ -4,13 +4,15 @@ import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   IconSearch, IconPlus, IconX, IconUsers,
-  IconStarFilled, IconStar,
+  IconStarFilled, IconStar, IconArchive, IconArchiveOff, IconTrash,
 } from '@tabler/icons-react'
 import type { StudentRow } from './data'
 import { getCurrentUser } from '@/lib/auth'
 import { useSelectedAcademy } from '@/lib/use-session'
-import { fetchStudents, fetchTeams, createStudent, type TeamRow } from './api'
+import { fetchStudents, fetchTeams, createStudent, archiveStudent, deleteStudent, type TeamRow } from './api'
 import { useModal, modalOverlayProps } from '../hooks/useModal'
+import { confirmAction } from '../components/admin-ui'
+import { toast } from '../components/toast'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -23,6 +25,13 @@ const PAYMENT_STYLE = {
 const ACADEMY_STYLE = {
   MFA: { bg: 'rgba(22,163,74,0.15)',  color: '#16a34a' },
   MBA: { bg: 'rgba(249,115,22,0.15)', color: '#f97316' },
+}
+
+const CARD_ACTION: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+  padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+  cursor: 'pointer', backgroundColor: 'transparent', color: 'var(--text-primary)',
+  border: '1px solid var(--border)', minHeight: 32,
 }
 
 // ── Mini components ────────────────────────────────────────────────────────────
@@ -63,15 +72,32 @@ function initials(name: string) {
 
 // ── Student card ───────────────────────────────────────────────────────────────
 
-function StudentCard({ student, teams, onClick }: { student: StudentRow; teams: TeamRow[]; onClick: () => void }) {
+function StudentCard({
+  student, teams, onClick, canArchive, canDelete, onArchive, onDelete, busy,
+}: {
+  student: StudentRow
+  teams: TeamRow[]
+  onClick: () => void
+  canArchive: boolean
+  canDelete: boolean
+  onArchive: (s: StudentRow) => void
+  onDelete: (s: StudentRow) => void
+  busy: boolean
+}) {
   const [hovered, setHovered] = useState(false)
   const acad  = ACADEMY_STYLE[student.academy]
   const pmnt  = PAYMENT_STYLE[student.payment_status]
   const team  = teams.find(t => t.id === student.team_id)?.name ?? '—'
+  const archived = !!student.archived_at
 
+  // A div rather than a button: the card now holds its own action buttons,
+  // and a button cannot legally contain another button.
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -86,6 +112,7 @@ function StudentCard({ student, teams, onClick }: { student: StudentRow; teams: 
         padding: '20px 20px 16px',
         transition: 'border-color 0.2s ease, transform 0.15s ease',
         transform: hovered ? 'translateY(-2px)' : 'none',
+        opacity: archived ? 0.6 : 1,
       }}>
         {/* Top row: avatar + badges */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -123,7 +150,10 @@ function StudentCard({ student, teams, onClick }: { student: StudentRow; teams: 
 
         {/* Bottom row: payment + attendance + stars */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-          <Badge label={pmnt.label} bg={pmnt.bg} color={pmnt.color} />
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <Badge label={pmnt.label} bg={pmnt.bg} color={pmnt.color} />
+            {archived && <Badge label="Archived" bg="rgba(136,136,136,0.18)" color="#9ca3af" />}
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
             <Stars rating={student.overall_rating} />
             <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>
@@ -131,8 +161,41 @@ function StudentCard({ student, teams, onClick }: { student: StudentRow; teams: 
             </span>
           </div>
         </div>
+
+        {(canArchive || canDelete) && (
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ display: 'flex', gap: 8, marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}
+          >
+            {canArchive && (
+              <button
+                onClick={() => onArchive(student)}
+                disabled={busy}
+                title={archived ? 'Put this student back on the active list' : 'Hide from the active list, keeping the record'}
+                style={{ ...CARD_ACTION, opacity: busy ? 0.5 : 1 }}
+              >
+                {archived ? <IconArchiveOff size={14} /> : <IconArchive size={14} />}
+                {archived ? 'Restore' : 'Archive'}
+              </button>
+            )}
+            {canDelete && (
+              <button
+                onClick={() => onDelete(student)}
+                disabled={busy}
+                title="Permanently delete this student and their records"
+                style={{
+                  ...CARD_ACTION,
+                  backgroundColor: 'rgba(220,38,38,0.12)', color: '#f87171',
+                  border: '1px solid rgba(220,38,38,0.3)', opacity: busy ? 0.5 : 1,
+                }}
+              >
+                <IconTrash size={14} /> Delete
+              </button>
+            )}
+          </div>
+        )}
       </div>
-    </button>
+    </div>
   )
 }
 
@@ -290,12 +353,12 @@ function AddStudentModal({
       <div style={{
         backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)',
         borderRadius: 16, width: '100%', maxWidth: 520,
-        maxHeight: '90vh', display: 'flex', flexDirection: 'column',
+        maxHeight: '90dvh', display: 'flex', flexDirection: 'column',
       }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 0' }}>
           <h2 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 700, margin: 0 }}>Add New Student</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4, minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <IconX size={20} />
           </button>
         </div>
@@ -444,6 +507,14 @@ export default function StudentsPage() {
   const [teams,        setTeams]        = useState<TeamRow[]>([])
   const [loading,       setLoading]     = useState(true)
   const [loadError,     setLoadError]   = useState('')
+  // Archived students are left out of the list by default; the toggle asks the
+  // API for them so they can be restored or deleted for good.
+  const [showArchived, setShowArchived] = useState(false)
+  const [version,       setVersion]     = useState(0)
+  const [busyId,        setBusyId]      = useState('')
+  const role = getCurrentUser()?.role
+  const canArchive = role === 'admin' || role === 'coach'
+  const canDelete  = role === 'admin'
   const selectedAcademy = useSelectedAcademy()
   const [search,   setSearch]           = useState('')
   // Follows the sidebar switcher unless overridden by the filter below. Seeding
@@ -458,7 +529,7 @@ export default function StudentsPage() {
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([fetchStudents(), fetchTeams()])
+    Promise.all([fetchStudents(showArchived), fetchTeams()])
       .then(([s, t]) => {
         if (cancelled) return
         const u = getCurrentUser()
@@ -468,11 +539,41 @@ export default function StudentsPage() {
         }
         setAllStudents(visible)
         setTeams(t)
+        setLoadError('')
       })
       .catch(err => { if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Failed to load students.') })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [showArchived, version])
+
+  async function onArchive(s: StudentRow) {
+    const archived = !!s.archived_at
+    if (!archived && !confirmAction(`Archive ${s.name}? They drop off the active list but the record is kept, and you can restore them any time.`)) return
+    setBusyId(s.id)
+    try {
+      await archiveStudent(s.id, !archived)
+      setVersion(v => v + 1)
+      toast(archived ? `${s.name} restored` : `${s.name} archived`)
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Could not update student')
+    } finally {
+      setBusyId('')
+    }
+  }
+
+  async function onDelete(s: StudentRow) {
+    if (!confirmAction(`Permanently delete ${s.name}? This also removes their attendance, ratings, payments and documents, and cannot be undone. Archive instead if you only want them off the list.`)) return
+    setBusyId(s.id)
+    try {
+      await deleteStudent(s.id)
+      setVersion(v => v + 1)
+      toast(`${s.name} deleted`)
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Could not delete student')
+    } finally {
+      setBusyId('')
+    }
+  }
 
   // Switching academy in the sidebar clears any local override.
   useEffect(() => {
@@ -505,17 +606,17 @@ export default function StudentsPage() {
       <style>{`
         .students-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 16px;
           margin-top: 24px;
         }
-        @media (max-width: 900px) { .students-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px) { .students-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { .students-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 600px) { .students-grid { grid-template-columns: minmax(0, 1fr); } }
         .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 20px; }
       `}</style>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 4 }}>
         <div>
           <h1 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, margin: '0 0 4px' }}>Students</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
@@ -589,6 +690,22 @@ export default function StudentsPage() {
           <option value="unpaid">Unpaid</option>
           <option value="partial">Partial</option>
         </select>
+
+        {canArchive && (
+          <label style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+            color: 'var(--text-secondary)', fontSize: 13, padding: '9px 12px',
+            backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: 8,
+          }}>
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={e => setShowArchived(e.target.checked)}
+              style={{ width: 15, height: 15, accentColor: '#f5c518', cursor: 'pointer' }}
+            />
+            Show archived
+          </label>
+        )}
       </div>
 
       {/* Grid */}
@@ -600,6 +717,11 @@ export default function StudentsPage() {
               student={s}
               teams={teams}
               onClick={() => router.push(`/dashboard/students/${s.id}`)}
+              canArchive={canArchive}
+              canDelete={canDelete}
+              onArchive={onArchive}
+              onDelete={onDelete}
+              busy={busyId === s.id}
             />
           ))}
         </div>

@@ -9,11 +9,13 @@ import {
   IconCash, IconStar, IconChartBar, IconLogout,
   IconSearch, IconX, IconBuildingArch, IconMenu2, IconSun, IconMoon,
   IconListDetails, IconQuote, IconPhoto, IconWorld, IconInbox, IconUserShield, IconUserCircle,
+  IconUsersGroup,
 } from '@tabler/icons-react'
 import { ToastContainer } from './components/ToastContainer'
 import { useTheme, toggleTheme } from '@/lib/theme'
-import { loadAllStudents } from './students/data'
-import { loadAllCoaches } from './coaches/data'
+import type { StudentRow } from './students/data'
+import { useAdminData } from './components/admin-ui'
+import { useAllCoaches, type CoachRow } from './coaches/data'
 import {
   logout, refreshSession, setSelectedAcademy,
   type SessionUser, type AcademyFilter,
@@ -45,6 +47,7 @@ const MAIN_NAV: NavItem[] = [
   { label: 'Attendance',   href: '/dashboard/attendance',       Icon: IconCalendarCheck },
   { label: 'Matches',      href: '/dashboard/matches',          Icon: IconTrophy        },
   { label: 'Coaches',      href: '/dashboard/coaches',          Icon: IconClipboardList },
+  { label: 'Teams',        href: '/dashboard/teams',            Icon: IconUsersGroup    },
   { label: 'Payments',     href: '/dashboard/payments',         Icon: IconCash          },
   { label: 'Ratings',      href: '/dashboard/ratings',          Icon: IconStar          },
   { label: 'Reports',      href: '/dashboard/reports',          Icon: IconChartBar      },
@@ -121,7 +124,9 @@ function AcademySwitcher({ user }: { user: SessionUser }) {
 
 // ── Global Search ─────────────────────────────────────────────────────────────
 
-function GlobalSearch() {
+function GlobalSearch({
+  students, coaches, onNavigate,
+}: { students: StudentRow[]; coaches: CoachRow[]; onNavigate?: () => void }) {
   const [query, setQuery] = useState('')
   const [open,  setOpen]  = useState(false)
   const router = useRouter()
@@ -132,23 +137,18 @@ function GlobalSearch() {
     const lq  = query.toLowerCase()
     const out: SearchResult[] = []
 
-    try {
-      loadAllStudents().forEach(s => {
-        if (s.name.toLowerCase().includes(lq) || String(s.jersey_number).includes(lq) || s.position.toLowerCase().includes(lq)) {
-          out.push({ label: s.name, sub: `#${s.jersey_number} · ${s.position} · ${s.team_id}`, href: `/dashboard/students/${s.id}`, category: 'Student' })
-        }
-      })
-    } catch {}
+    students.forEach(s => {
+      if (s.name.toLowerCase().includes(lq) || String(s.jersey_number ?? '').includes(lq) || s.position.toLowerCase().includes(lq)) {
+        const sub = [s.jersey_number ? `#${s.jersey_number}` : null, s.position || null, s.academy].filter(Boolean).join(' · ')
+        out.push({ label: s.name, sub, href: `/dashboard/students/${s.id}`, category: 'Student' })
+      }
+    })
 
-    // Reads the same source as the Coaches page, so coaches staff have added
-    // are searchable. This used to be a hardcoded list of the four seed names.
-    try {
-      loadAllCoaches().forEach(c => {
-        if (c.name.toLowerCase().includes(lq) || c.specialty.toLowerCase().includes(lq)) {
-          out.push({ label: c.name, sub: c.specialty, href: '/dashboard/coaches', category: 'Coach' })
-        }
-      })
-    } catch {}
+    coaches.forEach(c => {
+      if (c.name.toLowerCase().includes(lq) || c.specialty.toLowerCase().includes(lq)) {
+        out.push({ label: c.name, sub: c.specialty, href: '/dashboard/coaches', category: 'Coach' })
+      }
+    })
 
     try {
       const matches: Array<{ id: string; opponent: string; team_name: string; date: string; status: string }> =
@@ -161,7 +161,7 @@ function GlobalSearch() {
     } catch {}
 
     return out.slice(0, 8)
-  }, [query])
+  }, [query, students, coaches])
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -210,7 +210,7 @@ function GlobalSearch() {
           {results.map((r, i) => (
             <div
               key={i}
-              onClick={() => { router.push(r.href); setOpen(false); setQuery('') }}
+              onClick={() => { router.push(r.href); setOpen(false); setQuery(''); onNavigate?.() }}
               style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', cursor: 'pointer', borderTop: i > 0 ? `1px solid var(--border)` : 'none' }}
               onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--bg-hover)')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -231,9 +231,10 @@ function GlobalSearch() {
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
 function Sidebar({
-  user, pathname, onLogout, open, onClose,
+  user, pathname, onLogout, open, onClose, students, coaches,
 }: {
   user: SessionUser; pathname: string; onLogout: () => void; open: boolean; onClose: () => void
+  students: StudentRow[]; coaches: CoachRow[]
 }) {
   const initials = user.name.split(' ').map(w => w[0] ?? '').join('').toUpperCase().slice(0, 2)
   const navItems = navItemsFor(user)
@@ -261,6 +262,12 @@ function Sidebar({
             MILA ACADEMY
           </p>
           <div style={{ height: 1, backgroundColor: 'rgba(245,197,24,0.12)', marginBottom: 12 }} />
+        </div>
+
+        {/* Mobile only: the header's search is hidden under 768px, so the
+            drawer carries it — otherwise a phone has no search at all. */}
+        <div className="dash-sidebar-search" style={{ padding: '0 12px 10px' }}>
+          <GlobalSearch students={students} coaches={coaches} onNavigate={onClose} />
         </div>
 
         <AcademySwitcher user={user} />
@@ -364,6 +371,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     else if (user.mustChangePassword && pathname !== '/dashboard/account') router.replace('/dashboard/account?first=1')
   }, [ready, isLoginPage, user, router, pathname])
 
+  const searchCoaches = useAllCoaches()
+  const { data: searchStudents } = useAdminData<StudentRow[]>('/api/admin/students', true, [])
+
   // Close the sidebar when the route changes. Adjusting state during render is
   // React's documented alternative to a setState-in-effect here: it re-renders
   // before committing, so the sidebar never paints open on the new page.
@@ -407,6 +417,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [checking])  // re-runs once the guard resolves and #dash-main exists
 
+  // The drawer's backdrop covered the page but did not stop it scrolling, so a
+  // drag anywhere on the overlay moved the content underneath.
+  useEffect(() => {
+    if (!sidebarOpen) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previous }
+  }, [sidebarOpen])
+
   async function handleLogout() {
     await logout()
     router.replace('/dashboard/login')
@@ -422,13 +441,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+      <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
         <Sidebar
           user={user}
           pathname={pathname}
           onLogout={handleLogout}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
+          students={searchStudents}
+          coaches={searchCoaches}
         />
 
         <div id="dash-main" className="dash-main-content-wrapper" style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -453,7 +474,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 color: 'var(--text-secondary)', cursor: 'pointer',
                 padding: 4, borderRadius: 6, display: 'none',
                 alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
+                flexShrink: 0, minWidth: 44,
               }}
             >
               <IconMenu2 size={22} />
@@ -473,7 +494,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Search — desktop */}
             <div className="dash-search" style={{ flex: 1, maxWidth: 380 }}>
-              <GlobalSearch />
+              <GlobalSearch students={searchStudents} coaches={searchCoaches} />
             </div>
 
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -486,6 +507,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <button
                 onClick={toggleTheme}
                 aria-label="Toggle theme"
+                className="tap-exempt"
                 style={{
                   width: 36, height: 36, borderRadius: '50%',
                   backgroundColor: 'var(--bg-card)', border: '0.5px solid var(--border)',

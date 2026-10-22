@@ -244,28 +244,29 @@ export default function DashboardHome() {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <style>{`
-        .dash-stats  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-        .dash-cols   { display: grid; grid-template-columns: 3fr 2fr;        gap: 20px; margin-top: 20px; }
-        .dash-left   { display: flex; flex-direction: column; gap: 20px; }
-        .dash-right  { display: flex; flex-direction: column; gap: 20px; }
+        .dash-stats  { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+        .dash-cols   { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; margin-top: 20px; }
+        .dash-left   { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+        .dash-right  { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
         .att-table   { width: 100%; border-collapse: collapse; }
+        .table-scroll .att-table { min-width: 440px; }
         .att-table th{ color: var(--text-muted); font-size: 11px; font-weight: 600; letter-spacing: 1px;
                        text-transform: uppercase; padding: 0 0 10px; text-align: left; }
         .att-table td{ padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-secondary); vertical-align: middle; }
         .att-table tr:first-child td { border-top: none; }
         @media (max-width: 900px) {
-          .dash-stats { grid-template-columns: repeat(2, 1fr); }
-          .dash-cols  { grid-template-columns: 1fr; }
+          .dash-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .dash-cols  { grid-template-columns: minmax(0, 1fr); }
         }
         @media (max-width: 500px) {
-          .dash-stats { grid-template-columns: 1fr; }
+          .dash-stats { grid-template-columns: minmax(0, 1fr); }
         }
       `}</style>
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 28 }}>
         <div>
-          <h1 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, margin: '0 0 4px', lineHeight: 1.2 }}>
+          <h1 style={{ color: 'var(--text-primary)', fontSize: 'clamp(19px, 5.5vw, 24px)', fontWeight: 700, margin: '0 0 4px', lineHeight: 1.2 }}>
             {greeting}, {name} 👋
           </h1>
           <p style={{ color: '#f5c518', fontSize: 13, margin: '0 0 2px', letterSpacing: '0.3px' }}>
@@ -334,6 +335,7 @@ export default function DashboardHome() {
             {recentAttendance.length === 0 ? (
               <EmptyNote text="No attendance sessions recorded yet." />
             ) : (
+              <div className="table-scroll">
               <table className="att-table">
                 <thead>
                   <tr>
@@ -368,6 +370,7 @@ export default function DashboardHome() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </Card>
 
