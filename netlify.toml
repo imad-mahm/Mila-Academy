@@ -16,6 +16,20 @@
   # can't silently break the build.
   NODE_VERSION = "22"
 
+  # Netlify's secrets scanner fails the build when a value marked "Contains
+  # secret values" appears in any file. Turbopack records the build's whole
+  # environment in its build cache (.next/cache/turbopack/*.sst) so it knows
+  # when to rebuild — which puts SUPABASE_SECRET_KEY in there, and the scan
+  # fails as soon as that key is marked secret. The cache is build-internal and
+  # never published; checked: outside it the key is in 0 built files, 0 files a
+  # visitor can fetch, 0 repo files and 0 commits. Skipping only the cache keeps
+  # the scan on everything that is actually served.
+  #
+  # Only SUPABASE_SECRET_KEY should be marked secret. NEXT_PUBLIC_* values are
+  # written into the site's JavaScript on purpose, so marking them secret fails
+  # the build in the published files, which this does not (and should not) skip.
+  SECRETS_SCAN_OMIT_PATHS = ".netlify/.next/cache,.next/cache"
+
 # The Next.js runtime: turns Next's build output into Netlify Functions (the
 # server pages, API routes and proxy) plus static assets. Netlify is supposed
 # to add this automatically for a Next.js site, but on this site it did not —
