@@ -503,6 +503,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
 
+              {/* Link back to the public homepage */}
+              <Link
+                href="/"
+                style={{
+                  color: 'var(--accent-gold)', fontSize: 12, fontWeight: 600, textDecoration: 'none',
+                  border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px',
+                  whiteSpace: 'nowrap', backgroundColor: 'var(--bg-card)',
+                }}
+              >
+                View website ↗
+              </Link>
+
               {/* Theme toggle */}
               <button
                 onClick={toggleTheme}

@@ -61,6 +61,16 @@ export default function Navbar({
   const [menuOpen, setMenuOpen] = useState(false)
   const theme = useTheme()
   const router = useRouter()
+  // Staff who are signed in get a shortcut to the dashboard; visitors see
+  // nothing extra (the footer still has the staff-login link).
+  const [signedIn, setSignedIn] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/auth/me')
+      .then(r => { if (!cancelled && r.ok) setSignedIn(true) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
   // A nav item whose section isn't on the page is a dead link — Programs and
   // Gallery each render nothing when their table is empty.
   const navLinks = NAV_LINKS.filter(l =>
@@ -112,6 +122,13 @@ export default function Navbar({
           min-height: 44px; display: inline-flex; align-items: center;
         }
         .nb-join:hover { color: var(--color-text); }
+        .nb-dash {
+          color: var(--color-gold); font-size: 13px; font-weight: 600; text-decoration: none;
+          border: 1px solid rgba(var(--color-gold-rgb), 0.4); border-radius: 8px;
+          padding: 0 12px; min-height: 36px; display: inline-flex; align-items: center;
+          white-space: nowrap; margin-right: 8px; transition: background-color 0.15s ease;
+        }
+        .nb-dash:hover { background-color: rgba(var(--color-gold-rgb), 0.1); }
         .nb-theme {
           background: none; border: none;
           color: var(--color-text-dim); cursor: pointer;
@@ -182,6 +199,7 @@ export default function Navbar({
 
         {/* Right: enroll + theme + hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 'auto' }}>
+          {signedIn && <a className="nb-dash" href="/dashboard">Dashboard</a>}
           <button className="nb-join" onClick={() => handleNav('contact')} style={{ marginRight: 8 }}>
             {content.nav_enroll}
           </button>
@@ -231,6 +249,7 @@ export default function Navbar({
           <button className="mob-link" onClick={() => handleNav('contact')} style={{ color: 'var(--color-text-dim)', fontSize: 16, marginTop: 8 }}>
             {content.nav_enroll}
           </button>
+          {signedIn && <a className="mob-link" href="/dashboard" style={{ color: 'var(--color-gold)', fontSize: 16, marginTop: 8, textDecoration: 'none' }}>Dashboard</a>}
         </div>
       )}
     </>
