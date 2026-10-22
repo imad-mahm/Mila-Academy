@@ -10,6 +10,10 @@ live in the same build, so the whole thing deploys as a single unit.
 
 ## Setup
 
+**`SUPABASE_SETUP.md` is the step-by-step runbook** — follow that to get a
+machine running, including which SQL has already been applied to the shared
+project. What follows is the short version.
+
 1. `cp .env.example .env.local` and fill in the three values from the Supabase
    dashboard (Settings → API):
 
@@ -22,10 +26,11 @@ live in the same build, so the whole thing deploys as a single unit.
    For a deployed instance also set `NEXT_PUBLIC_SITE_URL` to the public origin,
    or share/preview image URLs resolve against `localhost`.
 
-2. Create the database. Paste **`supabase/apply_all.sql`** into the Supabase SQL
-   Editor and run it. It is the four migration files concatenated in order and is
-   safe to re-run — it guards the foreign key and only seeds example rows when
-   `students` is empty.
+2. Create the database — **only for a fresh Supabase project**; the shared one
+   is already migrated. Paste **`supabase/apply_all.sql`** into the SQL Editor
+   and run it. It is the migration files concatenated in order and is safe to
+   re-run: it guards the foreign key and only seeds example rows when `students`
+   is empty.
 
    The individual files are kept alongside it for reference:
    `schema_content.sql` → `schema_dashboard.sql` → `seed_dashboard.sql` →
