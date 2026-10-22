@@ -15,3 +15,11 @@
   # Next 16 needs Node 20.9+. Pinned so a change to Netlify's default image
   # can't silently break the build.
   NODE_VERSION = "22"
+
+# The Next.js runtime: turns Next's build output into Netlify Functions (the
+# server pages, API routes and proxy) plus static assets. Netlify is supposed
+# to add this automatically for a Next.js site, but on this site it did not —
+# the deploy uploaded .next as plain files with "0 new function(s)" and served
+# a 404. Declared explicitly (and pinned in devDependencies) so it always runs.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
