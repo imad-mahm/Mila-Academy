@@ -1,0 +1,17 @@
+# Netlify build settings.
+#
+# Next.js is meant to be zero-config on Netlify, but the first deploy published
+# a folder with no page in it and served Netlify's own 404 at "/". Settings in
+# this file override the dashboard, so pinning them here makes the deploy
+# deterministic regardless of what the site's UI settings say.
+
+[build]
+  command = "npm run build"
+  # The Netlify Next.js runtime reads Next's build output from here and turns
+  # it into functions + static assets. It is NOT a static export directory.
+  publish = ".next"
+
+[build.environment]
+  # Next 16 needs Node 20.9+. Pinned so a change to Netlify's default image
+  # can't silently break the build.
+  NODE_VERSION = "22"
