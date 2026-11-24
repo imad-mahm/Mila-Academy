@@ -2,21 +2,23 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { GalleryPhoto } from '@/lib/site-data'
 import type { SiteContent } from '@/lib/content-schema'
+import { ui, type Lang } from '@/lib/i18n'
 
 type Category = 'all' | 'football' | 'basketball' | 'events'
 
-const FILTERS: { key: Category; label: string }[] = [
-  { key: 'all',        label: 'All'        },
-  { key: 'football',   label: 'Football'   },
-  { key: 'basketball', label: 'Basketball' },
-  { key: 'events',     label: 'Events'     },
-]
+const FILTER_KEYS: Category[] = ['all', 'football', 'basketball', 'events']
 
-export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; content: SiteContent }) {
+export default function Gallery({ photos, content, lang = 'en' }: { photos: GalleryPhoto[]; content: SiteContent; lang?: Lang }) {
+  const t = ui(lang)
   const [activeTab,    setActiveTab]    = useState<Category>('all')
   const [visible,      setVisible]      = useState(true)
   const [hoveredId,    setHoveredId]    = useState<string | null>(null)
   const [lightboxIdx,  setLightboxIdx]  = useState<number | null>(null)
+
+  const FILTERS: { key: Category; label: string }[] = FILTER_KEYS.map(key => ({
+    key,
+    label: { all: t.gallery_all, football: t.gallery_football, basketball: t.gallery_basketball, events: t.gallery_events }[key],
+  }))
 
   // Derived from props rather than copied into state. The photos list is
   // refetched by the server every 60s (`revalidate`), and a state copy taken at
@@ -67,7 +69,7 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
       setActiveTab(tab)
       setVisible(true)
     }, 200)
-  }, [activeTab])
+  }, [activeTab, setLightboxIdx])
 
   const touchX = useRef(0)
   const touchY = useRef(0)
@@ -159,7 +161,7 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
               onFocus={() => setHoveredId(img.id)}
               onBlur={() => setHoveredId(null)}
               onClick={() => openLightbox(img)}
-              aria-label={`Open photo: ${img.caption || 'untitled'}`}
+              aria-label={`${t.open_photo}: ${img.caption || t.untitled}`}
               style={{
                 breakInside: 'avoid',
                 marginBottom: 12,
@@ -172,7 +174,7 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
                 padding: 0,
                 border: 'none',
                 background: 'none',
-                textAlign: 'left',
+                textAlign: 'start',
               }}
             >
               {/* Image */}
@@ -228,7 +230,7 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
           onTouchEnd={onTouchEnd}
           role="dialog"
           aria-modal="true"
-          aria-label={activeLightbox.caption || 'Photo viewer'}
+          aria-label={activeLightbox.caption || t.photo_viewer}
           style={{
             position: 'fixed',
             inset: 0,
@@ -242,7 +244,7 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
           {/* Close */}
           <button
             onClick={() => setLightboxIdx(null)}
-            aria-label="Close photo viewer"
+            aria-label={t.close_viewer}
             style={{
               position: 'absolute', top: 12, right: 12,
               background: 'none', border: 'none',
@@ -259,7 +261,7 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
           <button
             className="lb-arrow lb-prev"
             onClick={e => { e.stopPropagation(); setLightboxIdx(p => (p! - 1 + displayed.length) % displayed.length) }}
-            aria-label="Previous photo"
+            aria-label={t.previous_photo}
             style={{
               position: 'absolute', left: 20,
               background: 'none', border: 'none',
@@ -290,7 +292,7 @@ export default function Gallery({ photos, content }: { photos: GalleryPhoto[]; c
           <button
             className="lb-arrow lb-next"
             onClick={e => { e.stopPropagation(); setLightboxIdx(p => (p! + 1) % displayed.length) }}
-            aria-label="Next photo"
+            aria-label={t.next_photo}
             style={{
               position: 'absolute', right: 20,
               background: 'none', border: 'none',

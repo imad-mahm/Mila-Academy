@@ -28,10 +28,17 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (!(await requireRole('admin'))) return unauthorized()
 
   const { id } = await params
-  const { error, count } = await getSupabaseAdmin()
-    .from('coaches').delete({ count: 'exact' }).eq('id', id)
+  const db = getSupabaseAdmin()
+  const { data: coach } = await db.from('coaches').select('email').eq('id', id).maybeSingle()
+  const { error, count } = await db.from('coaches').delete({ count: 'exact' }).eq('id', id)
   if (error) return dbError('coaches.delete', error)
   if (!count) return notFound('Coach not found')
+  // Remove the matching coach sign-in too, otherwise it would linger with
+  // academy-wide access and no team limit. Only coach-role accounts, never admins.
+  const email = String(coach?.email ?? '').trim().toLowerCase()
+  if (email) {
+    await db.from('app_users').delete().eq('role', 'coach').ilike('email', email.replace(/[\\%_]/g, c => `\\${c}`))
+  }
   clearCoachScopeCache()
   return NextResponse.json({ ok: true })
 }

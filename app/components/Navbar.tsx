@@ -1,10 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { scrollToSection } from '@/lib/lenis-store'
 import { useTheme, toggleTheme } from '@/lib/theme'
 import { useSession } from '@/lib/use-session'
 import type { SiteContent } from '@/lib/content-schema'
+import { useLang } from './LangProvider'
+import { ui, localePath, otherLangPath, LANG_NAME } from '@/lib/i18n'
 
 const NAV_LINKS = [
   { key: 'nav_home',     id: 'hero'     },
@@ -62,6 +64,9 @@ export default function Navbar({
   const [menuOpen, setMenuOpen] = useState(false)
   const theme = useTheme()
   const router = useRouter()
+  const lang = useLang()
+  const t = ui(lang)
+  const other = otherLangPath(usePathname())
   // One way in for everyone: "Log in" for visitors (parents included — the only
   // entry point before was a footer link labelled "Staff Login"), "Dashboard"
   // once signed in. Read from the browser's copy of the session rather than
@@ -70,8 +75,8 @@ export default function Navbar({
   // The server renders "Log in", which is right for nearly every visitor.
   const { user } = useSession()
   const account = user
-    ? { href: '/dashboard',       label: 'Dashboard' }
-    : { href: '/dashboard/login', label: 'Log in' }
+    ? { href: '/dashboard',       label: t.account_dashboard }
+    : { href: '/dashboard/login', label: t.account_login }
   // A nav item whose section isn't on the page is a dead link — Programs and
   // Gallery each render nothing when their table is empty.
   const navLinks = NAV_LINKS.filter(l =>
@@ -98,7 +103,7 @@ export default function Navbar({
     // Falls back to the homepage anchor when the section isn't on this page
     // (the academy pages render only #programs and #enroll).
     if (!scrollToSection(id === 'hero' ? 'top' : id)) {
-      router.push(`/#${id}`)
+      router.push(localePath(`/#${id}`, lang))
     }
   }
 
@@ -127,9 +132,15 @@ export default function Navbar({
           color: var(--color-gold); font-size: 13px; font-weight: 600; text-decoration: none;
           border: 1px solid rgba(var(--color-gold-rgb), 0.4); border-radius: 8px;
           padding: 0 12px; min-height: 36px; display: inline-flex; align-items: center;
-          white-space: nowrap; margin-right: 8px; transition: background-color 0.15s ease;
+          white-space: nowrap; margin-inline-end: 8px; transition: background-color 0.15s ease;
         }
         .nb-dash:hover { background-color: rgba(var(--color-gold-rgb), 0.1); }
+        .nb-lang {
+          color: var(--color-text-dim); font-size: 13px; font-weight: 600; text-decoration: none;
+          min-height: 44px; padding: 0 10px; display: inline-flex; align-items: center; white-space: nowrap;
+          border-radius: 8px; transition: color 0.15s ease, background-color 0.15s ease;
+        }
+        .nb-lang:hover { color: var(--color-gold); background-color: rgba(var(--color-gold-rgb), 0.1); }
         .nb-theme {
           background: none; border: none;
           color: var(--color-text-dim); cursor: pointer;
@@ -156,7 +167,7 @@ export default function Navbar({
            the account link is the only way in besides the footer. */
         @media (max-width: 430px) {
           .nb-join { display: none !important; }
-          .nb-dash { padding: 0 10px; margin-right: 2px; font-size: 12px; }
+          .nb-dash { padding: 0 10px; margin-inline-end: 2px; font-size: 12px; }
         }
         @media (max-width: 360px) {
           .nb-bar { padding: 0 10px !important; }
@@ -206,23 +217,26 @@ export default function Navbar({
         <div style={{ flex: 1 }} className="nb-center" aria-hidden />
 
         {/* Right: enroll + theme + hamburger */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginInlineStart: 'auto' }}>
           <a className="nb-dash" href={account.href}>{account.label}</a>
-          <button className="nb-join" onClick={() => handleNav('contact')} style={{ marginRight: 8 }}>
+          <button className="nb-join" onClick={() => handleNav('contact')} style={{ marginInlineEnd: 8 }}>
             {content.nav_enroll}
           </button>
+          <a className="nb-lang" href={other.href} hrefLang={other.lang} lang={other.lang} aria-label={t.switch_language}>
+            {LANG_NAME[other.lang]}
+          </a>
           <button
             className="nb-theme"
             onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            aria-label={theme === 'dark' ? t.theme_to_light : t.theme_to_dark}
           >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>
           <button
             className="nb-hamburger"
             onClick={() => setMenuOpen(true)}
-            aria-label="Open menu"
-            style={{ marginLeft: 4 }}
+            aria-label={t.menu_open}
+            style={{ marginInlineStart: 4 }}
           >
             <MenuIcon />
           </button>
@@ -231,7 +245,7 @@ export default function Navbar({
 
       {/* ── Mobile fullscreen overlay ────────────────────────────────────────────── */}
       {menuOpen && (
-        <div role="dialog" aria-modal="true" aria-label="Site menu" style={{
+        <div role="dialog" aria-modal="true" aria-label={t.site_menu} style={{
           position: 'fixed', inset: 0, zIndex: 9999,
           backgroundColor: 'var(--color-bg)',
           display: 'flex', flexDirection: 'column',
@@ -239,9 +253,9 @@ export default function Navbar({
         }}>
           <button
             onClick={() => setMenuOpen(false)}
-            aria-label="Close menu"
+            aria-label={t.menu_close}
             style={{
-              position: 'absolute', top: 16, right: 20,
+              position: 'absolute', top: 16, insetInlineEnd: 20,
               background: 'none', border: 'none', color: 'var(--color-text)',
               cursor: 'pointer', padding: 8, minHeight: 44, minWidth: 44,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -257,6 +271,7 @@ export default function Navbar({
           <button className="mob-link" onClick={() => handleNav('contact')} style={{ color: 'var(--color-text-dim)', fontSize: 16, marginTop: 8 }}>
             {content.nav_enroll}
           </button>
+          <a className="mob-link" href={other.href} hrefLang={other.lang} lang={other.lang} style={{ color: 'var(--color-text-dim)', fontSize: 16, marginTop: 8, textDecoration: 'none' }}>{LANG_NAME[other.lang]}</a>
           <a className="mob-link" href={account.href} style={{ color: 'var(--color-gold)', fontSize: 16, marginTop: 8, textDecoration: 'none' }}>{account.label}</a>
         </div>
       )}

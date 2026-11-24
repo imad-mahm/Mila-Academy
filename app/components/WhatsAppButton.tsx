@@ -1,8 +1,11 @@
 'use client'
+import { useLang } from './LangProvider'
+import { ui } from '@/lib/i18n'
 
 export default function WhatsAppButton({ whatsappNumber }: { whatsappNumber: string }) {
   // No number configured in site_settings — render nothing rather than a
   // floating button linking to https://wa.me/ , which opens a WhatsApp error.
+  const t = ui(useLang())
   if (!whatsappNumber) return null
 
   return (
@@ -10,11 +13,11 @@ export default function WhatsAppButton({ whatsappNumber }: { whatsappNumber: str
       href={`https://wa.me/${whatsappNumber}`}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Chat on WhatsApp"
+      aria-label={t.chat_whatsapp}
       style={{
         position: 'fixed',
         bottom: 28,
-        right: 28,
+        insetInlineEnd: 28,
         zIndex: 999,
         width: 56,
         height: 56,

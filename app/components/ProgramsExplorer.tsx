@@ -2,12 +2,11 @@
 import { useState, useMemo } from 'react'
 import { IconBallFootball, IconBallBasketball } from '@tabler/icons-react'
 import type { SiteContent } from '@/lib/content-schema'
+import { useLang } from './LangProvider'
+import { ui, ageLabel, priceLabel, sessionsLabel, levelText, genderText, programsCount } from '@/lib/i18n'
 import {
   LEVEL_ORDER,
   ACADEMY_STYLE,
-  ageLabel,
-  priceLabel,
-  sessionsLabel,
   type Academy,
   type Level,
   type Gender,
@@ -17,12 +16,7 @@ import {
 type SortKey = 'age' | 'level' | 'price' | 'gender'
 type SortDir = 'asc' | 'desc'
 
-const SORT_KEYS: { key: SortKey; label: string }[] = [
-  { key: 'age',    label: 'Age'    },
-  { key: 'level',  label: 'Level'  },
-  { key: 'price',  label: 'Price'  },
-  { key: 'gender', label: 'Gender' },
-]
+const SORT_KEYS: SortKey[] = ['age', 'level', 'price', 'gender']
 
 const GENDER_OPTS: (Gender | 'All')[] = ['All', 'Boys', 'Girls', 'Mixed']
 const LEVEL_OPTS: (Level | 'All')[]   = ['All', 'Beginner', 'Intermediate', 'Elite', 'Pro']
@@ -58,6 +52,7 @@ function ProgramCard({
   p: Program; accent: string; accentRgb: string; icon: Academy; enrollLabel: string
 }) {
   const [hover, setHover] = useState(false)
+  const lang = useLang()
 
   const badge = (solid: boolean): React.CSSProperties => ({
     padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 700,
@@ -104,9 +99,9 @@ function ProgramCard({
             ? <IconBallFootball size={72} stroke={1.25} />
             : <IconBallBasketball size={72} stroke={1.25} />}
         </div>}
-        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
-          <span style={badge(true)}>{p.level}</span>
-          <span style={badge(false)}>{p.gender}</span>
+        <div style={{ position: 'absolute', top: 12, insetInlineStart: 12, display: 'flex', gap: 6 }}>
+          <span style={badge(true)}>{levelText(lang, p.level)}</span>
+          <span style={badge(false)}>{genderText(lang, p.gender)}</span>
         </div>
       </div>
 
@@ -134,7 +129,7 @@ function ProgramCard({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 11, flex: 1 }}>
-          {[ageLabel(p), sessionsLabel(p), priceLabel(p)].map((text) => (
+          {[ageLabel(lang, p), sessionsLabel(lang, p), priceLabel(lang, p)].map((text) => (
             <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{
                 width: 6, height: 6, borderRadius: '50%', backgroundColor: accent,
@@ -166,6 +161,8 @@ export default function ProgramsExplorer({
   academy, programs, content,
 }: { academy: Academy; programs: Program[]; content: SiteContent }) {
   const meta = { ...ACADEMY_STYLE[academy], icon: academy }
+  const lang = useLang()
+  const t = ui(lang)
 
   const [sortKey, setSortKey] = useState<SortKey>('age')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
@@ -207,23 +204,23 @@ export default function ProgramsExplorer({
           {content.academy_programs_title}
         </h2>
         <p style={{ color: meta.accent, fontSize: 14, margin: '0 0 32px', letterSpacing: '0.5px' }}>
-          {list.length} program{list.length === 1 ? '' : 's'} · {content.academy_programs_hint}
+          {programsCount(lang, list.length)} · {content.academy_programs_hint}
         </p>
 
         {/* Controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 36 }}>
           {/* Sort */}
           <div className="pe-controls-row">
-            <p style={labelStyle}>Sort by</p>
-            {SORT_KEYS.map(({ key, label }) => (
+            <p style={labelStyle}>{t.sort_by}</p>
+            {SORT_KEYS.map((key) => (
               <Pill key={key} active={sortKey === key} accent={meta.accent} accentRgb={meta.accentRgb} onClick={() => setSortKey(key)}>
-                {label}
+                {t[key]}
               </Pill>
             ))}
             <button
               onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-              title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
-              aria-label={`Sort direction: ${sortDir === 'asc' ? 'ascending' : 'descending'}`}
+              title={sortDir === 'asc' ? t.ascending : t.descending}
+              aria-label={`${t.sort_direction}: ${sortDir === 'asc' ? t.ascending : t.descending}`}
               className="tap-exempt"
               style={{
                 width: 38, height: 34, borderRadius: 8, cursor: 'pointer',
@@ -237,20 +234,20 @@ export default function ProgramsExplorer({
 
           {/* Gender filter */}
           <div className="pe-controls-row">
-            <p style={labelStyle}>Gender</p>
+            <p style={labelStyle}>{t.gender}</p>
             {GENDER_OPTS.map((g) => (
               <Pill key={g} active={gender === g} accent={meta.accent} accentRgb={meta.accentRgb} onClick={() => setGender(g)}>
-                {g}
+                {g === 'All' ? t.all : genderText(lang, g)}
               </Pill>
             ))}
           </div>
 
           {/* Level filter */}
           <div className="pe-controls-row">
-            <p style={labelStyle}>Level</p>
+            <p style={labelStyle}>{t.level}</p>
             {LEVEL_OPTS.map((l) => (
               <Pill key={l} active={level === l} accent={meta.accent} accentRgb={meta.accentRgb} onClick={() => setLevel(l)}>
-                {l}
+                {l === 'All' ? t.all : levelText(lang, l)}
               </Pill>
             ))}
           </div>
@@ -263,12 +260,12 @@ export default function ProgramsExplorer({
             border: '1px dashed var(--color-border-soft)', borderRadius: 16,
             color: 'var(--color-text-dim)', fontSize: 15,
           }}>
-            No programs match these filters.{' '}
+            {t.no_programs}{' '}
             <button
               onClick={() => { setGender('All'); setLevel('All') }}
               style={{ background: 'none', border: 'none', color: meta.accent, fontSize: 15, fontWeight: 600, cursor: 'pointer', padding: 0 }}
             >
-              Clear filters
+              {t.clear_filters}
             </button>
           </div>
         ) : (

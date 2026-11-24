@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { SiteContent } from '@/lib/content-schema'
+import { localePath, type Lang } from '@/lib/i18n'
 
 // Two halves, one per academy. No ball illustrations and no glow: each half is
 // a flat tint of its sport colour with the pitch / court markings drawn as thin
@@ -37,15 +38,15 @@ function CourtLines() {
   )
 }
 
-export default function Hero({ content }: { content: SiteContent }) {
+export default function Hero({ content, lang = 'en' }: { content: SiteContent; lang?: Lang }) {
   const halves = [
     {
-      key: 'football', href: '/football', cls: 'hero-fb', Lines: PitchLines,
+      key: 'football', href: localePath('/football', lang), cls: 'hero-fb', Lines: PitchLines,
       name: content.football_name, est: content.football_est,
       line: content.football_tagline, photo: content.football_hero_image, n: '01',
     },
     {
-      key: 'basketball', href: '/basketball', cls: 'hero-bb', Lines: CourtLines,
+      key: 'basketball', href: localePath('/basketball', lang), cls: 'hero-bb', Lines: CourtLines,
       name: content.basketball_name, est: content.basketball_est,
       line: content.basketball_tagline, photo: content.basketball_hero_image, n: '02',
     },
@@ -75,7 +76,7 @@ export default function Hero({ content }: { content: SiteContent }) {
         .hero-split .hero-half:hover { flex-grow: 1.3; }
         .hero-photo { object-fit: cover; opacity: 0.55; mix-blend-mode: luminosity; }
         .hero-lines {
-          position: absolute; right: -4%; bottom: -3%; width: min(78%, 520px); height: auto;
+          position: absolute; inset-inline-end: -4%; bottom: -3%; width: min(78%, 520px); height: auto;
           color: var(--tone); opacity: 0.28; transition: opacity 0.4s ease, transform 0.6s ease;
           pointer-events: none;
         }
@@ -97,6 +98,12 @@ export default function Hero({ content }: { content: SiteContent }) {
         .hero-half:hover .hero-enter { gap: 14px; }
         .hero-divider { width: 1px; background: var(--color-border-soft); flex-shrink: 0; }
 
+        .lang-ar .hero-name {
+          font-family: var(--font-arabic), system-ui, sans-serif;
+          font-stretch: 100%; text-transform: none; letter-spacing: 0; line-height: 1.25;
+          font-size: clamp(34px, 5vw, 72px);
+        }
+        .lang-ar .hero-num, .lang-ar .hero-est { letter-spacing: 0; }
         @media (max-width: 768px) {
           .hero-split { flex-direction: column; }
           .hero-split:hover .hero-half, .hero-split .hero-half:hover { flex-grow: 1; }
@@ -114,6 +121,7 @@ export default function Hero({ content }: { content: SiteContent }) {
       `}</style>
 
       <section id="hero" className="hero-split">
+        <h1 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>{content.brand_name}</h1>
         {halves.map((h, i) => (
           <div key={h.key} style={{ display: 'contents' }}>
             {i === 1 && <div className="hero-divider" />}

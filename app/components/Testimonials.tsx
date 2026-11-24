@@ -2,10 +2,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Testimonial } from '@/lib/site-data'
 import type { SiteContent } from '@/lib/content-schema'
+import { useLang } from './LangProvider'
+import { ui, isRtl } from '@/lib/i18n'
 
 const CARD_GAP = 24
 
 export default function Testimonials({ testimonials, content }: { testimonials: Testimonial[]; content: SiteContent }) {
+  const lang = useLang()
+  const t = ui(lang)
   const [idx,         setIdx]         = useState(0)
   const [windowWidth, setWindowWidth] = useState(0)
   const [paused,      setPaused]      = useState(false)
@@ -142,7 +146,7 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
         <button
           className="tm-arrow"
           onClick={goPrev}
-          aria-label="Previous"
+          aria-label={t.previous}
           style={{
             position: 'absolute',
             left: -20,
@@ -170,6 +174,7 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
         <div
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
+          dir="ltr"
           style={{ overflow: 'hidden', padding: '4px 0' }}
         >
           {/* Track — transform is driven directly via ref, not state */}
@@ -184,6 +189,7 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
             {testimonials.map((t, i) => (
               <div
                 key={t.id}
+                dir={isRtl(lang) ? 'rtl' : 'ltr'}
                 style={{
                   width: cardW,
                   flexShrink: 0,
@@ -247,7 +253,7 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
         <button
           className="tm-arrow"
           onClick={goNext}
-          aria-label="Next"
+          aria-label={t.next}
           style={{
             position: 'absolute',
             right: -20,
@@ -280,7 +286,7 @@ export default function Testimonials({ testimonials, content }: { testimonials: 
           <button
             key={i}
             onClick={() => { moveTo(i); resetTimer() }}
-            aria-label={`Go to testimonial ${i + 1}`}
+            aria-label={`${t.go_to_testimonial} ${i + 1}`}
             aria-current={idx === i}
             style={{
               // The visible bar is the inner span; the button itself is a

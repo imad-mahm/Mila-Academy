@@ -127,7 +127,7 @@ export default function Stats({ content }: { content: SiteContent }) {
             justifyContent: 'center',
             padding: '0 8px',
             minWidth: 0,
-            borderRight: i < STATS.length - 1 ? '1px solid rgba(var(--color-gold-rgb),0.25)' : 'none',
+            borderInlineEnd: i < STATS.length - 1 ? '1px solid rgba(var(--color-gold-rgb),0.25)' : 'none',
           }}>
             <span className="display"
               ref={el => { numRefs.current[i] = el }}
@@ -195,10 +195,10 @@ export default function Stats({ content }: { content: SiteContent }) {
              hard-coded "first two", since figures that are unset get filtered
              out and the count varies. */
           .stats-grid > div {
-            border-right: none !important;
+            border-inline-end: none !important;
           }
           .stats-grid > div:nth-child(odd):not(:last-child) {
-            border-right: 1px solid rgba(var(--color-gold-rgb),0.25) !important;
+            border-inline-end: 1px solid rgba(var(--color-gold-rgb),0.25) !important;
           }
           .stats-grid > div:nth-last-child(n+3) {
             border-bottom: 1px solid rgba(var(--color-gold-rgb),0.2);

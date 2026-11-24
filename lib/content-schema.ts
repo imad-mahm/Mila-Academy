@@ -12,6 +12,8 @@
 // To make a new piece of the site editable: add a field below, then read
 // `content.<key>` in the component instead of the hardcoded string.
 
+import { CONTENT_AR } from './content-ar'
+
 export type FieldType = 'text' | 'textarea' | 'image' | 'url' | 'email' | 'tel'
 
 export interface ContentField {
@@ -62,7 +64,7 @@ function academySection<S extends 'football' | 'basketball'>(sport: S) {
   } as const
 }
 
-export const CONTENT_SECTIONS = [
+const BASE_SECTIONS = [
   {
     id: 'general',
     title: 'General',
@@ -184,16 +186,52 @@ export const CONTENT_SECTIONS = [
   academySection('basketball'),
 ] as const satisfies readonly ContentSection[]
 
-type Sections = typeof CONTENT_SECTIONS
+type Sections = typeof BASE_SECTIONS
 export type ContentKey = Sections[number]['fields'][number]['key']
+/** The English text of every editable field (what the English pages read). */
 export type SiteContent = Record<ContentKey, string>
 
+// ── Arabic ───────────────────────────────────────────────────────────────────
+// Every field with Arabic wording in lib/content-ar.ts gets a second field right
+// after it, stored as "<key>__ar". The editor, the settings API and the
+// defaults all work from this one list, so they handle Arabic with no extra code.
+
+export const AR_SUFFIX = '__ar'
+export const arKey = (key: string): string => key + AR_SUFFIX
+
+function withArabic(section: ContentSection): ContentSection {
+  return {
+    ...section,
+    fields: (section.fields as readonly ContentField[]).flatMap((field): ContentField[] => {
+      const ar = CONTENT_AR[field.key]
+      if (ar === undefined || (field.type !== 'text' && field.type !== 'textarea')) return [field]
+      return [field, {
+        key: arKey(field.key),
+        label: field.label + ' — Arabic (العربية)',
+        type: field.type,
+        default: ar,
+        help: 'Shown on the Arabic pages (/ar). Leave as it is to keep the standard Arabic wording.',
+      }]
+    }),
+  }
+}
+
+export const CONTENT_SECTIONS: readonly ContentSection[] = BASE_SECTIONS.map(withArabic)
+
+/** All fields, English and Arabic. */
 export const CONTENT_FIELDS: readonly ContentField[] = CONTENT_SECTIONS.flatMap(s => s.fields as readonly ContentField[])
 
+/** Every key the settings table and API accept (English and Arabic). */
 export const CONTENT_KEYS: ReadonlySet<string> = new Set(CONTENT_FIELDS.map(fl => fl.key))
 
+/** Defaults for every field, English and Arabic: what the dashboard editor starts from. */
 export const CONTENT_DEFAULTS = Object.fromEntries(
   CONTENT_FIELDS.map(fl => [fl.key, fl.default]),
+) as SiteContent & Record<string, string>
+
+/** English defaults only: the object the English pages receive. */
+export const CONTENT_DEFAULTS_EN = Object.fromEntries(
+  CONTENT_FIELDS.filter(fl => !fl.key.endsWith(AR_SUFFIX)).map(fl => [fl.key, fl.default]),
 ) as SiteContent
 
 /** Longest value accepted for a field, by type. */

@@ -1,6 +1,8 @@
 'use client'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useLang } from './LangProvider'
+import { localePath } from '@/lib/i18n'
 import type { SiteContent } from '@/lib/content-schema'
 import { useRouter } from 'next/navigation'
 import { scrollToSection } from '@/lib/lenis-store'
@@ -44,6 +46,7 @@ export default function Footer({
 }: { content: SiteContent; hasGallery?: boolean; hasPrograms?: boolean }) {
   const settings = content
   const router = useRouter()
+  const lang = useLang()
   // Same guard as the navbar: drop links whose section isn't rendered.
   const navLinks = NAV_LINKS.filter(l =>
     (l.id !== 'gallery'  || hasGallery) &&
@@ -156,9 +159,9 @@ export default function Footer({
             {navLinks.map((link) => (
               <button
                 key={link.id}
-                onClick={() => { if (!scrollToSection(link.id)) router.push(`/#${link.id}`) }}
+                onClick={() => { if (!scrollToSection(link.id)) router.push(localePath(`/#${link.id}`, lang)) }}
                 className="footer-link"
-                style={{ background: 'none', border: 'none', textAlign: 'left', fontFamily: 'inherit', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', textAlign: 'start', fontFamily: 'inherit', cursor: 'pointer' }}
               >
                 {link.label}
               </button>

@@ -3,10 +3,11 @@ import Link from 'next/link'
 import type { SiteContent } from '@/lib/content-schema'
 import { ACADEMY_STYLE, type Academy, type Program } from '@/lib/programs'
 import ProgramsExplorer from './ProgramsExplorer'
+import { localePath, type Lang } from '@/lib/i18n'
 
 export default function AcademyLanding({
-  academy, content, programs,
-}: { academy: Academy; content: SiteContent; programs: Program[] }) {
+  academy, content, programs, lang = 'en',
+}: { academy: Academy; content: SiteContent; programs: Program[]; lang?: Lang }) {
   const meta = {
     ...ACADEMY_STYLE[academy],
     name:      content[`${academy}_name`],
@@ -101,7 +102,7 @@ export default function AcademyLanding({
                 {content.whatsapp_label}
               </a>
             )}
-            <Link href="/#contact" style={{
+            <Link href={localePath('/#contact', lang)} style={{
               backgroundColor: 'transparent', color: meta.accent, border: `1px solid ${meta.accent}`,
               padding: '13px 28px', borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: 'none',
             }}>

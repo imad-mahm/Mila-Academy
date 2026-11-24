@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { IconMapPin, IconPhone, IconMail, IconClock } from '@tabler/icons-react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import type { SiteContent } from '@/lib/content-schema'
+import { useLang } from './LangProvider'
+import { ui, isRtl } from '@/lib/i18n'
 
 // ── Inline SVGs ───────────────────────────────────────────────────────────────
 
@@ -60,14 +62,17 @@ function FloatingField({
   autoComplete?: string
 }) {
   const [focused, setFocused] = useState(false)
+  const rtl = isRtl(useLang())
   const up = focused || value.length > 0
+  // Email addresses and phone numbers are written left-to-right even on an Arabic page.
+  const ltrData = type === 'email' || type === 'tel' || type === 'number'
   const Tag = multiline ? 'textarea' : 'input'
 
   return (
     <div style={{ position: 'relative', marginBottom: 20 }}>
       <label style={{
         position: 'absolute',
-        left: 14,
+        insetInlineStart: 14,
         top: up ? 0 : (multiline ? '14px' : '50%'),
         transform: up ? 'translateY(-50%)' : (multiline ? 'none' : 'translateY(-50%)'),
         fontSize: up ? 11 : 14,
@@ -87,6 +92,7 @@ function FloatingField({
         type={type}
         name={name}
         autoComplete={autoComplete}
+        dir={ltrData ? 'ltr' : undefined}
         value={value}
         required={required}
         onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange(e.target.value)}
@@ -105,6 +111,7 @@ function FloatingField({
           resize: multiline ? ('vertical' as const) : undefined,
           transition: 'border-color 0.18s ease',
           fontFamily: 'inherit',
+          textAlign: ltrData && rtl ? 'right' : undefined,
           minHeight: multiline ? 100 : undefined,
           display: 'block',
         }}
@@ -117,13 +124,16 @@ function FloatingField({
 
 export default function Contact({ content }: { content: SiteContent }) {
   const settings = content
+  const lang = useLang()
+  const t = ui(lang)
+  const rtlSelect = isRtl(lang)
   // Skip entries the site settings haven't been filled in for, rather than
   // rendering a card with a label and a blank value under it.
   const INFO = [
-    { Icon: IconMapPin, label: 'Location',       value: settings.location     },
-    { Icon: IconPhone,  label: 'Phone',          value: settings.phone_display },
-    { Icon: IconMail,   label: 'Email',          value: settings.email        },
-    { Icon: IconClock,  label: 'Training Hours', value: settings.hours        },
+    { Icon: IconMapPin, label: t.location,       value: settings.location     },
+    { Icon: IconPhone,  label: t.phone,          value: settings.phone_display },
+    { Icon: IconMail,   label: t.email,          value: settings.email        },
+    { Icon: IconClock,  label: t.training_hours, value: settings.hours        },
   ].filter(i => i.value)
 
   const SOCIALS = [
@@ -184,16 +194,16 @@ export default function Contact({ content }: { content: SiteContent }) {
           </h2>
 
           <form onSubmit={handleSubmit}>
-            <FloatingField label="Full Name"    name="name" autoComplete="name" value={form.name}    onChange={set('name')}  required />
-            <FloatingField label="Email"        type="email" name="email" autoComplete="email" value={form.email}   onChange={set('email')} required />
-            <FloatingField label="Phone"        type="tel"   name="phone" autoComplete="tel" value={form.phone}   onChange={set('phone')} />
-            <FloatingField label="Child's Age"  type="number" name="child_age" value={form.age}   onChange={set('age')}   />
+            <FloatingField label={t.full_name}    name="name" autoComplete="name" value={form.name}    onChange={set('name')}  required />
+            <FloatingField label={t.email}        type="email" name="email" autoComplete="email" value={form.email}   onChange={set('email')} required />
+            <FloatingField label={t.phone}        type="tel"   name="phone" autoComplete="tel" value={form.phone}   onChange={set('phone')} />
+            <FloatingField label={t.child_age}  type="number" name="child_age" value={form.age}   onChange={set('age')}   />
 
             {/* Select dropdown */}
             <div style={{ position: 'relative', marginBottom: 20 }}>
               <label style={{
                 position: 'absolute',
-                left: 14,
+                insetInlineStart: 14,
                 top: form.academy ? 0 : '50%',
                 transform: 'translateY(-50%)',
                 fontSize: form.academy ? 11 : 14,
@@ -205,16 +215,16 @@ export default function Contact({ content }: { content: SiteContent }) {
                 zIndex: 1,
                 lineHeight: 1,
               }}>
-                Select Academy
+                {t.select_academy}
               </label>
               <select
                 value={form.academy}
                 required
-                aria-label="Select Academy"
+                aria-label={t.select_academy}
                 onChange={e => setForm(p => ({ ...p, academy: e.target.value }))}
                 style={{
                   width: '100%',
-                  padding: '15px 36px 15px 14px',
+                  paddingBlock: 15, paddingInlineStart: 14, paddingInlineEnd: 36,
                   backgroundColor: 'var(--color-surface)',
                   border: '1px solid var(--color-border-soft)',
                   borderRadius: 8,
@@ -226,7 +236,7 @@ export default function Contact({ content }: { content: SiteContent }) {
                   WebkitAppearance: 'none',
                   backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 010 1.659l-4.796 5.48a1 1 0 01-1.506 0z'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 14px center',
+                  backgroundPosition: rtlSelect ? 'left 14px center' : 'right 14px center',
                   backgroundSize: '12px',
                   transition: 'border-color 0.18s ease',
                 }}
@@ -237,7 +247,7 @@ export default function Contact({ content }: { content: SiteContent }) {
               </select>
             </div>
 
-            <FloatingField label="Message (optional)" name="message" value={form.message} onChange={set('message')} multiline />
+            <FloatingField label={t.message_optional} name="message" value={form.message} onChange={set('message')} multiline />
 
             {/* Submit button */}
             <button

@@ -3,7 +3,9 @@ import { useState } from 'react'
 import { IconBallFootball, IconBallBasketball } from '@tabler/icons-react'
 import { scrollToSection } from '@/lib/lenis-store'
 import type { SiteContent } from '@/lib/content-schema'
-import { ageLabel, priceLabel, sessionsLabel, type Program } from '@/lib/programs'
+import type { Program } from '@/lib/programs'
+import { useLang } from './LangProvider'
+import { ageLabel, priceLabel, sessionsLabel } from '@/lib/i18n'
 
 const SPORT_STYLE = {
   football:   { color: 'var(--color-football)',   colorRgb: 'var(--color-football-rgb)',   Icon: IconBallFootball   },
@@ -12,6 +14,7 @@ const SPORT_STYLE = {
 
 export default function Programs({ programs, content }: { programs: Program[]; content: SiteContent }) {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
+  const lang = useLang()
 
   if (programs.length === 0) return null
 
@@ -106,7 +109,7 @@ export default function Programs({ programs, content }: { programs: Program[]; c
 
               {/* Detail rows */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 11, flex: 1 }}>
-                {[ageLabel(prog), sessionsLabel(prog), priceLabel(prog)].map((text) => (
+                {[ageLabel(lang, prog), sessionsLabel(lang, prog), priceLabel(lang, prog)].map((text) => (
                   <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span
                       style={{

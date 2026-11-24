@@ -1,6 +1,8 @@
 import { cache } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import { CONTENT_DEFAULTS, CONTENT_KEYS, type SiteContent } from '@/lib/content-schema'
+import { CONTENT_DEFAULTS_EN, CONTENT_KEYS, AR_SUFFIX, arKey, type SiteContent } from '@/lib/content-schema'
+import { CONTENT_AR } from '@/lib/content-ar'
+import type { Lang } from '@/lib/i18n'
 import type { Academy, Program } from '@/lib/programs'
 
 export type { Program } from '@/lib/programs'
@@ -111,13 +113,25 @@ export async function getGalleryPhotos(): Promise<GalleryPhoto[]> {
  * Every editable text/image on the site: what the admin saved, with the
  * schema default for anything they haven't. Unknown keys in the table are
  * ignored. Memoised per request — metadata and the page body both need it.
+ *
+ * For Arabic, the texts that have Arabic wording come from the saved
+ * "<key>__ar" value or, failing that, the standard Arabic default; images,
+ * links, phone numbers and figures are shared with English.
  */
-export const getSiteContent = cache(async (): Promise<SiteContent> => {
-  if (unconfigured()) return { ...CONTENT_DEFAULTS }
+export const getSiteContent = cache(async (lang: Lang = 'en'): Promise<SiteContent> => {
+  if (unconfigured()) return localize({ ...CONTENT_DEFAULTS_EN }, {}, lang)
   const { data, error } = await supabase.from('site_settings').select('key, value').retry(false)
-  if (error) { reportError('getSiteContent', error.message); return { ...CONTENT_DEFAULTS } }
-  const saved = Object.fromEntries(
+  if (error) { reportError('getSiteContent', error.message); return localize({ ...CONTENT_DEFAULTS_EN }, {}, lang) }
+  const saved: Record<string, string> = Object.fromEntries(
     (data ?? []).filter(r => CONTENT_KEYS.has(r.key)).map(r => [r.key, r.value]),
   )
-  return { ...CONTENT_DEFAULTS, ...saved }
+  const english = Object.fromEntries(Object.entries(saved).filter(([k]) => !k.endsWith(AR_SUFFIX)))
+  return localize({ ...CONTENT_DEFAULTS_EN, ...english }, saved, lang)
 })
+
+function localize(content: SiteContent, saved: Record<string, string>, lang: Lang): SiteContent {
+  if (lang !== 'ar') return content
+  const out: Record<string, string> = { ...content }
+  for (const key of Object.keys(CONTENT_AR)) out[key] = saved[arKey(key)] ?? CONTENT_AR[key]
+  return out as SiteContent
+}
