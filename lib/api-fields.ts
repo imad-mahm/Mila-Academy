@@ -30,7 +30,7 @@ export function paymentProblem(v: Record<string, unknown>): string | null {
     const n = v.payment_amount
     if (typeof n !== 'number' || !Number.isFinite(n) || n < 0 || n > 1_000_000) return 'Amount must be a number from 0 to 1,000,000'
   }
-  if (Object.hasOwn(v, 'payment_due_date') && v.payment_due_date !== null && !/^d{4}-d{2}-d{2}$/.test(String(v.payment_due_date))) return 'Due date must look like 2026-12-31'
+  if (Object.hasOwn(v, 'payment_due_date') && v.payment_due_date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(String(v.payment_due_date))) return 'Due date must look like 2026-12-31'
   return null
 }
 
