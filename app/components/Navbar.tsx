@@ -135,20 +135,22 @@ export default function Navbar({
           white-space: nowrap; margin-inline-end: 8px; transition: background-color 0.15s ease;
         }
         .nb-dash:hover { background-color: rgba(var(--color-gold-rgb), 0.1); }
-        .nb-lang {
-          color: var(--color-text-dim); font-size: 13px; font-weight: 600; text-decoration: none;
-          min-height: 44px; padding: 0 10px; display: inline-flex; align-items: center; white-space: nowrap;
-          border-radius: 8px; transition: color 0.15s ease, background-color 0.15s ease;
+        /* Language + theme: one pill, two buttons. */
+        .nb-seg {
+          display: inline-flex; align-items: stretch; flex-shrink: 0;
+          border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden;
+          background-color: var(--color-surface);
         }
-        .nb-lang:hover { color: var(--color-gold); background-color: rgba(var(--color-gold-rgb), 0.1); }
-        .nb-theme {
-          background: none; border: none;
-          color: var(--color-text-dim); cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          padding: 8px; border-radius: 6px; transition: color 0.15s ease;
-          min-height: 44px; min-width: 44px;
+        .nb-seg-btn {
+          background: none; border: none; font-family: inherit; text-decoration: none; cursor: pointer;
+          color: var(--color-text-dim); font-size: 13px; font-weight: 600; white-space: nowrap;
+          display: inline-flex; align-items: center; justify-content: center;
+          min-height: 40px; min-width: 40px; padding: 0 12px;
+          transition: color 0.15s ease, background-color 0.15s ease;
         }
-        .nb-theme:hover { color: var(--color-text); }
+        .nb-seg-btn + .nb-seg-btn { border-inline-start: 1px solid var(--color-border); }
+        .nb-seg-btn:hover { color: var(--color-gold); background-color: rgba(var(--color-gold-rgb), 0.1); }
+        .nb-seg-btn:focus-visible { outline: 2px solid var(--color-gold); outline-offset: -2px; }
         .nb-hamburger {
           background: none; border: none; color: var(--color-text);
           cursor: pointer; padding: 8px; display: none;
@@ -222,16 +224,19 @@ export default function Navbar({
           <button className="nb-join" onClick={() => handleNav('contact')} style={{ marginInlineEnd: 8 }}>
             {content.nav_enroll}
           </button>
-          <a className="nb-lang" href={other.href} hrefLang={other.lang} lang={other.lang} aria-label={t.switch_language}>
-            {LANG_NAME[other.lang]}
-          </a>
-          <button
-            className="nb-theme"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? t.theme_to_light : t.theme_to_dark}
-          >
-            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-          </button>
+          <div className="nb-seg" role="group">
+            <a className="nb-seg-btn" href={other.href} hrefLang={other.lang} lang={other.lang} aria-label={t.switch_language}>
+              {LANG_NAME[other.lang]}
+            </a>
+            <button
+              type="button"
+              className="nb-seg-btn"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? t.theme_to_light : t.theme_to_dark}
+            >
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+            </button>
+          </div>
           <button
             className="nb-hamburger"
             onClick={() => setMenuOpen(true)}

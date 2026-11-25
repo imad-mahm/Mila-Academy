@@ -714,6 +714,7 @@ export default function StudentsPage() {
         {isAdmin && <button
           onClick={() => setShowModal(true)}
           disabled={teams.length === 0}
+          title={teams.length === 0 ? 'Create a team first — every student belongs to a team' : undefined}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
             backgroundColor: '#16a34a', color: '#fff',
@@ -730,6 +731,13 @@ export default function StudentsPage() {
 
       {loadError && (
         <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12 }}>{loadError}</p>
+      )}
+
+      {isAdmin && !loading && !loadError && teams.length === 0 && (
+        <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 12 }}>
+          Add Student is off because there are no teams yet — every student belongs to a team.{' '}
+          <a href="/dashboard/teams" style={{ color: '#f5c518', fontWeight: 600 }}>Create a team first</a>.
+        </p>
       )}
 
       {/* Filter bar */}
