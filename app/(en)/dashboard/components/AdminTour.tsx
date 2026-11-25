@@ -44,19 +44,19 @@ const STEPS: Step[] = [
   {
     href: '/dashboard/students',
     title: 'A student’s profile',
-    text: 'Click any student to open their profile. It has their details, ratings, payments, a notes box and a Documents tab for medical forms, ID copies and photos. Parents can upload documents there too.',
+    text: 'Click any student to open their profile. It has their details, ratings, payments, a notes box and a Documents tab for photos, ID cards, passports and civil records. Files there are private.',
     todo: 'Open the student you just added and look through the tabs. Use “Archive” on the list to hide a student who left, keeping their record. “Delete” removes them for good.',
   },
   {
     href: '/dashboard/attendance',
     title: '4. Take attendance',
-    text: 'Pick a team and a date, then mark each player Present, Absent or Late. Coaches do this at every session, and the Reports page uses it.',
+    text: 'Choose a team and a date, then mark each player Present, Absent or Late. Coaches do this at every session.',
     todo: 'Note: attendance, ratings and matches are saved in this browser only for now, so use the same computer, and they are not yet shared between devices or users.',
   },
   {
     href: '/dashboard/ratings',
     title: '5. Rate your players',
-    text: 'After a session, score each player’s effort and skills so parents and coaches can see progress over time. Ratings also appear on each student’s profile.',
+    text: 'After a session, score each player on Technique, Fitness, Attitude and Teamwork so you can follow their progress over time.',
     todo: 'Click “Rate Session”, pick the team and rate each player. This is also saved in this browser only for now.',
   },
   {
@@ -74,8 +74,8 @@ const STEPS: Step[] = [
   {
     href: '/dashboard/reports',
     title: '8. Reports',
-    text: 'Monthly summaries of payments, attendance and players, ready to download as a spreadsheet for your records.',
-    todo: 'Pick a month and press the download button.',
+    text: 'PDF and Excel summaries you can download for your records. Attendance, ratings and payment figures are not included in these reports yet, so for money use the Payments page, which exports to Excel.',
+    todo: 'Choose a report and press its download button.',
   },
   {
     href: '/dashboard/website',
