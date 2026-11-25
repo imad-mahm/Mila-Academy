@@ -21,63 +21,94 @@ interface Step {
 const STEPS: Step[] = [
   {
     title: 'Welcome! Let’s set up your academy',
-    text: 'This quick guide walks you through the setup in the order that works best. It takes about ten minutes, and you can stop at any time and come back from “Setup guide” at the top.',
+    text: 'This guide takes you from an empty system to a working academy: first a team, then a coach, then a student and their parent, then everything else. It takes about ten minutes. You can stop at any time and come back from “Setup guide” at the top.',
   },
   {
     href: '/dashboard/teams',
-    title: '1. Create your teams',
-    text: 'Start here: students and coaches are assigned to teams, and every other screen (attendance, ratings, payments) lists them.',
-    todo: 'Click “New team”, then give it a name, the academy (football or basketball) and an age group.',
+    title: '1. Create your first team',
+    text: 'Start here. Students and coaches are assigned to teams, and attendance, ratings and payments all list them. “Add Student” stays switched off until at least one team exists.',
+    todo: 'Click “New team”, then enter a name (for example “U12 Boys”), pick the academy (football or basketball) and an age group, then press “Create team”.',
   },
   {
     href: '/dashboard/coaches',
-    title: '2. Add your coaches',
-    text: 'Each coach is created together with their own sign-in. Tick the teams they look after: they will only see those teams’ students.',
-    todo: 'Click “Add Coach”, fill in the details and their email, then press “Add Coach and create sign-in”. Copy the temporary password shown and send it to them: it appears only once.',
+    title: '2. Add a coach',
+    text: 'Every coach is created together with their own sign-in. Tick the teams they look after: a coach only sees those teams’ students.',
+    todo: 'Click “Add Coach”, fill in the details and their email, tick their team, then press “Add Coach and create sign-in”. Copy the temporary password shown and send it to them. It appears only once, and they choose their own when they first sign in.',
   },
   {
     href: '/dashboard/students',
-    title: '3. Add your students',
-    text: 'Add each player with their birth date, team and parent details. You can also give the parent a sign-in at the same time.',
-    todo: 'Click “Add Student”. On the last tab, “Login”, tick “Create a sign-in” to give the parent access, then copy the password shown.',
+    title: '3. Add a student and their parent',
+    text: 'One form does both. The “Basic” tab needs the name, birth date, position and team. The “Parent Info” tab holds the guardian’s name and phone numbers. The parent gets their own sign-in on the last tab and sees only their child.',
+    todo: 'Click “Add Student” and fill in Basic and Parent Info. On the “Login” tab, tick “Create a sign-in”, choose “Parent / guardian”, enter the parent’s email, then press “Add Student”. Copy the password shown and send it to the parent. It appears only once.',
+  },
+  {
+    href: '/dashboard/students',
+    title: 'A student’s profile',
+    text: 'Click any student to open their profile. It has their details, ratings, payments, a notes box and a Documents tab for medical forms, ID copies and photos. Parents can upload documents there too.',
+    todo: 'Open the student you just added and look through the tabs. Use “Archive” on the list to hide a student who left, keeping their record. “Delete” removes them for good.',
+  },
+  {
+    href: '/dashboard/attendance',
+    title: '4. Take attendance',
+    text: 'Pick a team and a date, then mark each player Present, Absent or Late. Coaches do this at every session, and the Reports page uses it.',
+    todo: 'Note: attendance, ratings and matches are saved in this browser only for now, so use the same computer, and they are not yet shared between devices or users.',
+  },
+  {
+    href: '/dashboard/ratings',
+    title: '5. Rate your players',
+    text: 'After a session, score each player’s effort and skills so parents and coaches can see progress over time. Ratings also appear on each student’s profile.',
+    todo: 'Click “Rate Session”, pick the team and rate each player. This is also saved in this browser only for now.',
+  },
+  {
+    href: '/dashboard/matches',
+    title: '6. Schedule matches',
+    text: 'Add upcoming fixtures and record results. Parents and students can see the matches too.',
+    todo: 'Click “Schedule Match”, choose the team, opponent, date and place. Matches are also saved in this browser only for now.',
   },
   {
     href: '/dashboard/payments',
-    title: '4. Track payments',
-    text: 'Payments are recorded per month or per day. Open a student and use their Payments tab to add records and mark them paid or not paid.',
+    title: '7. Track payments',
+    text: 'Payments are recorded per month or per day. Open a student’s profile and use their Payments tab to add a record and mark it paid or not paid. This page shows the whole academy and exports to Excel.',
     todo: 'To let one coach handle payments, open Users, edit that coach and tick “Can view and update payments”.',
   },
   {
+    href: '/dashboard/reports',
+    title: '8. Reports',
+    text: 'Monthly summaries of payments, attendance and players, ready to download as a spreadsheet for your records.',
+    todo: 'Pick a month and press the download button.',
+  },
+  {
     href: '/dashboard/website',
-    title: '5. Make the website yours',
-    text: 'Every text and picture on the public homepage can be changed here without any code: names, logos, the numbers, contact details and social links.',
+    title: '9. Make the website yours',
+    text: 'Every text and picture on the public homepage can be changed here without any code: names, logos, the numbers, contact details and social links. Each text field has an Arabic version for the Arabic site.',
     todo: 'Pick a section on the left, change what you need, then press “Save & publish”.',
   },
   {
     href: '/dashboard/content/programs',
-    title: '6. Add your programs',
+    title: '10. Add your programs',
     text: 'The programs shown on the football and basketball pages. Add the real ones for your age groups, with price and sessions per week.',
-    todo: 'Click “Add program” and star the ones you want on the homepage.',
+    todo: 'Click “Add program” and star the ones you want on the homepage. Testimonials and Gallery, just below it, work the same way.',
   },
   {
     href: '/dashboard/content/inquiries',
-    title: '7. Answer new sign-ups',
+    title: '11. Answer new sign-ups',
     text: 'Families who fill in the enquiry form on the website show up here. You are not emailed, so check this page regularly.',
     todo: 'Press “Create student” on an enquiry to open the Add Student form already filled in.',
   },
   {
     href: '/dashboard/users',
-    title: '8. Manage everyone’s access',
+    title: '12. Manage everyone’s access',
     text: 'All accounts are here. You can reset a password, disable someone, or download a sign-in sheet with every coach and parent’s details.',
     todo: 'Use “Sign-in sheet” to download a spreadsheet to hand out. Share it privately and delete it afterwards.',
   },
   {
     title: 'You’re all set',
-    text: 'Open “View website” at the top to see how the public site looks. You can run this guide again any time from “Setup guide”.',
+    text: 'Open “View website” at the top to see how the public site looks, and use the language button on it to check the Arabic version. You can run this guide again any time from “Setup guide”.',
   },
 ]
 
-const KEY = (userId: string) => `mila_tour_${userId}`
+// v2: the guide was rewritten, so admins who finished the old one see it once more.
+const KEY = (userId: string) => `mila_tour2_${userId}`
 
 interface Box { top: number; left: number; width: number; height: number }
 
