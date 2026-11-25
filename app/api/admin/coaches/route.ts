@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
       data: (data ?? []).map(c => ({ ...c, has_login: withLogin.has(String(c.email ?? '').trim().toLowerCase()) })),
     })
   }
-  return NextResponse.json({ data })
+  // Coaches see colleagues' public profile only; salary, contract and personal phone are admin-only.
+  return NextResponse.json({ data: (data ?? []).map(({ salary: _s, contract_end: _c, phone: _p, ...pub }) => pub) })
 }
 
 // Every coach is created together with a sign-in: the email is required, and a

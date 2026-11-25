@@ -25,15 +25,32 @@ function PitchLines() {
 }
 
 function CourtLines() {
-  // Paint, free-throw circle and three-point arc.
+  // Half of a FIBA court, baseline at the top, at 25 units per metre — which
+  // puts the half-court line (14 m out) at y=350, level with the pitch's
+  // half-way line. 15 m wide; key 4.9 x 5.8 m with lane marks; free-throw and
+  // centre circles r 1.8 m, the free-throw circle dashed inside the key;
+  // backboard 1.2 m out, hoop 1.575 m; three-point line 6.75 m from the hoop
+  // with straight corners 0.9 m in from the sidelines. The key and centre
+  // circle are tinted, as on a painted court.
+  const lane = [44, 71, 92, 114] // lane-mark distances from the baseline
   return (
     <svg className="hero-lines" viewBox="0 0 600 700" fill="none" stroke="currentColor"
       strokeWidth="2" aria-hidden preserveAspectRatio="xMaxYMax slice">
-      <rect x="0" y="0" width="600" height="700" />
-      <rect x="210" y="0" width="180" height="270" />
-      <circle cx="300" cy="270" r="90" />
-      <path d="M 40 0 L 40 130 A 270 270 0 0 0 560 130 L 560 0" />
-      <path d="M 255 40 A 45 45 0 0 0 345 40" />
+      <path d="M 112.5 350 L 112.5 1 L 487.5 1 L 487.5 350 Z" />
+      <circle cx="300" cy="350" r="45" fill="currentColor" fillOpacity="0.35" />
+      <rect x="238.75" y="1" width="122.5" height="144" fill="currentColor" fillOpacity="0.2" />
+      {lane.map(y => (
+        <g key={y}>
+          <line x1="228.75" y1={y} x2="238.75" y2={y} />
+          <line x1="361.25" y1={y} x2="371.25" y2={y} />
+        </g>
+      ))}
+      <path d="M 255 145 A 45 45 0 0 0 345 145" />
+      <path d="M 255 145 A 45 45 0 0 1 345 145" strokeDasharray="7 7" />
+      <line x1="277.5" y1="30" x2="322.5" y2="30" />
+      <line x1="300" y1="30" x2="300" y2="33" />
+      <circle cx="300" cy="39.5" r="6.5" />
+      <path d="M 135 1 L 135 74.8 A 168.75 168.75 0 0 0 465 74.8 L 465 1" />
     </svg>
   )
 }

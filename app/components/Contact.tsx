@@ -282,7 +282,7 @@ export default function Contact({ content }: { content: SiteContent }) {
                 }} />
               )}
               {(status === 'idle' || status === 'error') && content.contact_submit}
-              {status === 'loading' && 'Sending…'}
+              {status === 'loading' && t.sending}
               {status === 'done'    && content.contact_success}
             </button>
 

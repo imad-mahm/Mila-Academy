@@ -123,9 +123,9 @@ html {
 
 /* ── Reduced motion ──────────────────────────────────────────────────────────
    The public site runs GSAP count-ups, a continuously spinning ball on the
-   hero, an auto-advancing testimonial carousel and Lenis smooth scrolling.
-   Honour the OS setting and stand all of it down. (SmoothScrollProvider checks
-   the same query in JS and skips Lenis entirely.) */
+   hero, an auto-advancing testimonial carousel and gliding in-page jumps.
+   Honour the OS setting and stand all of it down. (lib/scroll.ts checks the
+   same query in JS and jumps instantly.) */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

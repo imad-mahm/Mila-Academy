@@ -1,25 +1,18 @@
-import type Lenis from 'lenis'
+/** Height of the fixed navbar, so scroll targets don't land underneath it. */
+export const NAV_HEIGHT = 60
 
-let _instance: Lenis | null = null
-
-/** Pass null on teardown — a destroyed Lenis left in this slot would make
- *  every later scrollToSection() call a no-op. */
-export function setLenisInstance(l: Lenis | null): void {
-  _instance = l
+// Glide for in-page jumps, unless the OS asks for reduced motion.
+function behavior(): ScrollBehavior {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
 }
 
 function scrollToTop(): void {
-  if (_instance) _instance.scrollTo(0)
-  else window.scrollTo({ top: 0, behavior: 'smooth' })
+  window.scrollTo({ top: 0, behavior: behavior() })
 }
 
 function scrollToEl(el: HTMLElement): void {
-  if (_instance) _instance.scrollTo(el, { offset: -NAV_HEIGHT })
-  else window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - NAV_HEIGHT, behavior: 'smooth' })
+  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - NAV_HEIGHT, behavior: behavior() })
 }
-
-/** Height of the fixed navbar, so scroll targets don't land underneath it. */
-export const NAV_HEIGHT = 60
 
 /**
  * Scrolls to the named section.
@@ -45,8 +38,8 @@ export function scrollToSection(id: string): boolean {
 
 /**
  * Scrolls to the section named by the current URL hash, if any.
- * Lenis takes over the scroll position on mount, which cancels the browser's
- * own hash jump — so an inbound `/#contact` needs to be replayed manually.
+ * The section may render after the browser's own hash jump, so an inbound
+ * `/#contact` is replayed by components/HashScroll.tsx.
  */
 export function scrollToHash(): void {
   const id = window.location.hash.slice(1)

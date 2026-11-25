@@ -1,4 +1,4 @@
-import SmoothScrollProvider from './SmoothScrollProvider'
+import HashScroll from './HashScroll'
 import { LangProvider } from './LangProvider'
 import { geistSans, geistMono, archivo, cairo } from '@/lib/fonts'
 import { isRtl, type Lang } from '@/lib/i18n'
@@ -25,9 +25,8 @@ export default function RootShell({ lang, children }: { lang: Lang; children: Re
       </head>
       <body className="min-h-full flex flex-col">
         <LangProvider lang={lang}>
-          <SmoothScrollProvider>
-            {children}
-          </SmoothScrollProvider>
+          <HashScroll />
+          {children}
         </LangProvider>
       </body>
     </html>

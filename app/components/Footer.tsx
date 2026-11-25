@@ -2,10 +2,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useLang } from './LangProvider'
-import { localePath } from '@/lib/i18n'
+import { localePath, ui } from '@/lib/i18n'
 import type { SiteContent } from '@/lib/content-schema'
 import { useRouter } from 'next/navigation'
-import { scrollToSection } from '@/lib/lenis-store'
+import { scrollToSection } from '@/lib/scroll'
 
 const NAV_LINKS = [
   { key: 'nav_home',     id: 'top'      },
@@ -153,7 +153,7 @@ export default function Footer({
         {/* Quick links column */}
         <div>
           <p style={{ color: 'var(--color-gold)', fontSize: 11, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', margin: '0 0 22px' }}>
-            Navigation
+            {ui(lang).footer_navigation}
           </p>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {navLinks.map((link) => (
@@ -172,7 +172,7 @@ export default function Footer({
         {/* Contact column */}
         <div>
           <p style={{ color: 'var(--color-gold)', fontSize: 11, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', margin: '0 0 22px' }}>
-            Contact
+            {ui(lang).footer_contact}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[

@@ -1,11 +1,12 @@
 'use client'
 import { useState } from 'react'
 import { IconBallFootball, IconBallBasketball } from '@tabler/icons-react'
-import { scrollToSection } from '@/lib/lenis-store'
+import { scrollToSection } from '@/lib/scroll'
 import type { SiteContent } from '@/lib/content-schema'
 import type { Program } from '@/lib/programs'
 import { useLang } from './LangProvider'
-import { ageLabel, priceLabel, sessionsLabel } from '@/lib/i18n'
+import { useRouter } from 'next/navigation'
+import { ageLabel, priceLabel, sessionsLabel, localePath } from '@/lib/i18n'
 
 const SPORT_STYLE = {
   football:   { color: 'var(--color-football)',   colorRgb: 'var(--color-football-rgb)',   Icon: IconBallFootball   },
@@ -15,6 +16,7 @@ const SPORT_STYLE = {
 export default function Programs({ programs, content }: { programs: Program[]; content: SiteContent }) {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
   const lang = useLang()
+  const router = useRouter()
 
   if (programs.length === 0) return null
 
@@ -128,7 +130,7 @@ export default function Programs({ programs, content }: { programs: Program[]; c
 
               {/* Enroll Now */}
               <button
-                onClick={() => scrollToSection('contact')}
+                onClick={() => { if (!scrollToSection('contact')) router.push(localePath('/#contact', lang)) }}
                 style={{
                   marginTop: 22,
                   width: '100%',

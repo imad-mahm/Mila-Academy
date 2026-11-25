@@ -50,6 +50,9 @@ type Dict = {
   site_menu: string
   switch_language: string
   chat_whatsapp: string
+  footer_navigation: string
+  footer_contact: string
+  sending: string
   sort_by: string
   age: string
   level: string
@@ -103,6 +106,9 @@ export const UI: Record<Lang, Dict> = {
     site_menu: 'Site menu',
     switch_language: 'Switch to Arabic',
     chat_whatsapp: 'Chat on WhatsApp',
+    footer_navigation: 'Navigation',
+    footer_contact: 'Contact',
+    sending: 'Sending…',
     sort_by: 'Sort by',
     age: 'Age',
     level: 'Level',
@@ -154,6 +160,9 @@ export const UI: Record<Lang, Dict> = {
     site_menu: 'قائمة الموقع',
     switch_language: 'التبديل إلى الإنجليزية',
     chat_whatsapp: 'تحدّث معنا عبر واتساب',
+    footer_navigation: 'التنقّل',
+    footer_contact: 'اتصل بنا',
+    sending: 'جارٍ الإرسال…',
     sort_by: 'ترتيب حسب',
     age: 'العمر',
     level: 'المستوى',

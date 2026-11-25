@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { scrollToSection } from '@/lib/lenis-store'
+import { scrollToSection } from '@/lib/scroll'
 import { useTheme, toggleTheme } from '@/lib/theme'
 import { useSession } from '@/lib/use-session'
 import type { SiteContent } from '@/lib/content-schema'
